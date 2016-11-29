@@ -1,0 +1,46 @@
+{
+    "name": "coplest.flinger.core.test",
+    "title": "Flinger",
+    "description": "Web server to test Flinger Core",
+    "version": "0.0.1",
+    "homepage": "http://coplest.com",
+    "author": {
+        "name": "Coplest S.A.S. and other contributors",
+        "url": "https://github.com/Coplest/Coplest.Flinger/blob/master/AUTHORS"
+    },
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/Coplest/Coplest.Flinger.git"
+    },
+    "keywords": [
+        "flinger",
+        "coplest",
+        "heatmaps",
+        "remote",
+        "administration",
+        "tool",
+        "form",
+        "analysis",
+        "insights",
+        "record",
+        "usability",
+        "ux",
+        "user",
+        "experience"
+    ],
+    "bugs": {
+        "url": "https://github.com/Coplest/Coplest.Flinger/issues"
+    },
+    "license": "MIT",
+    "dependencies": {
+        "express": "latest",
+        "morgan": "latest",
+        "body-parser": "latest",
+        "ejs": "latest",
+        "open": "latest",
+        "cors": "latest"
+    },
+    "scripts": {
+        "start": "node app.js"
+    }
+}

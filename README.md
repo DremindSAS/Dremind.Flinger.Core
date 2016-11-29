@@ -1,2 +1,7 @@
-# Dremind.Flinger.Core
-Client Library to use Flinger Platform
+# Build library
+
+> npm run build
+
+# Developing library
+
+> npm run start
