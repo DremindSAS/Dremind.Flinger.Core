@@ -58,30 +58,10 @@ var ScreenshotHub = (function () {
     }
 
     var saveScreenshot = function () {
-        if (_isOnDescoveryMode) {
-            var endpoint = '/api/Site/AddImage';
+        if (_isOnDescoveryMode) {            
             var canvas = document.querySelector('#screenshot-result>canvas');
-            var params = { Base64Data: canvas.toDataURL(), Endpoint: document.location.pathname, ApiKey: Cross.GetApiKey() };
 
-            var req;
-            if (XMLHttpRequest) {
-                req = new XMLHttpRequest();
-
-                if ('withCredentials' in req) {
-                    req.open("POST", Cross.GetServerUri() + endpoint, true);
-                    req.withCredentials = true;
-                    req.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
-                    req.send(JSON.stringify(params));
-                }
-            } else if (XDomainRequest) {
-                req = new XDomainRequest();
-                req.open("POST", Cross.GetServerUri() + endpoint);
-                
-                req.send(JSON.stringify(params));
-            } else {
-                errback(new Error('CORS not supported'));
-            }
-
+            SocketHub.PushScreenshot({ Command: 'Scroll', Values: { Base64Data: canvas.toDataURL(), Endpoint: document.location.pathname, ApiKey: Cross.GetApiKey() } })
         }
     }
 

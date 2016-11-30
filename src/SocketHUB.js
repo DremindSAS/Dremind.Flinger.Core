@@ -76,6 +76,14 @@ var SocketHub = (function() {
         }
     }
 
+    var pushScreenshot = function(data){
+        if(_socket != undefined){
+            if(Cross.GetApiKey() != undefined && Cross.GetApiKey().length > 0){
+                _socket.emit('Coplest.Flinger.PushScreenshot', data);
+            }   
+        }
+    }
+
     /// Pull an event when server send a message
     var pullEvent = function(type, data){
         _socketEvent = new CustomEvent(type, data);

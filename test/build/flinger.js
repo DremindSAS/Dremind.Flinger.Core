@@ -1,4 +1,4 @@
-/*! coplest.flinger.core - v0.0.1 - 2016-11-29 */
+/*! coplest.flinger.core - v0.0.1 - 2016-11-30 */
 var Cross = (function() {
     var _timeStamp;
     var _serverUri;
@@ -341,6 +341,14 @@ var SocketHub = (function() {
         }
     }
 
+    var pushScreenshot = function(data){
+        if(_socket != undefined){
+            if(Cross.GetApiKey() != undefined && Cross.GetApiKey().length > 0){
+                _socket.emit('Coplest.Flinger.PushScreenshot', data);
+            }   
+        }
+    }
+
     /// Pull an event when server send a message
     var pullEvent = function(type, data){
         _socketEvent = new CustomEvent(type, data);
@@ -640,30 +648,10 @@ var ScreenshotHub = (function () {
     }
 
     var saveScreenshot = function () {
-        if (_isOnDescoveryMode) {
-            var endpoint = '/api/Site/AddImage';
+        if (_isOnDescoveryMode) {            
             var canvas = document.querySelector('#screenshot-result>canvas');
-            var params = { Base64Data: canvas.toDataURL(), Endpoint: document.location.pathname, ApiKey: Cross.GetApiKey() };
 
-            var req;
-            if (XMLHttpRequest) {
-                req = new XMLHttpRequest();
-
-                if ('withCredentials' in req) {
-                    req.open("POST", Cross.GetServerUri() + endpoint, true);
-                    req.withCredentials = true;
-                    req.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
-                    req.send(JSON.stringify(params));
-                }
-            } else if (XDomainRequest) {
-                req = new XDomainRequest();
-                req.open("POST", Cross.GetServerUri() + endpoint);
-                
-                req.send(JSON.stringify(params));
-            } else {
-                errback(new Error('CORS not supported'));
-            }
-
+            SocketHub.PushScreenshot({ Command: 'Scroll', Values: { Base64Data: canvas.toDataURL(), Endpoint: document.location.pathname, ApiKey: Cross.GetApiKey() } })
         }
     }
 
@@ -760,6 +748,14 @@ var SocketHub = (function() {
             if(Cross.GetApiKey() != undefined && Cross.GetApiKey().length > 0){
                 _socket.emit('Coplest.Flinger.PushInsight', data);
             }          
+        }
+    }
+
+    var pushScreenshot = function(data){
+        if(_socket != undefined){
+            if(Cross.GetApiKey() != undefined && Cross.GetApiKey().length > 0){
+                _socket.emit('Coplest.Flinger.PushScreenshot', data);
+            }   
         }
     }
 
