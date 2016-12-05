@@ -53,6 +53,8 @@ var SocketHub = (function () {
                 }
             }
 
+            _socket.emit('Coplest.Flinger.AddApiKeyToSocket', {ApiKey: Cross.GetApiKey()})
+
             pullEvent('SocketConnected')
         });
         _socket.on('Coplest.Flinger.ServerEvent', function (data) {

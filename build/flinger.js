@@ -1,4 +1,4 @@
-/*! coplest.flinger.core - v0.0.1 - 2016-11-30 */
+/*! coplest.flinger.core - v0.0.1 - 2016-12-04 */
 var Cross = (function() {
     var _timeStamp;
     var _serverUri;
@@ -317,6 +317,8 @@ var SocketHub = (function () {
                     console.log('Connection to server succesfully');
                 }
             }
+
+            _socket.emit('Coplest.Flinger.AddApiKeyToSocket', {ApiKey: Cross.GetApiKey()})
 
             pullEvent('SocketConnected')
         });
@@ -728,6 +730,8 @@ var SocketHub = (function () {
                     console.log('Connection to server succesfully');
                 }
             }
+
+            _socket.emit('Coplest.Flinger.AddApiKeyToSocket', {ApiKey: Cross.GetApiKey()})
 
             pullEvent('SocketConnected')
         });
