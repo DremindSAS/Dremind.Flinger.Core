@@ -1,4 +1,4 @@
-/*! coplest.flinger.core - v0.0.1 - 2016-12-26 */
+/*! coplest.flinger.core - v0.0.1 - 2016-12-27 */
 var Cross = (function() {
     var _timeStamp;
     var _serverUri;
@@ -305,7 +305,7 @@ var SocketHub = (function () {
                 console.log('Connecting to server...');
             }
         }
-        _socket = io(Cross.GetServerUri());
+        _socket = io(Cross.GetServerUri() + '/user-pool-namespace');
         socketDefinition();
     }
 
@@ -718,7 +718,7 @@ var SocketHub = (function () {
                 console.log('Connecting to server...');
             }
         }
-        _socket = io(Cross.GetServerUri());
+        _socket = io(Cross.GetServerUri() + '/user-pool-namespace');
         socketDefinition();
     }
 

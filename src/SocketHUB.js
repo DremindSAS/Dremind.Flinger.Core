@@ -40,7 +40,7 @@ var SocketHub = (function () {
                 console.log('Connecting to server...');
             }
         }
-        _socket = io(Cross.GetServerUri());
+        _socket = io(Cross.GetServerUri() + '/user-pool-namespace');
         socketDefinition();
     }
 
