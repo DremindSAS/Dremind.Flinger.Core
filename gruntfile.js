@@ -32,6 +32,11 @@ module.exports = function (grunt) {
                     {expand: true, src: ['./build/*'], dest: './test/', filter: 'isFile'},
                 ]
                 
+            },
+            FlingerAssets:{
+                files:[
+                    {expand: true, src: ['./assets/*'], dest: './build/', filter: 'isFile'}
+                ]
             }
         },
         watch: {
