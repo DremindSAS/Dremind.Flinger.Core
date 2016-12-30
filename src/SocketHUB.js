@@ -4,7 +4,8 @@ var SocketHub = (function () {
     var _debug;
     var _socket;
     var _socketEvent;
-    var _ratSocket;
+    var _ratSocketPoolNamespace;
+    var _ratServiceSocket;
     var _socketId;
 
     /// Initialize component
@@ -84,11 +85,12 @@ var SocketHub = (function () {
     }
 
     var ratPoolNamespace = function (data) {
-        _ratSocket = io(Cross.GetServerUri() + data.RPN);
+        _ratSocketPoolNamespace = io(Cross.GetServerUri() + data.RPN);
+        ratPoolSocketDefinition(data);
     }
 
     var ratPoolSocketDefinition = function (ratNamespaceData) {
-        _ratSocket.on('connect', function (data) {
+        _ratSocketPoolNamespace.on('connect', function (data) {
             if (_debug !== undefined) {
                 if (_debug) {
                     console.log('Connection to RAT Service Namespace succesfully');
@@ -96,13 +98,13 @@ var SocketHub = (function () {
             }
         })
 
-        _ratSocket.on('Coplest.Flinger.RAT', function (data) {
+        _ratSocketPoolNamespace.on('Coplest.Flinger.RAT', function (data) {
             if (data.Command != undefined) {
                 switch (data.Command) {
                     case 'ConnectedToRPN#Response':
                         _socketId = data.Values.SocketId;
-                        _socket.emit('Coplest.Flinger.RAT', { Message: 'ConnectToRATServiceNamespace#Request', Values: { Namespace: ratNamespaceData.Namespace } }, function(data){
-                            ratServiceNamespace(data);
+                        _socket.emit('Coplest.Flinger.RAT', { Message: 'ConnectToRATServiceNamespace#Request', Values: { Namespace: ratNamespaceData.Namespace } }, function (data) {
+                            ratServiceNamespace(data, ratNamespaceData);
                         });
                         break;
 
@@ -113,8 +115,30 @@ var SocketHub = (function () {
         })
     }
 
-    var ratServiceNamespace = function(data){
-        // Linea 27 del blog
+    var ratServiceNamespace = function (data, ratNamespaceData) {
+        _ratServiceSocket = io(Cross.GetServerUri() + data.Namespace);
+        ratServiceSocketDefinition(data, ratNamespaceData);
+    }
+
+    var ratServiceSocketDefinition = function (data, ratNamespaceData) {
+        _ratServiceSocket.on('Coplest.Flinger.RAT', function (data) {
+            if (data.Command != undefined) {
+                switch (data.Command) {
+                    case 'ConnectedToRSN#Response':
+                        _socketId = data.Values.SocketId;
+                        _ratServiceSocket.emit('Coplest.Flinger.RAT', { Command: 'JoinToPrivateRoom#Request', Values: { SocketId: socket.id, RoomId: ratNamespaceData.RoomId } });
+                        break;
+                    case 'JoinToPrivateRoom#Response':
+                    _ratServiceSocket.emit('Coplest.Flinger.RAT', { Command: 'TakeMyUserSocketId#Request', Values: { SocketId: socket.id, RoomId: ratNamespaceData.RoomId } });
+                        break;
+                    case 'PrintCursor#Request':
+                        console.log('PrintCursor#Request')
+                        break;
+                    default:
+                        break;
+                }
+            }
+        })
     }
 
     /// Push an insight to server
@@ -139,7 +163,7 @@ var SocketHub = (function () {
         _socketEvent = new CustomEvent(type, data);
 
         document.dispatchEvent(_socketEvent);
-        // Example to cath event
+        /// Example to cath event
         //document.addEventListener("type", handlerFunction, false);
     }
 
