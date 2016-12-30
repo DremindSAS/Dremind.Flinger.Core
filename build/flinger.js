@@ -1,4 +1,4 @@
-/*! coplest.flinger.core - v0.0.1 - 2016-12-27 */
+/*! coplest.flinger.core - v0.0.1 - 2016-12-30 */
 var Cross = (function() {
     var _timeStamp;
     var _serverUri;
@@ -269,6 +269,8 @@ var SocketHub = (function () {
     var _debug;
     var _socket;
     var _socketEvent;
+    var _ratSocket;
+    var _socketId;
 
     /// Initialize component
     var constructor = function (params) {
@@ -318,7 +320,7 @@ var SocketHub = (function () {
                 }
             }
 
-            _socket.emit('Coplest.Flinger.AddApiKeyToSocket', {ApiKey: Cross.GetApiKey()})
+            _socket.emit('Coplest.Flinger.AddApiKeyToSocket', { ApiKey: Cross.GetApiKey() })
 
             pullEvent('SocketConnected')
         });
@@ -332,6 +334,52 @@ var SocketHub = (function () {
                 }
             }
         });
+        _socket.on('Coplest.Flinger.RAT', function (data) {
+            if (data.Command != undefined) {
+                switch (data.Command) {
+                    case 'RATPoolConnection#Request':
+                        ratPoolNamespace(data.Values);
+                        break;
+
+                    default:
+                        break;
+                }
+            }
+        })
+    }
+
+    var ratPoolNamespace = function (data) {
+        _ratSocket = io(Cross.GetServerUri() + data.RPN);
+    }
+
+    var ratPoolSocketDefinition = function (ratNamespaceData) {
+        _ratSocket.on('connect', function (data) {
+            if (_debug !== undefined) {
+                if (_debug) {
+                    console.log('Connection to RAT Service Namespace succesfully');
+                }
+            }
+        })
+
+        _ratSocket.on('Coplest.Flinger.RAT', function (data) {
+            if (data.Command != undefined) {
+                switch (data.Command) {
+                    case 'ConnectedToRPN#Response':
+                        _socketId = data.Values.SocketId;
+                        _socket.emit('Coplest.Flinger.RAT', { Message: 'ConnectToRATServiceNamespace#Request', Values: { Namespace: ratNamespaceData.Namespace } }, function(data){
+                            ratServiceNamespace(data);
+                        });
+                        break;
+
+                    default:
+                        break;
+                }
+            }
+        })
+    }
+
+    var ratServiceNamespace = function(data){
+        // Linea 27 del blog
     }
 
     /// Push an insight to server
@@ -682,6 +730,8 @@ var SocketHub = (function () {
     var _debug;
     var _socket;
     var _socketEvent;
+    var _ratSocket;
+    var _socketId;
 
     /// Initialize component
     var constructor = function (params) {
@@ -731,7 +781,7 @@ var SocketHub = (function () {
                 }
             }
 
-            _socket.emit('Coplest.Flinger.AddApiKeyToSocket', {ApiKey: Cross.GetApiKey()})
+            _socket.emit('Coplest.Flinger.AddApiKeyToSocket', { ApiKey: Cross.GetApiKey() })
 
             pullEvent('SocketConnected')
         });
@@ -745,6 +795,52 @@ var SocketHub = (function () {
                 }
             }
         });
+        _socket.on('Coplest.Flinger.RAT', function (data) {
+            if (data.Command != undefined) {
+                switch (data.Command) {
+                    case 'RATPoolConnection#Request':
+                        ratPoolNamespace(data.Values);
+                        break;
+
+                    default:
+                        break;
+                }
+            }
+        })
+    }
+
+    var ratPoolNamespace = function (data) {
+        _ratSocket = io(Cross.GetServerUri() + data.RPN);
+    }
+
+    var ratPoolSocketDefinition = function (ratNamespaceData) {
+        _ratSocket.on('connect', function (data) {
+            if (_debug !== undefined) {
+                if (_debug) {
+                    console.log('Connection to RAT Service Namespace succesfully');
+                }
+            }
+        })
+
+        _ratSocket.on('Coplest.Flinger.RAT', function (data) {
+            if (data.Command != undefined) {
+                switch (data.Command) {
+                    case 'ConnectedToRPN#Response':
+                        _socketId = data.Values.SocketId;
+                        _socket.emit('Coplest.Flinger.RAT', { Message: 'ConnectToRATServiceNamespace#Request', Values: { Namespace: ratNamespaceData.Namespace } }, function(data){
+                            ratServiceNamespace(data);
+                        });
+                        break;
+
+                    default:
+                        break;
+                }
+            }
+        })
+    }
+
+    var ratServiceNamespace = function(data){
+        // Linea 27 del blog
     }
 
     /// Push an insight to server
