@@ -84,16 +84,17 @@ var SocketHub = (function () {
         })
     }
 
-    var ratPoolNamespace = function (data) {
-        _ratSocketPoolNamespace = io(Cross.GetServerUri() + data.RPN);
-        ratPoolSocketDefinition(data);
+    var ratPoolNamespace = function (ratNamespaceValues) {
+        console.log(Cross.GetServerUri() + ratNamespaceValues.RPN)
+        _ratSocketPoolNamespace = io(Cross.GetServerUri() + ratNamespaceValues.RPN);
+        ratPoolSocketDefinition(ratNamespaceValues);
     }
 
-    var ratPoolSocketDefinition = function (ratNamespaceData) {
+    var ratPoolSocketDefinition = function (ratNamespaceValues) {
         _ratSocketPoolNamespace.on('connect', function (data) {
             if (_debug !== undefined) {
                 if (_debug) {
-                    console.log('Connection to RAT Service Namespace succesfully');
+                    console.log('Connection to RAT Pool Namespace succesfully');
                 }
             }
         })
@@ -102,9 +103,19 @@ var SocketHub = (function () {
             if (data.Command != undefined) {
                 switch (data.Command) {
                     case 'ConnectedToRPN#Response':
+                        if (_debug !== undefined) {
+                            if (_debug) {
+                                console.log('Socket Event: ConnectedToRPN#Response');
+                            }
+                        }
                         _socketId = data.Values.SocketId;
-                        _socket.emit('Coplest.Flinger.RAT', { Message: 'ConnectToRATServiceNamespace#Request', Values: { Namespace: ratNamespaceData.Namespace } }, function (data) {
-                            ratServiceNamespace(data, ratNamespaceData);
+                        _ratSocketPoolNamespace.emit('Coplest.Flinger.RAT', { Command: 'ConnectToRATServiceNamespace#Request', Values: { Namespace: ratNamespaceValues.Namespace } }, function (data) {
+                            if (_debug !== undefined) {
+                                if (_debug) {
+                                    console.log('Socket Event: ConnectToRATServiceNamespace#Request');
+                                }
+                            }
+                            ratServiceNamespace(data.Values, ratNamespaceValues);
                         });
                         break;
 
@@ -116,8 +127,11 @@ var SocketHub = (function () {
     }
 
     var ratServiceNamespace = function (data, ratNamespaceData) {
-        _ratServiceSocket = io(Cross.GetServerUri() + data.Namespace);
-        ratServiceSocketDefinition(data, ratNamespaceData);
+        var ns = (Cross.SearchObjectByIdOnArray(ratNamespaceData.Namespace.Id, data.Namespace));
+        if (ns != null) {
+            _ratServiceSocket = io(Cross.GetServerUri() + '/' + ns.Id);
+            ratServiceSocketDefinition(data, ratNamespaceData);
+        }
     }
 
     var ratServiceSocketDefinition = function (data, ratNamespaceData) {
@@ -125,14 +139,28 @@ var SocketHub = (function () {
             if (data.Command != undefined) {
                 switch (data.Command) {
                     case 'ConnectedToRSN#Response':
+                        if (_debug !== undefined) {
+                            if (_debug) {
+                                console.log('Socket Event: ConnectedToRSN#Response');
+                            }
+                        }
                         _socketId = data.Values.SocketId;
-                        _ratServiceSocket.emit('Coplest.Flinger.RAT', { Command: 'JoinToPrivateRoom#Request', Values: { SocketId: socket.id, RoomId: ratNamespaceData.RoomId } });
+                        _ratServiceSocket.emit('Coplest.Flinger.RAT', { Command: 'UserJoinToPrivateRoom#Request', Values: { SocketId: _ratServiceSocket.id, RoomId: ratNamespaceData.RoomId } });
                         break;
-                    case 'JoinToPrivateRoom#Response':
-                    _ratServiceSocket.emit('Coplest.Flinger.RAT', { Command: 'TakeMyUserSocketId#Request', Values: { SocketId: socket.id, RoomId: ratNamespaceData.RoomId } });
+                    case 'UserJoinToPrivateRoom#Response':
+                        if (_debug !== undefined) {
+                            if (_debug) {
+                                console.log('Socket Event: UserJoinToPrivateRoom#Response');
+                            }
+                        }
+                        _ratServiceSocket.emit('Coplest.Flinger.RAT', { Command: 'TakeMyUserSocketId#Request', Values: { SocketId: _ratServiceSocket.id, RoomId: ratNamespaceData.RoomId } });
                         break;
                     case 'PrintCursor#Request':
-                        console.log('PrintCursor#Request')
+                        if (_debug !== undefined) {
+                            if (_debug) {
+                                console.log('PrintCursor#Request');
+                            }
+                        }
                         break;
                     default:
                         break;
