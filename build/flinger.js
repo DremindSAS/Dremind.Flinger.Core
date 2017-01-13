@@ -1,4 +1,4 @@
-/*! coplest.flinger.core - v0.0.1 - 2017-01-03 */
+/*! coplest.flinger.core - v0.0.1 - 2017-01-13 */
 var Cross = (function () {
     var _timeStamp;
     var _serverUri;
@@ -40,7 +40,7 @@ var Cross = (function () {
         }
 
         _timeStamp = new Date();
-        _serverUri = "http://localhost:3500";
+        _serverUri = "http://flingerbackend.cloudapp.net:3500";
         setApiKey();
         analyzeClient();
         injectUserLocationLibrary();
