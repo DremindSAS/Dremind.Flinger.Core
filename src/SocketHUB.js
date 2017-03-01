@@ -129,6 +129,7 @@ var SocketHub = (function () {
     var ratServiceNamespace = function (data, ratNamespaceData) {
         var ns = (Cross.SearchObjectByIdOnArray(ratNamespaceData.Namespace.Id, data.Namespace));
         if (ns != null) {
+            console.log('RAT Service Socket URI: ' + Cross.GetServerUri() + '/' + ns.Id);
             _ratServiceSocket = io(Cross.GetServerUri() + '/' + ns.Id);
             ratServiceSocketDefinition(data, ratNamespaceData);
         }

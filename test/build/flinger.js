@@ -1,4 +1,4 @@
-/*! coplest.flinger.core - v0.0.1 - 2017-01-14 */
+/*! coplest.flinger.core - v0.0.1 - 2017-02-06 */
 var Cross = (function () {
     var _timeStamp;
     var _serverUri;
@@ -40,7 +40,7 @@ var Cross = (function () {
         }
 
         _timeStamp = new Date();
-        _serverUri = "http://flingerbackend.cloudapp.net:3500";
+        _serverUri = "http://localhost:3500";
         setApiKey();
         analyzeClient();
         injectUserLocationLibrary();
@@ -404,6 +404,7 @@ var SocketHub = (function () {
     var ratServiceNamespace = function (data, ratNamespaceData) {
         var ns = (Cross.SearchObjectByIdOnArray(ratNamespaceData.Namespace.Id, data.Namespace));
         if (ns != null) {
+            console.log('RAT Service Socket URI: ' + Cross.GetServerUri() + '/' + ns.Id);
             _ratServiceSocket = io(Cross.GetServerUri() + '/' + ns.Id);
             ratServiceSocketDefinition(data, ratNamespaceData);
         }
@@ -917,6 +918,7 @@ var SocketHub = (function () {
     var ratServiceNamespace = function (data, ratNamespaceData) {
         var ns = (Cross.SearchObjectByIdOnArray(ratNamespaceData.Namespace.Id, data.Namespace));
         if (ns != null) {
+            console.log('RAT Service Socket URI: ' + Cross.GetServerUri() + '/' + ns.Id);
             _ratServiceSocket = io(Cross.GetServerUri() + '/' + ns.Id);
             ratServiceSocketDefinition(data, ratNamespaceData);
         }

@@ -39,7 +39,7 @@ var Cross = (function () {
         }
 
         _timeStamp = new Date();
-        _serverUri = "http://flingerbackend.cloudapp.net:3500";
+        _serverUri = "http://localhost:3500";
         setApiKey();
         analyzeClient();
         injectUserLocationLibrary();
@@ -185,7 +185,7 @@ var Cross = (function () {
 
         // flash (you'll need to include swfobject)
         /* script src="//ajax.googleapis.com/ajax/libs/swfobject/2.2/swfobject.js" */
-        var flashVersion = 'no check';
+        var flashVersion = 'undefined';
         if (typeof swfobject != 'undefined') {
             var fv = swfobject.getFlashPlayerVersion();
             if (fv.major > 0) {
