@@ -1,4 +1,4 @@
-/*! coplest.flinger.core - v0.0.1 - 2017-02-06 */
+/*! coplest.flinger.core - v0.0.1 - 2017-03-09 */
 var Cross = (function () {
     var _timeStamp;
     var _serverUri;
@@ -186,7 +186,7 @@ var Cross = (function () {
 
         // flash (you'll need to include swfobject)
         /* script src="//ajax.googleapis.com/ajax/libs/swfobject/2.2/swfobject.js" */
-        var flashVersion = 'no check';
+        var flashVersion = 'undefined';
         if (typeof swfobject != 'undefined') {
             var fv = swfobject.getFlashPlayerVersion();
             if (fv.major > 0) {
@@ -318,7 +318,7 @@ var SocketHub = (function () {
                 console.log('Connecting to server...');
             }
         }
-        _socket = io(Cross.GetServerUri() + '/user-pool-namespace');
+        _socket = io(Cross.GetServerUri() + '/user-pool-namespace', { ApiKey: Cross.GetApiKey() });
         socketDefinition();
     }
 
@@ -832,7 +832,7 @@ var SocketHub = (function () {
                 console.log('Connecting to server...');
             }
         }
-        _socket = io(Cross.GetServerUri() + '/user-pool-namespace');
+        _socket = io(Cross.GetServerUri() + '/user-pool-namespace', { ApiKey: Cross.GetApiKey() });
         socketDefinition();
     }
 
