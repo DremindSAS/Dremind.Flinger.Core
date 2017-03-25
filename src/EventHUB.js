@@ -69,7 +69,7 @@ var EventHub = (function () {
             Position: { X: this.scrollX, Y: this.scrollY },
             TimeStamp: Cross.TimeStamp(),
             Client: Cross.GetClientInformation(),
-            Location: Cross.GetClientLocation()
+            Location: {}
         }
 
         if (SocketHub.GetSocket() != undefined && SocketHub.GetSocket().connected === true) {
@@ -120,7 +120,7 @@ var EventHub = (function () {
             Scroll: Cross.GetScrollPosition(),
             TimeStamp: Cross.TimeStamp(),
             Client: Cross.GetClientInformation(),
-            Location: Cross.GetClientLocation()
+            Location: {}
         }
 
         if (SocketHub.GetSocket() != undefined && SocketHub.GetSocket().connected === true) {
