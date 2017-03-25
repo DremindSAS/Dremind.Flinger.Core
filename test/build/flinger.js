@@ -1,4 +1,4 @@
-/*! coplest.flinger.core - v0.0.1 - 2017-03-09 */
+/*! coplest.flinger.core - v0.0.1 - 2017-03-24 */
 var Cross = (function () {
     var _timeStamp;
     var _serverUri;
@@ -43,7 +43,7 @@ var Cross = (function () {
         _serverUri = "http://localhost:3500";
         setApiKey();
         analyzeClient();
-        injectUserLocationLibrary();
+        //injectUserLocationLibrary();
     }
 
     var setApiKey = function () {
@@ -211,13 +211,13 @@ var Cross = (function () {
         }
     }
 
-    var injectUserLocationLibrary = function () {
+    /*var injectUserLocationLibrary = function () {
         var head = document.getElementsByTagName('head')[0];
         var script = document.createElement('script');
         script.onload = userLocationLibrary_loaded;
         script.src = 'http://js.maxmind.com/js/apis/geoip2/v2.1/geoip2.js';
         head.appendChild(script);
-    }
+    }*/
 
     var userLocationLibrary_loaded = function () {
         geoip2.city(locationSuccesfuly, locationFails);
@@ -243,9 +243,9 @@ var Cross = (function () {
         return _clientInformation;
     }
 
-    var getClientLocation = function () {
+    /*var getClientLocation = function () {
         return _clientLocation;
-    }
+    }*/
 
     var getApiKey = function () {
         return _apiKey;
@@ -266,7 +266,7 @@ var Cross = (function () {
         GetScrollPosition: getScrollPosition,
         GetServerUri: getServerUri,
         GetClientInformation: getClientInformation,
-        GetClientLocation: getClientLocation,
+        /*GetClientLocation: getClientLocation,*/
         GetApiKey: getApiKey,
         SearchObjectByIdOnArray: searchObjectByIdOnArray
     };
@@ -622,7 +622,7 @@ var EventHub = (function () {
             Scroll: Cross.GetScrollPosition(),
             TimeStamp: Cross.TimeStamp(),
             Client: Cross.GetClientInformation(),
-            Location: Cross.GetClientLocation()
+            Location: {}
         };
 
         if (_debug !== undefined) {

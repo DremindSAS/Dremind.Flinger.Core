@@ -138,7 +138,7 @@ var EventHub = (function () {
             Scroll: Cross.GetScrollPosition(),
             TimeStamp: Cross.TimeStamp(),
             Client: Cross.GetClientInformation(),
-            Location: Cross.GetClientLocation()
+            Location: {}
         };
 
         if (_debug !== undefined) {
