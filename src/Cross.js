@@ -47,11 +47,11 @@ var Cross = (function () {
         _serverUri = "http://localhost:3500";//"http://13.84.164.38:3500";
         setApiKey();
         analyzeClient();
-        setUseHeatmaps(true);
-        setUseRAT(true);
-        setUseFunnels(true);
-        setUseScreenRecorder(true);
-        setUseFormAnalysis(true);
+        setUseHeatmaps(null);
+        setUseRAT(null);
+        setUseFunnels(null);
+        setUseScreenRecorder(null);
+        setUseFormAnalysis(null);
         //injectUserLocationLibrary();
     }
 

@@ -30,12 +30,19 @@ var EventHub = (function () {
 
     }, false);
 
-    document.addEventListener("CanUseHeatmaps", function(event){
-            console.log('CanUseHeatmaps:');
-            console.log(event)
-        if(event.detail.success == true){ 
+    document.addEventListener("CanUseHeatmaps", function (event) {
+        if (_debug !== undefined) {
+            if (_debug) {
+                console.log('CanUseHeatmaps:');
+                console.log(event)
+            }
+        }
+        if (event.detail.success == true) {
             Cross.SetUseHeatmaps(event.detail.result);
-            SocketHub.PushEvent({Command: 'Coplest.Flinger.ICanUseHeatmaps', Values: {}});
+            
+            if(event.detail.result == true){
+                SocketHub.PushEvent({ Command: 'Coplest.Flinger.ICanUseHeatmaps', Values: {} }); 
+            }
         }
     }, false)
 
@@ -82,8 +89,10 @@ var EventHub = (function () {
         }
 
         if (SocketHub.GetSocket() != undefined && SocketHub.GetSocket().connected === true) {
-            if (Cross.CanUseHeatmaps()){
-                SocketHub.PushInsight({ Command: 'Scroll', Values: { ApiKey: Cross.GetApiKey(), Event: scrollEvent, Pathname: window.location.pathname } })
+            if (Cross.CanUseHeatmaps() != undefined && Cross.CanUseHeatmaps() != null) {
+                if(Cross.CanUseHeatmaps() == true){
+                    SocketHub.PushInsight({ Command: 'Scroll', Values: { ApiKey: Cross.GetApiKey(), Event: scrollEvent, Pathname: window.location.pathname } })
+                }
             }
         }
         else {
@@ -135,8 +144,10 @@ var EventHub = (function () {
         }
 
         if (SocketHub.GetSocket() != undefined && SocketHub.GetSocket().connected === true) {
-            if (Cross.CanUseHeatmaps()) {
-                SocketHub.PushInsight({ Command: 'Movement', Values: { ApiKey: Cross.GetApiKey(), Event: movementEvent, Pathname: window.location.pathname } })
+            if (Cross.CanUseHeatmaps() != undefined && Cross.CanUseHeatmaps() != null) {
+                if(Cross.CanUseHeatmaps() == true){
+                    SocketHub.PushInsight({ Command: 'Movement', Values: { ApiKey: Cross.GetApiKey(), Event: movementEvent, Pathname: window.location.pathname } })
+                }
             }
         }
         else {
@@ -160,8 +171,10 @@ var EventHub = (function () {
             }
         }
         if (SocketHub.GetSocket() != undefined && SocketHub.GetSocket().connected === true) {
-            if (Cross.CanUseHeatmaps()){
-                SocketHub.PushInsight({ Command: 'Click', Values: { ApiKey: Cross.GetApiKey(), Event: clickEvent, Pathname: window.location.pathname } })
+            if (Cross.CanUseHeatmaps() != undefined && Cross.CanUseHeatmaps() != null) {
+                if(Cross.CanUseHeatmaps() == true){
+                    SocketHub.PushInsight({ Command: 'Click', Values: { ApiKey: Cross.GetApiKey(), Event: clickEvent, Pathname: window.location.pathname } })
+                }
             }
         }
         else {
