@@ -6,7 +6,7 @@ var EventHub = (function () {
     var _mouseScrollEvents = [];
 
     /// Global Events
-    document.addEventListener("SocketConnected", function () {
+    document.addEventListener("InsightsQueue", function () {
         if (_mouseClickEvents.length > 0) {
             _mouseClickEvents.forEach(function (clickEvent) {
                 SocketHub.PushInsight({ Command: 'Click', Values: { ApiKey: Cross.GetApiKey(), Event: clickEvent } })
@@ -29,6 +29,15 @@ var EventHub = (function () {
         }
 
     }, false);
+
+    document.addEventListener("CanUseHeatmaps", function(event){
+            console.log('CanUseHeatmaps:');
+            console.log(event)
+        if(event.detail.success == true){ 
+            Cross.SetUseHeatmaps(event.detail.result);
+            SocketHub.PushEvent({Command: 'Coplest.Flinger.ICanUseHeatmaps', Values: {}});
+        }
+    }, false)
 
     /// Initialize component
     var constructor = function (params) {
@@ -73,7 +82,9 @@ var EventHub = (function () {
         }
 
         if (SocketHub.GetSocket() != undefined && SocketHub.GetSocket().connected === true) {
-            SocketHub.PushInsight({ Command: 'Scroll', Values: { ApiKey: Cross.GetApiKey(), Event: scrollEvent, Pathname: window.location.pathname } })
+            if (Cross.CanUseHeatmaps()){
+                SocketHub.PushInsight({ Command: 'Scroll', Values: { ApiKey: Cross.GetApiKey(), Event: scrollEvent, Pathname: window.location.pathname } })
+            }
         }
         else {
             _mouseScrollEvents.push(scrollEvent);
@@ -124,7 +135,9 @@ var EventHub = (function () {
         }
 
         if (SocketHub.GetSocket() != undefined && SocketHub.GetSocket().connected === true) {
-            SocketHub.PushInsight({ Command: 'Movement', Values: { ApiKey: Cross.GetApiKey(), Event: movementEvent, Pathname: window.location.pathname } })
+            if (Cross.CanUseHeatmaps()) {
+                SocketHub.PushInsight({ Command: 'Movement', Values: { ApiKey: Cross.GetApiKey(), Event: movementEvent, Pathname: window.location.pathname } })
+            }
         }
         else {
             _mouseMovementEvents.push(movementEvent);
@@ -147,7 +160,9 @@ var EventHub = (function () {
             }
         }
         if (SocketHub.GetSocket() != undefined && SocketHub.GetSocket().connected === true) {
-            SocketHub.PushInsight({ Command: 'Click', Values: { ApiKey: Cross.GetApiKey(), Event: clickEvent, Pathname: window.location.pathname } })
+            if (Cross.CanUseHeatmaps()){
+                SocketHub.PushInsight({ Command: 'Click', Values: { ApiKey: Cross.GetApiKey(), Event: clickEvent, Pathname: window.location.pathname } })
+            }
         }
         else {
             _mouseClickEvents.push(clickEvent);

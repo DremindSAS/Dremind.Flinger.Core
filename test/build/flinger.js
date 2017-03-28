@@ -1,4 +1,4 @@
-/*! coplest.flinger.core - v0.0.1 - 2017-03-24 */
+/*! coplest.flinger.core - v0.0.1 - 2017-03-28 */
 var Cross = (function () {
     var _timeStamp;
     var _serverUri;
@@ -33,6 +33,11 @@ var Cross = (function () {
     ];
     var _clientLocation;
     var _apiKey;
+    var _canUseHeatmaps;
+    var _canUseRAT;
+    var _canUseFunnels;
+    var _canUseScreenRecorder;
+    var _canUseFormAnalysis;
 
     var constructor = function (params) {
         if (params != undefined) {
@@ -40,9 +45,14 @@ var Cross = (function () {
         }
 
         _timeStamp = new Date();
-        _serverUri = "http://localhost:3500";
+        _serverUri = "http://localhost:3500";//"http://13.84.164.38:3500";
         setApiKey();
         analyzeClient();
+        setUseHeatmaps(true);
+        setUseRAT(true);
+        setUseFunnels(true);
+        setUseScreenRecorder(true);
+        setUseFormAnalysis(true);
         //injectUserLocationLibrary();
     }
 
@@ -251,6 +261,46 @@ var Cross = (function () {
         return _apiKey;
     }
 
+    var setUseHeatmaps = function (canUse) {
+        _canUseHeatmaps = canUse;
+    }
+
+    var setUseRAT = function (canUse) {
+        _canUseRAT = canUse;
+    }
+
+    var setUseFunnels = function (canUse) {
+        _canUseFunnels = canUse;
+    }
+
+    var setUseScreenRecorder = function canUse() {
+        _canUseScreenRecorder = canUse;
+    }
+
+    var setUseFormAnalysis = function (canUse) {
+        _canUseFormAnalysis = canUse;
+    }
+
+    var canUseHeatmaps = function () {
+        return _canUseHeatmaps;
+    }
+
+    var canUseRAT = function () {
+        return _canUseRAT;
+    }
+
+    var canUseFunnels = function () {
+        return _canUseFunnels;
+    }
+
+    var canUseScreenRecorder = function () {
+        return _canUseScreenRecorder;
+    }
+
+    var canUseFormAnalysis = function () {
+        return _canUseFormAnalysis;
+    }
+
     var searchObjectByIdOnArray = function (nameKey, _array) {
         for (var i = 0; i < _array.length; i++) {
             if (_array[i].Id === nameKey) {
@@ -268,7 +318,17 @@ var Cross = (function () {
         GetClientInformation: getClientInformation,
         /*GetClientLocation: getClientLocation,*/
         GetApiKey: getApiKey,
-        SearchObjectByIdOnArray: searchObjectByIdOnArray
+        SearchObjectByIdOnArray: searchObjectByIdOnArray,
+        CanUseHeatmaps: canUseHeatmaps,
+        CanUseRAT: canUseRAT,
+        CanUseFunnels: canUseFunnels,
+        CanUseScreenRecorder: canUseScreenRecorder,
+        CanUseFormAnalysis: canUseFormAnalysis,
+        SetUseHeatmaps: setUseHeatmaps,
+        SetUseRAT: setUseRAT,
+        SetUseFunnels: setUseFunnels,
+        SetUseScreenRecorder: setUseScreenRecorder,
+        SetUseFormAnalysis: setUseFormAnalysis,
     };
 })()
 
@@ -333,7 +393,7 @@ var SocketHub = (function () {
 
             _socket.emit('Coplest.Flinger.AddApiKeyToSocket', { ApiKey: Cross.GetApiKey() })
 
-            pullEvent('SocketConnected')
+            _socket.emit('Coplest.Flinger.CanISendData', { ApiKey: Cross.GetApiKey() })
         });
         _socket.on('Coplest.Flinger.ServerEvent', function (data) {
             pullEvent(data.Command, data.Values)
@@ -445,6 +505,14 @@ var SocketHub = (function () {
         })
     }
 
+    var pushEvent = function (data) {
+        if (_socket != undefined) {
+            if (Cross.GetApiKey() != undefined && Cross.GetApiKey().length > 0) {
+                _socket.emit(data.Command, data.Values);
+            }
+        }
+    }
+
     /// Push an insight to server
     var pushInsight = function (data) {
         if (_socket != undefined) {
@@ -464,7 +532,7 @@ var SocketHub = (function () {
 
     /// Pull an event when server send a message
     var pullEvent = function (type, data) {
-        _socketEvent = new CustomEvent(type, data);
+        _socketEvent = new CustomEvent(type, {detail: data});
 
         document.dispatchEvent(_socketEvent);
         /// Example to cath event
@@ -479,7 +547,8 @@ var SocketHub = (function () {
         Initialize: constructor,
         GetSocket: getSocket,
         PushInsight: pushInsight,
-        PushScreenshot: pushScreenshot
+        PushScreenshot: pushScreenshot,
+        PushEvent: pushEvent,
     };
 })();
 var EventHub = (function () {
@@ -490,7 +559,7 @@ var EventHub = (function () {
     var _mouseScrollEvents = [];
 
     /// Global Events
-    document.addEventListener("SocketConnected", function () {
+    document.addEventListener("InsightsQueue", function () {
         if (_mouseClickEvents.length > 0) {
             _mouseClickEvents.forEach(function (clickEvent) {
                 SocketHub.PushInsight({ Command: 'Click', Values: { ApiKey: Cross.GetApiKey(), Event: clickEvent } })
@@ -513,6 +582,15 @@ var EventHub = (function () {
         }
 
     }, false);
+
+    document.addEventListener("CanUseHeatmaps", function(event){
+            console.log('CanUseHeatmaps:');
+            console.log(event)
+        if(event.detail.success == true){ 
+            Cross.SetUseHeatmaps(event.detail.result);
+            SocketHub.PushEvent({Command: 'Coplest.Flinger.ICanUseHeatmaps', Values: {}});
+        }
+    }, false)
 
     /// Initialize component
     var constructor = function (params) {
@@ -557,7 +635,9 @@ var EventHub = (function () {
         }
 
         if (SocketHub.GetSocket() != undefined && SocketHub.GetSocket().connected === true) {
-            SocketHub.PushInsight({ Command: 'Scroll', Values: { ApiKey: Cross.GetApiKey(), Event: scrollEvent, Pathname: window.location.pathname } })
+            if (Cross.CanUseHeatmaps()){
+                SocketHub.PushInsight({ Command: 'Scroll', Values: { ApiKey: Cross.GetApiKey(), Event: scrollEvent, Pathname: window.location.pathname } })
+            }
         }
         else {
             _mouseScrollEvents.push(scrollEvent);
@@ -608,7 +688,9 @@ var EventHub = (function () {
         }
 
         if (SocketHub.GetSocket() != undefined && SocketHub.GetSocket().connected === true) {
-            SocketHub.PushInsight({ Command: 'Movement', Values: { ApiKey: Cross.GetApiKey(), Event: movementEvent, Pathname: window.location.pathname } })
+            if (Cross.CanUseHeatmaps()) {
+                SocketHub.PushInsight({ Command: 'Movement', Values: { ApiKey: Cross.GetApiKey(), Event: movementEvent, Pathname: window.location.pathname } })
+            }
         }
         else {
             _mouseMovementEvents.push(movementEvent);
@@ -631,7 +713,9 @@ var EventHub = (function () {
             }
         }
         if (SocketHub.GetSocket() != undefined && SocketHub.GetSocket().connected === true) {
-            SocketHub.PushInsight({ Command: 'Click', Values: { ApiKey: Cross.GetApiKey(), Event: clickEvent, Pathname: window.location.pathname } })
+            if (Cross.CanUseHeatmaps()){
+                SocketHub.PushInsight({ Command: 'Click', Values: { ApiKey: Cross.GetApiKey(), Event: clickEvent, Pathname: window.location.pathname } })
+            }
         }
         else {
             _mouseClickEvents.push(clickEvent);
@@ -847,7 +931,7 @@ var SocketHub = (function () {
 
             _socket.emit('Coplest.Flinger.AddApiKeyToSocket', { ApiKey: Cross.GetApiKey() })
 
-            pullEvent('SocketConnected')
+            _socket.emit('Coplest.Flinger.CanISendData', { ApiKey: Cross.GetApiKey() })
         });
         _socket.on('Coplest.Flinger.ServerEvent', function (data) {
             pullEvent(data.Command, data.Values)
@@ -959,6 +1043,14 @@ var SocketHub = (function () {
         })
     }
 
+    var pushEvent = function (data) {
+        if (_socket != undefined) {
+            if (Cross.GetApiKey() != undefined && Cross.GetApiKey().length > 0) {
+                _socket.emit(data.Command, data.Values);
+            }
+        }
+    }
+
     /// Push an insight to server
     var pushInsight = function (data) {
         if (_socket != undefined) {
@@ -978,7 +1070,7 @@ var SocketHub = (function () {
 
     /// Pull an event when server send a message
     var pullEvent = function (type, data) {
-        _socketEvent = new CustomEvent(type, data);
+        _socketEvent = new CustomEvent(type, {detail: data});
 
         document.dispatchEvent(_socketEvent);
         /// Example to cath event
@@ -993,7 +1085,8 @@ var SocketHub = (function () {
         Initialize: constructor,
         GetSocket: getSocket,
         PushInsight: pushInsight,
-        PushScreenshot: pushScreenshot
+        PushScreenshot: pushScreenshot,
+        PushEvent: pushEvent,
     };
 })();
 var Flinger = (function() {

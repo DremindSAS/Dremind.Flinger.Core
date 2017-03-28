@@ -32,6 +32,11 @@ var Cross = (function () {
     ];
     var _clientLocation;
     var _apiKey;
+    var _canUseHeatmaps;
+    var _canUseRAT;
+    var _canUseFunnels;
+    var _canUseScreenRecorder;
+    var _canUseFormAnalysis;
 
     var constructor = function (params) {
         if (params != undefined) {
@@ -39,9 +44,14 @@ var Cross = (function () {
         }
 
         _timeStamp = new Date();
-        _serverUri = "http://localhost:3500";
+        _serverUri = "http://localhost:3500";//"http://13.84.164.38:3500";
         setApiKey();
         analyzeClient();
+        setUseHeatmaps(true);
+        setUseRAT(true);
+        setUseFunnels(true);
+        setUseScreenRecorder(true);
+        setUseFormAnalysis(true);
         //injectUserLocationLibrary();
     }
 
@@ -250,6 +260,46 @@ var Cross = (function () {
         return _apiKey;
     }
 
+    var setUseHeatmaps = function (canUse) {
+        _canUseHeatmaps = canUse;
+    }
+
+    var setUseRAT = function (canUse) {
+        _canUseRAT = canUse;
+    }
+
+    var setUseFunnels = function (canUse) {
+        _canUseFunnels = canUse;
+    }
+
+    var setUseScreenRecorder = function canUse() {
+        _canUseScreenRecorder = canUse;
+    }
+
+    var setUseFormAnalysis = function (canUse) {
+        _canUseFormAnalysis = canUse;
+    }
+
+    var canUseHeatmaps = function () {
+        return _canUseHeatmaps;
+    }
+
+    var canUseRAT = function () {
+        return _canUseRAT;
+    }
+
+    var canUseFunnels = function () {
+        return _canUseFunnels;
+    }
+
+    var canUseScreenRecorder = function () {
+        return _canUseScreenRecorder;
+    }
+
+    var canUseFormAnalysis = function () {
+        return _canUseFormAnalysis;
+    }
+
     var searchObjectByIdOnArray = function (nameKey, _array) {
         for (var i = 0; i < _array.length; i++) {
             if (_array[i].Id === nameKey) {
@@ -267,7 +317,17 @@ var Cross = (function () {
         GetClientInformation: getClientInformation,
         /*GetClientLocation: getClientLocation,*/
         GetApiKey: getApiKey,
-        SearchObjectByIdOnArray: searchObjectByIdOnArray
+        SearchObjectByIdOnArray: searchObjectByIdOnArray,
+        CanUseHeatmaps: canUseHeatmaps,
+        CanUseRAT: canUseRAT,
+        CanUseFunnels: canUseFunnels,
+        CanUseScreenRecorder: canUseScreenRecorder,
+        CanUseFormAnalysis: canUseFormAnalysis,
+        SetUseHeatmaps: setUseHeatmaps,
+        SetUseRAT: setUseRAT,
+        SetUseFunnels: setUseFunnels,
+        SetUseScreenRecorder: setUseScreenRecorder,
+        SetUseFormAnalysis: setUseFormAnalysis,
     };
 })()
 

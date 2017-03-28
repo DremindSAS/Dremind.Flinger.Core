@@ -58,7 +58,7 @@ var SocketHub = (function () {
 
             _socket.emit('Coplest.Flinger.AddApiKeyToSocket', { ApiKey: Cross.GetApiKey() })
 
-            pullEvent('SocketConnected')
+            _socket.emit('Coplest.Flinger.CanISendData', { ApiKey: Cross.GetApiKey() })
         });
         _socket.on('Coplest.Flinger.ServerEvent', function (data) {
             pullEvent(data.Command, data.Values)
@@ -170,6 +170,14 @@ var SocketHub = (function () {
         })
     }
 
+    var pushEvent = function (data) {
+        if (_socket != undefined) {
+            if (Cross.GetApiKey() != undefined && Cross.GetApiKey().length > 0) {
+                _socket.emit(data.Command, data.Values);
+            }
+        }
+    }
+
     /// Push an insight to server
     var pushInsight = function (data) {
         if (_socket != undefined) {
@@ -189,7 +197,7 @@ var SocketHub = (function () {
 
     /// Pull an event when server send a message
     var pullEvent = function (type, data) {
-        _socketEvent = new CustomEvent(type, data);
+        _socketEvent = new CustomEvent(type, {detail: data});
 
         document.dispatchEvent(_socketEvent);
         /// Example to cath event
@@ -204,6 +212,7 @@ var SocketHub = (function () {
         Initialize: constructor,
         GetSocket: getSocket,
         PushInsight: pushInsight,
-        PushScreenshot: pushScreenshot
+        PushScreenshot: pushScreenshot,
+        PushEvent: pushEvent,
     };
 })()
