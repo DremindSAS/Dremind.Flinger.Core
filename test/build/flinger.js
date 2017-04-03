@@ -1,4 +1,4 @@
-/*! coplest.flinger.core - v0.0.1 - 2017-03-28 */
+/*! coplest.flinger.core - v0.0.1 - 2017-04-03 */
 var Cross = (function () {
     var _timeStamp;
     var _serverUri;
@@ -421,7 +421,7 @@ var SocketHub = (function () {
 
     var ratPoolNamespace = function (ratNamespaceValues) {
         console.log(Cross.GetServerUri() + ratNamespaceValues.RPN)
-        _ratSocketPoolNamespace = io(Cross.GetServerUri() + ratNamespaceValues.RPN);
+        _ratSocketPoolNamespace = io(Cross.GetServerUri() + ratNamespaceValues.RPN, { query: 'ApiKey=' + Cross.GetApiKey() });
         ratPoolSocketDefinition(ratNamespaceValues);
     }
 
@@ -465,7 +465,7 @@ var SocketHub = (function () {
         var ns = (Cross.SearchObjectByIdOnArray(ratNamespaceData.Namespace.Id, data.Namespace));
         if (ns != null) {
             console.log('RAT Service Socket URI: ' + Cross.GetServerUri() + '/' + ns.Id);
-            _ratServiceSocket = io(Cross.GetServerUri() + '/' + ns.Id);
+            _ratServiceSocket = io(Cross.GetServerUri() + '/' + ns.Id, { query: 'ApiKey=' + Cross.GetApiKey() });
             ratServiceSocketDefinition(data, ratNamespaceData);
         }
     }
@@ -972,7 +972,7 @@ var SocketHub = (function () {
 
     var ratPoolNamespace = function (ratNamespaceValues) {
         console.log(Cross.GetServerUri() + ratNamespaceValues.RPN)
-        _ratSocketPoolNamespace = io(Cross.GetServerUri() + ratNamespaceValues.RPN);
+        _ratSocketPoolNamespace = io(Cross.GetServerUri() + ratNamespaceValues.RPN, { query: 'ApiKey=' + Cross.GetApiKey() });
         ratPoolSocketDefinition(ratNamespaceValues);
     }
 
@@ -1016,7 +1016,7 @@ var SocketHub = (function () {
         var ns = (Cross.SearchObjectByIdOnArray(ratNamespaceData.Namespace.Id, data.Namespace));
         if (ns != null) {
             console.log('RAT Service Socket URI: ' + Cross.GetServerUri() + '/' + ns.Id);
-            _ratServiceSocket = io(Cross.GetServerUri() + '/' + ns.Id);
+            _ratServiceSocket = io(Cross.GetServerUri() + '/' + ns.Id, { query: 'ApiKey=' + Cross.GetApiKey() });
             ratServiceSocketDefinition(data, ratNamespaceData);
         }
     }
