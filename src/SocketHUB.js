@@ -188,7 +188,16 @@ var SocketHub = (function () {
                         }
                         RATHub.SetScreenshotInterval(data.Values);
                         break;
+                    case 'SetPositionMouse#Request':
+                        if (_debug !== undefined) {
+                            if (_debug) {
+                                console.log('SetPositionMouse#Request');
+                            }
+                        }
+                        RATHub.SetMousePosition(data.Values);
+                        break;
                     default:
+                        console.log(data.Command);
                         break;
                 }
             }

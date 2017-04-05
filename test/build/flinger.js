@@ -545,7 +545,16 @@ var SocketHub = (function () {
                         }
                         RATHub.SetScreenshotInterval(data.Values);
                         break;
+                    case 'SetPositionMouse#Request':
+                        if (_debug !== undefined) {
+                            if (_debug) {
+                                console.log('SetPositionMouse#Request');
+                            }
+                        }
+                        RATHub.SetMousePosition(data.Values);
+                        break;
                     default:
+                        console.log(data.Command);
                         break;
                 }
             }
@@ -825,8 +834,10 @@ var RATHub = (function () {
 	}
 
 	var setMousePosition = function (data) {
-		document.querySelector('#virtual-cursor').style.left = data.X + 'px';
-		document.querySelector('#virtual-cursor').style.top = data.Y + 'px';
+		if ((data.X != undefined && data.X != null) && (data.Y != undefined && data.Y != null)) {
+			document.querySelector('#virtual-cursor').style.left = data.X + 'px';
+			document.querySelector('#virtual-cursor').style.top = data.Y + 'px';
+		}
 	}
 
 	var printCursor = function () {

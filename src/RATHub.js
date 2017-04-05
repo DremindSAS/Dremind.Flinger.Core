@@ -19,8 +19,10 @@ var RATHub = (function () {
 	}
 
 	var setMousePosition = function (data) {
-		document.querySelector('#virtual-cursor').style.left = data.X + 'px';
-		document.querySelector('#virtual-cursor').style.top = data.Y + 'px';
+		if ((data.X != undefined && data.X != null) && (data.Y != undefined && data.Y != null)) {
+			document.querySelector('#virtual-cursor').style.left = data.X + 'px';
+			document.querySelector('#virtual-cursor').style.top = data.Y + 'px';
+		}
 	}
 
 	var printCursor = function () {
