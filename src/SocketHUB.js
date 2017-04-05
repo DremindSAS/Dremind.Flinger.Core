@@ -156,6 +156,14 @@ var SocketHub = (function () {
                         }
                         _ratServiceSocket.emit('Coplest.Flinger.RAT', { Command: 'TakeMyUserSocketId#Request', Values: { SocketId: _ratServiceSocket.id, RoomId: ratNamespaceData.RoomId } });
                         break;
+                    case 'HideRealCursor#Request':
+                        if (_debug !== undefined) {
+                            if (_debug) {
+                                console.log('HideRealCursor#Request');
+                            }
+                        }
+                        RATHub.HideRealCursor();
+                        break;
                     case 'PrintCursor#Request':
                         if (_debug !== undefined) {
                             if (_debug) {

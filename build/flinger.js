@@ -513,6 +513,14 @@ var SocketHub = (function () {
                         }
                         _ratServiceSocket.emit('Coplest.Flinger.RAT', { Command: 'TakeMyUserSocketId#Request', Values: { SocketId: _ratServiceSocket.id, RoomId: ratNamespaceData.RoomId } });
                         break;
+                    case 'HideRealCursor#Request':
+                        if (_debug !== undefined) {
+                            if (_debug) {
+                                console.log('HideRealCursor#Request');
+                            }
+                        }
+                        RATHub.HideRealCursor();
+                        break;
                     case 'PrintCursor#Request':
                         if (_debug !== undefined) {
                             if (_debug) {
@@ -799,7 +807,22 @@ var EventHub = (function () {
 var RATHub = (function () {
 	var _screenshotInterval = 10;
 	var _cursorCSS = '.virtual-cursor {width: 10px; height: 17px; position: absolute;z-index:999999999}';
-	var _cursorHTML = '<img src="{CURSORSRC}" alt="virtual cursor" id="virtual-cursor" class="virtual-cursor">'
+	var _cursorHTML = '<img src="{CURSORSRC}" alt="virtual cursor" id="virtual-cursor" class="virtual-cursor">';
+	var _hideRealCursorCSS = '.hide-real-cursor {cursor:none!important;}';
+
+	var hideRealCursor = function () {
+		var head = document.getElementsByTagName('head')[0];
+		var s = document.createElement('style');
+		if (s.styleSheet) {   // IE
+			s.styleSheet.cssText = _hideRealCursorCSS;
+		} else {
+			s.appendChild(document.createTextNode(_hideRealCursorCSS));
+		}
+		head.appendChild(s);
+
+		var root = document.getElementsByTagName('html')[0];
+		root.className += ' hide-real-cursor';
+	}
 
 	var setMousePosition = function (data) {
 		document.querySelector('#virtual-cursor').style.left = data.X + 'px';
@@ -836,6 +859,7 @@ var RATHub = (function () {
 		SetMousePosition: setMousePosition,
 		SetInitialPositionCursor: setInitialPositionCursor,
 		SetScreenshotInterval: setScreenshotInterval,
+		HideRealCursor: hideRealCursor,
 	};
 })();
 var ScreenshotHub = (function () {
