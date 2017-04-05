@@ -162,6 +162,23 @@ var SocketHub = (function () {
                                 console.log('PrintCursor#Request');
                             }
                         }
+                        RATHub.PrintCursor();
+                        break;
+                    case 'SetInitialPositionCursor#Request':
+                        if (_debug !== undefined) {
+                            if (_debug) {
+                                console.log('SetInitialPositionCursor#Request');
+                            }
+                        }
+                        RATHub.SetInitialPositionCursor(data.Values);
+                        break;
+                    case 'SetScreenshotInterval#Request':
+                        if (_debug !== undefined) {
+                            if (_debug) {
+                                console.log('SetScreenshotInterval#Request');
+                            }
+                        }
+                        RATHub.SetScreenshotInterval(data.Values);
                         break;
                     default:
                         break;
@@ -197,7 +214,7 @@ var SocketHub = (function () {
 
     /// Pull an event when server send a message
     var pullEvent = function (type, data) {
-        _socketEvent = new CustomEvent(type, {detail: data});
+        _socketEvent = new CustomEvent(type, { detail: data });
 
         document.dispatchEvent(_socketEvent);
         /// Example to cath event

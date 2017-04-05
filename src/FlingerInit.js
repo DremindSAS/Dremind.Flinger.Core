@@ -27,6 +27,6 @@ var Flinger = (function() {
       GetNotSentMouseMovementEvents : EventHub.GetNotSentMouseMovementEvents,
       GetNotSentMouseScrollEvents : EventHub.GetNotSentMouseScrollEvents
   };
-})()
+})();
 
 Flinger.Initialize();

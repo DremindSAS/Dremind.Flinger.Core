@@ -12,8 +12,9 @@ module.exports = function (grunt) {
                 src: [
                     './src/Cross.js',
                     './src/SocketHub.js',
-                    './src/*.js',
-                    '!./src/FlingerInit.js',
+                    './src/EventHUB.js',
+                    './src/RATHub.js',
+                    './src/ScreenshotHub.js',
                     './src/FlingerInit.js'
                 ],
                 dest: './build/flinger.js'
@@ -32,6 +33,11 @@ module.exports = function (grunt) {
                     {expand: true, src: ['./build/*'], dest: './test/', filter: 'isFile'},
                 ]
                 
+            },
+            FlingerAssetsTest:{
+                files:[
+                    {expand: true, src: ['./assets/*'], dest: './test/build/', filter: 'isFile'}
+                ]
             },
             FlingerAssets:{
                 files:[

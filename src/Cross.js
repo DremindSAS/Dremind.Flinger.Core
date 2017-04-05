@@ -1,6 +1,7 @@
 var Cross = (function () {
     var _timeStamp;
     var _serverUri;
+    var _coreUri;
     var _clientInformation;
     var _clientStrings = [
         { s: 'Windows 10', r: /(Windows 10.0|Windows NT 10.0)/ },
@@ -45,6 +46,7 @@ var Cross = (function () {
 
         _timeStamp = new Date();
         _serverUri = "http://localhost:3500";//"http://13.84.164.38:3500";
+        _coreUri = "http://localhost:3501";
         setApiKey();
         analyzeClient();
         setUseHeatmaps(null);
@@ -52,7 +54,7 @@ var Cross = (function () {
         setUseFunnels(null);
         setUseScreenRecorder(null);
         setUseFormAnalysis(null);
-        //injectUserLocationLibrary();
+        createStringToDOMPrototype();
     }
 
     var setApiKey = function () {
@@ -248,6 +250,10 @@ var Cross = (function () {
         return _serverUri;
     }
 
+    var getCoreUri = function(){
+        return _coreUri;
+    }
+
     var getClientInformation = function () {
         return _clientInformation;
     }
@@ -309,11 +315,26 @@ var Cross = (function () {
         return null;
     }
 
+    var createStringToDOMPrototype = function () {
+        String.prototype.toDOM = function () {
+            var d = document
+                , i
+                , a = d.createElement("div")
+                , b = d.createDocumentFragment();
+            a.innerHTML = this;
+            while (i = a.firstChild) b.appendChild(i);
+            return b;
+        };
+    }
+
+
+
     return {
         Initialize: constructor,
         TimeStamp: timeStamp,
         GetScrollPosition: getScrollPosition,
         GetServerUri: getServerUri,
+        GetCoreUri: getCoreUri,
         GetClientInformation: getClientInformation,
         /*GetClientLocation: getClientLocation,*/
         GetApiKey: getApiKey,
@@ -328,7 +349,8 @@ var Cross = (function () {
         SetUseFunnels: setUseFunnels,
         SetUseScreenRecorder: setUseScreenRecorder,
         SetUseFormAnalysis: setUseFormAnalysis,
+        CreateStringToDOMPrototype: createStringToDOMPrototype,
     };
-})()
+})();
 
-Cross.Initialize();
+Cross.Initialize()

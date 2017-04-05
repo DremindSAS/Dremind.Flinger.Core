@@ -1,7 +1,8 @@
-/*! coplest.flinger.core - v0.0.1 - 2017-04-03 */
+/*! coplest.flinger.core - v0.0.1 - 2017-04-05 */
 var Cross = (function () {
     var _timeStamp;
     var _serverUri;
+    var _coreUri;
     var _clientInformation;
     var _clientStrings = [
         { s: 'Windows 10', r: /(Windows 10.0|Windows NT 10.0)/ },
@@ -46,6 +47,7 @@ var Cross = (function () {
 
         _timeStamp = new Date();
         _serverUri = "http://localhost:3500";//"http://13.84.164.38:3500";
+        _coreUri = "http://localhost:3501";
         setApiKey();
         analyzeClient();
         setUseHeatmaps(null);
@@ -53,7 +55,7 @@ var Cross = (function () {
         setUseFunnels(null);
         setUseScreenRecorder(null);
         setUseFormAnalysis(null);
-        //injectUserLocationLibrary();
+        createStringToDOMPrototype();
     }
 
     var setApiKey = function () {
@@ -249,6 +251,10 @@ var Cross = (function () {
         return _serverUri;
     }
 
+    var getCoreUri = function(){
+        return _coreUri;
+    }
+
     var getClientInformation = function () {
         return _clientInformation;
     }
@@ -310,11 +316,26 @@ var Cross = (function () {
         return null;
     }
 
+    var createStringToDOMPrototype = function () {
+        String.prototype.toDOM = function () {
+            var d = document
+                , i
+                , a = d.createElement("div")
+                , b = d.createDocumentFragment();
+            a.innerHTML = this;
+            while (i = a.firstChild) b.appendChild(i);
+            return b;
+        };
+    }
+
+
+
     return {
         Initialize: constructor,
         TimeStamp: timeStamp,
         GetScrollPosition: getScrollPosition,
         GetServerUri: getServerUri,
+        GetCoreUri: getCoreUri,
         GetClientInformation: getClientInformation,
         /*GetClientLocation: getClientLocation,*/
         GetApiKey: getApiKey,
@@ -329,10 +350,11 @@ var Cross = (function () {
         SetUseFunnels: setUseFunnels,
         SetUseScreenRecorder: setUseScreenRecorder,
         SetUseFormAnalysis: setUseFormAnalysis,
+        CreateStringToDOMPrototype: createStringToDOMPrototype,
     };
-})()
+})();
 
-Cross.Initialize();;
+Cross.Initialize();
 var SocketHub = (function () {
 
     /// Properties
@@ -497,6 +519,23 @@ var SocketHub = (function () {
                                 console.log('PrintCursor#Request');
                             }
                         }
+                        RATHub.PrintCursor();
+                        break;
+                    case 'SetInitialPositionCursor#Request':
+                        if (_debug !== undefined) {
+                            if (_debug) {
+                                console.log('SetInitialPositionCursor#Request');
+                            }
+                        }
+                        RATHub.SetInitialPositionCursor(data.Values);
+                        break;
+                    case 'SetScreenshotInterval#Request':
+                        if (_debug !== undefined) {
+                            if (_debug) {
+                                console.log('SetScreenshotInterval#Request');
+                            }
+                        }
+                        RATHub.SetScreenshotInterval(data.Values);
                         break;
                     default:
                         break;
@@ -532,7 +571,7 @@ var SocketHub = (function () {
 
     /// Pull an event when server send a message
     var pullEvent = function (type, data) {
-        _socketEvent = new CustomEvent(type, {detail: data});
+        _socketEvent = new CustomEvent(type, { detail: data });
 
         document.dispatchEvent(_socketEvent);
         /// Example to cath event
@@ -757,47 +796,47 @@ var EventHub = (function () {
         GetNotSentMouseScrollEvents: getNotSentMouseScrollEvents
     };
 })();
-var FormHub = (function() {
-  var privateVariable = 10;
+var RATHub = (function () {
+	var _screenshotInterval = 10;
+	var _cursorCSS = '.virtual-cursor {width: 10px; height: 17px; position: absolute;z-index:999999999}';
+	var _cursorHTML = '<img src="{CURSORSRC}" alt="virtual cursor" id="virtual-cursor" class="virtual-cursor">'
 
-  var privateMethod = function() {
-    console.log('Inside a private method!');
-    privateVariable++;
-  }
+	var setMousePosition = function (data) {
+		document.querySelector('#virtual-cursor').style.left = data.X + 'px';
+		document.querySelector('#virtual-cursor').style.top = data.Y + 'px';
+	}
 
-  var methodToExpose = function() {
-    console.log('This is a method I want to expose!');
-  }
+	var printCursor = function () {
+		// Inject virtual cursor style
+		var head = document.getElementsByTagName('head')[0];
+		var s = document.createElement('style');
+		if (s.styleSheet) {   // IE
+			s.styleSheet.cssText = _cursorCSS;
+		} else {
+			s.appendChild(document.createTextNode(_cursorCSS));
+		}
+		head.appendChild(s);
 
-  var otherMethodIWantToExpose = function() {
-    privateMethod();
-  }
+		var body = document.getElementsByTagName('body')[0];
+		var cursor = _cursorHTML.replace('{CURSORSRC}', Cross.GetCoreUri() + '/build/assets/fake_cursor.png');
+		var virtualCursor = cursor.toDOM();
+		body.appendChild(virtualCursor);
+	}
 
-  return {
-      first: methodToExpose,
-      second: otherMethodIWantToExpose
-  };
-})();
-var RATHub = (function() {
-  var privateVariable = 10;
+	var setInitialPositionCursor = function (data) {
+		setMousePosition(data);
+	}
 
-  var privateMethod = function() {
-    console.log('Inside a private method!');
-    privateVariable++;
-  }
+	var setScreenshotInterval = function (data) {
+		_screenshotInterval = data.Interval;
+	}
 
-  var methodToExpose = function() {
-    console.log('This is a method I want to expose!');
-  }
-
-  var otherMethodIWantToExpose = function() {
-    privateMethod();
-  }
-
-  return {
-      first: methodToExpose,
-      second: otherMethodIWantToExpose
-  };
+	return {
+		PrintCursor: printCursor,
+		SetMousePosition: setMousePosition,
+		SetInitialPositionCursor: setInitialPositionCursor,
+		SetScreenshotInterval: setScreenshotInterval,
+	};
 })();
 var ScreenshotHub = (function () {
     /// Properties
@@ -884,224 +923,6 @@ var ScreenshotHub = (function () {
         TakeScreenshot: takeScreenshot
     };
 })();;
-var SocketHub = (function () {
-
-    /// Properties
-    var _debug;
-    var _socket;
-    var _socketEvent;
-    var _ratSocketPoolNamespace;
-    var _ratServiceSocket;
-    var _socketId;
-
-    /// Initialize component
-    var constructor = function (params) {
-        if (params != undefined) {
-            _debug = params.Debug;
-        }
-
-        injectSocketClientLibrary();
-    }
-
-    var injectSocketClientLibrary = function () {
-        var head = document.getElementsByTagName('head')[0];
-        var script = document.createElement('script');
-        script.type = 'text/javascript';
-        script.onload = socketLibrary_loaded;
-        script.src = 'https://cdn.socket.io/socket.io-1.4.5.js';
-        head.appendChild(script);
-    }
-
-    /// When Socket library is loaded 
-    var socketLibrary_loaded = function () {
-        connectSocket();
-        if (_debug !== undefined) {
-            if (_debug) {
-                console.log('Socket Library is loaded succesfully');
-            }
-        }
-    }
-
-    /// Connection to Socket Server
-    var connectSocket = function () {
-        if (_debug !== undefined) {
-            if (_debug) {
-                console.log('Connecting to server...');
-            }
-        }
-        _socket = io(Cross.GetServerUri() + '/user-pool-namespace', { query: 'ApiKey=' + Cross.GetApiKey() });
-        socketDefinition();
-    }
-
-    /// Define all events from socket
-    var socketDefinition = function () {
-        _socket.on('connect', function () {
-            if (_debug !== undefined) {
-                if (_debug) {
-                    console.log('Connection to server succesfully');
-                }
-            }
-
-            _socket.emit('Coplest.Flinger.AddApiKeyToSocket', { ApiKey: Cross.GetApiKey() })
-
-            _socket.emit('Coplest.Flinger.CanISendData', { ApiKey: Cross.GetApiKey() })
-        });
-        _socket.on('Coplest.Flinger.ServerEvent', function (data) {
-            pullEvent(data.Command, data.Values)
-        });
-        _socket.on('disconnect', function () {
-            if (_debug !== undefined) {
-                if (_debug) {
-                    console.log('Disconected from server')
-                }
-            }
-        });
-        _socket.on('Coplest.Flinger.RAT', function (data) {
-            if (data.Command != undefined) {
-                switch (data.Command) {
-                    case 'RATPoolConnection#Request':
-                        ratPoolNamespace(data.Values);
-                        break;
-
-                    default:
-                        break;
-                }
-            }
-        })
-    }
-
-    var ratPoolNamespace = function (ratNamespaceValues) {
-        console.log(Cross.GetServerUri() + ratNamespaceValues.RPN)
-        _ratSocketPoolNamespace = io(Cross.GetServerUri() + ratNamespaceValues.RPN, { query: 'ApiKey=' + Cross.GetApiKey() });
-        ratPoolSocketDefinition(ratNamespaceValues);
-    }
-
-    var ratPoolSocketDefinition = function (ratNamespaceValues) {
-        _ratSocketPoolNamespace.on('connect', function (data) {
-            if (_debug !== undefined) {
-                if (_debug) {
-                    console.log('Connection to RAT Pool Namespace succesfully');
-                }
-            }
-        })
-
-        _ratSocketPoolNamespace.on('Coplest.Flinger.RAT', function (data) {
-            if (data.Command != undefined) {
-                switch (data.Command) {
-                    case 'ConnectedToRPN#Response':
-                        if (_debug !== undefined) {
-                            if (_debug) {
-                                console.log('Socket Event: ConnectedToRPN#Response');
-                            }
-                        }
-                        _socketId = data.Values.SocketId;
-                        _ratSocketPoolNamespace.emit('Coplest.Flinger.RAT', { Command: 'ConnectToRATServiceNamespace#Request', Values: { Namespace: ratNamespaceValues.Namespace } }, function (data) {
-                            if (_debug !== undefined) {
-                                if (_debug) {
-                                    console.log('Socket Event: ConnectToRATServiceNamespace#Request');
-                                }
-                            }
-                            ratServiceNamespace(data.Values, ratNamespaceValues);
-                        });
-                        break;
-
-                    default:
-                        break;
-                }
-            }
-        })
-    }
-
-    var ratServiceNamespace = function (data, ratNamespaceData) {
-        var ns = (Cross.SearchObjectByIdOnArray(ratNamespaceData.Namespace.Id, data.Namespace));
-        if (ns != null) {
-            console.log('RAT Service Socket URI: ' + Cross.GetServerUri() + '/' + ns.Id);
-            _ratServiceSocket = io(Cross.GetServerUri() + '/' + ns.Id, { query: 'ApiKey=' + Cross.GetApiKey() });
-            ratServiceSocketDefinition(data, ratNamespaceData);
-        }
-    }
-
-    var ratServiceSocketDefinition = function (data, ratNamespaceData) {
-        _ratServiceSocket.on('Coplest.Flinger.RAT', function (data) {
-            if (data.Command != undefined) {
-                switch (data.Command) {
-                    case 'ConnectedToRSN#Response':
-                        if (_debug !== undefined) {
-                            if (_debug) {
-                                console.log('Socket Event: ConnectedToRSN#Response');
-                            }
-                        }
-                        _socketId = data.Values.SocketId;
-                        _ratServiceSocket.emit('Coplest.Flinger.RAT', { Command: 'UserJoinToPrivateRoom#Request', Values: { SocketId: _ratServiceSocket.id, RoomId: ratNamespaceData.RoomId } });
-                        break;
-                    case 'UserJoinToPrivateRoom#Response':
-                        if (_debug !== undefined) {
-                            if (_debug) {
-                                console.log('Socket Event: UserJoinToPrivateRoom#Response');
-                            }
-                        }
-                        _ratServiceSocket.emit('Coplest.Flinger.RAT', { Command: 'TakeMyUserSocketId#Request', Values: { SocketId: _ratServiceSocket.id, RoomId: ratNamespaceData.RoomId } });
-                        break;
-                    case 'PrintCursor#Request':
-                        if (_debug !== undefined) {
-                            if (_debug) {
-                                console.log('PrintCursor#Request');
-                            }
-                        }
-                        break;
-                    default:
-                        break;
-                }
-            }
-        })
-    }
-
-    var pushEvent = function (data) {
-        if (_socket != undefined) {
-            if (Cross.GetApiKey() != undefined && Cross.GetApiKey().length > 0) {
-                _socket.emit(data.Command, data.Values);
-            }
-        }
-    }
-
-    /// Push an insight to server
-    var pushInsight = function (data) {
-        if (_socket != undefined) {
-            if (Cross.GetApiKey() != undefined && Cross.GetApiKey().length > 0) {
-                _socket.emit('Coplest.Flinger.PushInsight', data);
-            }
-        }
-    }
-
-    var pushScreenshot = function (data) {
-        if (_socket != undefined) {
-            if (Cross.GetApiKey() != undefined && Cross.GetApiKey().length > 0) {
-                _socket.emit('Coplest.Flinger.PushScreenshot', data);
-            }
-        }
-    }
-
-    /// Pull an event when server send a message
-    var pullEvent = function (type, data) {
-        _socketEvent = new CustomEvent(type, {detail: data});
-
-        document.dispatchEvent(_socketEvent);
-        /// Example to cath event
-        //document.addEventListener("type", handlerFunction, false);
-    }
-
-    var getSocket = function () {
-        return _socket;
-    }
-
-    return {
-        Initialize: constructor,
-        GetSocket: getSocket,
-        PushInsight: pushInsight,
-        PushScreenshot: pushScreenshot,
-        PushEvent: pushEvent,
-    };
-})();
 var Flinger = (function() {
   var _flingerElement;
   var _debugFlinger;
@@ -1131,6 +952,6 @@ var Flinger = (function() {
       GetNotSentMouseMovementEvents : EventHub.GetNotSentMouseMovementEvents,
       GetNotSentMouseScrollEvents : EventHub.GetNotSentMouseScrollEvents
   };
-})()
+})();
 
 Flinger.Initialize();
