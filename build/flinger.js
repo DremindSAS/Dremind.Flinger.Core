@@ -46,8 +46,8 @@ var Cross = (function () {
         }
 
         _timeStamp = new Date();
-        _serverUri = "http://192.168.0.6:3500";//"http://13.84.164.38:3500";
-        _coreUri = "http://192.168.0.6:3501";
+        _serverUri = "http://crawlerbackend.azurewebsites.net";//"http://13.84.164.38:3500";
+        _coreUri = "http://crawlersite-kernel.azurewebsites.net"; 
         setApiKey();
         analyzeClient();
         setUseHeatmaps(null);
