@@ -46,8 +46,8 @@ var Cross = (function () {
         }
 
         _timeStamp = new Date();
-        _serverUri = "http://localhost:3500";//"http://13.84.164.38:3500";
-        _coreUri = "http://localhost:3501";
+        _serverUri = "http://192.168.0.6:3500";//"http://13.84.164.38:3500";
+        _coreUri = "http://192.168.0.6:3501";
         setApiKey();
         analyzeClient();
         setUseHeatmaps(null);
