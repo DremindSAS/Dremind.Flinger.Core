@@ -28,17 +28,6 @@ module.exports = function (grunt) {
             }
         },
         copy: {
-            FlingerJSTest: {
-                files: [
-                    {expand: true, src: ['./build/*'], dest: './test/', filter: 'isFile'},
-                ]
-                
-            },
-            FlingerAssetsTest:{
-                files:[
-                    {expand: true, src: ['./assets/*'], dest: './test/build/', filter: 'isFile'}
-                ]
-            },
             FlingerAssets:{
                 files:[
                     {expand: true, src: ['./assets/*'], dest: './build/', filter: 'isFile'}

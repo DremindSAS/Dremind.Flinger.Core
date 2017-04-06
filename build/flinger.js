@@ -1,4 +1,4 @@
-/*! coplest.flinger.core - v0.0.1 - 2017-04-05 */
+/*! coplest.flinger.core - v0.0.1 - 2017-04-06 */
 var Cross = (function () {
     var _timeStamp;
     var _serverUri;
