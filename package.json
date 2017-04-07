@@ -45,10 +45,17 @@
     "grunt-contrib-copy": "^1.0.0",
     "gzip-js": "0.3.2",
     "load-grunt-tasks": "3.5.0",
-    "requirejs": "2.2.0"
+    "requirejs": "2.2.0",
+    "express": "latest",
+    "morgan": "latest",
+    "body-parser": "latest",
+    "ejs": "latest",
+    "open": "latest",
+    "cors": "latest"
   },
   "scripts": {
     "build": "npm install && grunt",
-    "dev": "grunt watch"
+    "dev": "grunt watch",
+    "start": "node app.js"
   }
 }
