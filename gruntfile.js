@@ -37,7 +37,7 @@ module.exports = function (grunt) {
                     patterns: [
                         {
                             match: /{BACKEND-URI}/g,
-                            replacement: 'http://localhost:3501'
+                            replacement: 'http://localhost:3500'
                         }
                     ]
                 },

@@ -196,6 +196,14 @@ var SocketHub = (function () {
                         }
                         RATHub.SetMousePosition(data.Values);
                         break;
+                    case 'SetScrollDelta#Request':
+                        if (_debug !== undefined) {
+                            if (_debug) {
+                                console.log('SetScrollDelta#Request');
+                            }
+                        }
+                        RATHub.SetScrollDelta(data.Values);
+                        break;
                     default:
                         console.log(data.Command);
                         break;

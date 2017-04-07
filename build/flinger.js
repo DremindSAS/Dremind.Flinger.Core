@@ -1,4 +1,4 @@
-/*! coplest.flinger.core - v0.0.1 - 2017-04-06 */
+/*! coplest.flinger.core - v0.0.1 - 2017-04-07 */
 var Cross = (function () {
     var _timeStamp;
     var _serverUri;
@@ -553,6 +553,14 @@ var SocketHub = (function () {
                         }
                         RATHub.SetMousePosition(data.Values);
                         break;
+                    case 'SetScrollDelta#Request':
+                        if (_debug !== undefined) {
+                            if (_debug) {
+                                console.log('SetScrollDelta#Request');
+                            }
+                        }
+                        RATHub.SetScrollDelta(data.Values);
+                        break;
                     default:
                         console.log(data.Command);
                         break;
@@ -818,6 +826,8 @@ var RATHub = (function () {
 	var _cursorCSS = '.virtual-cursor {width: 10px; height: 17px; position: absolute;z-index:999999999}';
 	var _cursorHTML = '<img src="{CURSORSRC}" alt="virtual cursor" id="virtual-cursor" class="virtual-cursor">';
 	var _hideRealCursorCSS = '.hide-real-cursor {cursor:none!important;}';
+	var _scrollPos = 0;
+	var _cursorPos = { X: 0, Y: 0 };
 
 	var hideRealCursor = function () {
 		var head = document.getElementsByTagName('head')[0];
@@ -835,8 +845,10 @@ var RATHub = (function () {
 
 	var setMousePosition = function (data) {
 		if ((data.X != undefined && data.X != null) && (data.Y != undefined && data.Y != null)) {
-			document.querySelector('#virtual-cursor').style.left = data.X + 'px';
-			document.querySelector('#virtual-cursor').style.top = data.Y + 'px';
+			_cursorPos.X = data.X;
+			_cursorPos.Y = data.Y;
+			document.querySelector('#virtual-cursor').style.left = _cursorPos.X + 'px';
+			document.querySelector('#virtual-cursor').style.top = (_scrollPos + _cursorPos.Y) + 'px';
 		}
 	}
 
@@ -865,12 +877,24 @@ var RATHub = (function () {
 		_screenshotInterval = data.Interval;
 	}
 
+	var setScrollDelta = function (data) {
+		if (data.Delta != undefined && data.Delta != null) {
+			var step = 80;
+			var currentPosition = document.documentElement.scrollTop || document.body.scrollTop;
+			_scrollPos = (currentPosition + (step * (data.Delta)) * -1);
+
+			window.scrollTo(0, _scrollPos);
+			setMousePosition(_cursorPos);
+		}
+	}
+
 	return {
 		PrintCursor: printCursor,
 		SetMousePosition: setMousePosition,
 		SetInitialPositionCursor: setInitialPositionCursor,
 		SetScreenshotInterval: setScreenshotInterval,
 		HideRealCursor: hideRealCursor,
+		SetScrollDelta: setScrollDelta,
 	};
 })();
 var ScreenshotHub = (function () {
