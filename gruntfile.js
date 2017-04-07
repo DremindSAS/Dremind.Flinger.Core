@@ -8,7 +8,18 @@ module.exports = function (grunt) {
                 banner: '/*! <%= pkg.name %> - v<%= pkg.version %> - ' +
                 '<%= grunt.template.today("yyyy-mm-dd") %> */\n',
             },
-            FlingerJS: {
+            FlingerDevJS: {
+                src: [
+                    './src/Cross.js',
+                    './src/SocketHub.js',
+                    './src/EventHUB.js',
+                    './src/RATHub.js',
+                    './src/ScreenshotHub.js',
+                    './src/FlingerInit.js'
+                ],
+                dest: './dev-build/flinger.js'
+            },
+            FlingerProductionJS: {
                 src: [
                     './src/Cross.js',
                     './src/SocketHub.js',
@@ -20,17 +31,81 @@ module.exports = function (grunt) {
                 dest: './build/flinger.js'
             }
         },
+        replace: {
+            FlingerBackendDevJS: {
+                options: {
+                    patterns: [
+                        {
+                            match: /{BACKEND-URI}/g,
+                            replacement: 'http://localhost:3501'
+                        }
+                    ]
+                },
+                files: [
+                    { expand: true, flatten: true, src: ['dev-build/flinger.js'], dest: 'dev-build/' }
+                ]
+            },
+            FlingerBackendProductionJS: {
+                options: {
+                    patterns: [
+                        {
+                            match: /{BACKEND-URI}/g,
+                            replacement: 'http://crawlerbackend.azurewebsites.net'
+                        }
+                    ]
+                },
+                files: [
+                    { expand: true, flatten: true, src: ['build/flinger.js'], dest: 'build/' }
+                ]
+            },
+            FlingerCoreDevJS: {
+                options: {
+                    patterns: [
+                        {
+                            match: /{CORE-URI}/g,
+                            replacement: 'http://localhost:3501'
+                        }
+                    ]
+                },
+                files: [
+                    { expand: true, flatten: true, src: ['dev-build/flinger.js'], dest: 'dev-build/' }
+                ]
+            },
+            FlingerCoreProductionJS: {
+                options: {
+                    patterns: [
+                        {
+                            match: /{CORE-URI}/g,
+                            replacement: 'http://crawlersite-kernel.azurewebsites.net'
+                        }
+                    ]
+                },
+                files: [
+                    { expand: true, flatten: true, src: ['build/flinger.js'], dest: 'build/' }
+                ]
+            },
+        },
         uglify: {
-            FlingerMinJS: {
+            FlingerProductionMinJS: {
                 files: {
                     './build/flinger.min.js': './build/flinger.js'
+                }
+            },
+            FlingerDevMinJS: {
+                files: {
+                    './dev-build/flinger.min.js': './dev-build/flinger.js'
                 }
             }
         },
         copy: {
-            FlingerAssets:{
-                files:[
-                    {expand: true, src: ['./assets/*'], dest: './build/', filter: 'isFile'}
+            FlingerProductionAssets: {
+                files: [
+                    { expand: true, src: ['./assets/*'], dest: './build/', filter: 'isFile' }
+                ]
+            },
+            FlingerDevAssets: {
+                files: [
+                    { expand: true, src: ['./assets/*'], dest: './dev-build/', filter: 'isFile' }
                 ]
             }
         },
@@ -44,6 +119,7 @@ module.exports = function (grunt) {
     grunt.loadNpmTasks('grunt-contrib-concat');
     grunt.loadNpmTasks('grunt-contrib-uglify');
     grunt.loadNpmTasks('grunt-contrib-watch');
+    grunt.loadNpmTasks('grunt-replace');
 
-    grunt.registerTask('default', ['concat', 'uglify', 'copy']);
+    grunt.registerTask('default', ['concat', 'replace', 'uglify', 'copy']);
 };
