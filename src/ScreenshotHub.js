@@ -49,6 +49,10 @@ var ScreenshotHub = (function () {
 
     var takeScreenshot = function () {
         html2canvas(document.body).then(function (canvas) {
+            ctx = canvas.getContext("2d");
+            ctx.scale(0.5, 0.5);
+            ctx.save();
+            document.querySelector(".img-responsive").setAttribute('src', canvas.toDataURL('image/jpeg', 0.3));
             document.getElementById('screenshot-result').appendChild(canvas);
 
             if (_isOnDescoveryMode == true) {
@@ -58,7 +62,7 @@ var ScreenshotHub = (function () {
     }
 
     var saveScreenshot = function () {
-        if (_isOnDescoveryMode) {            
+        if (_isOnDescoveryMode) {
             var canvas = document.querySelector('#screenshot-result>canvas');
 
             SocketHub.PushScreenshot({ Command: 'Scroll', Values: { Base64Data: canvas.toDataURL(), Endpoint: document.location.pathname, ApiKey: Cross.GetApiKey() } })

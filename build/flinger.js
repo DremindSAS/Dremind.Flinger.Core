@@ -1,4 +1,4 @@
-/*! coplest.flinger.core - v0.0.1 - 2017-04-07 */
+/*! coplest.flinger.core - v0.0.1 - 2017-04-11 */
 var Cross = (function () {
     var _timeStamp;
     var _serverUri;
@@ -561,6 +561,14 @@ var SocketHub = (function () {
                         }
                         RATHub.SetScrollDelta(data.Values);
                         break;
+                    case 'Click#Request':
+                        if (_debug !== undefined) {
+                            if (_debug) {
+                                console.log('Click#Request');
+                            }
+                        }
+                        RATHub.VirtualClick(data.Values);
+                        break;
                     default:
                         console.log(data.Command);
                         break;
@@ -822,12 +830,43 @@ var EventHub = (function () {
     };
 })();
 var RATHub = (function () {
+
+	/// Properties
+	var _debug;
 	var _screenshotInterval = 10;
-	var _cursorCSS = '.virtual-cursor {width: 10px; height: 17px; position: absolute;z-index:999999999}';
+	var _cursorCSS = '.virtual-cursor {width: 10px; height: 17px; position: absolute;z-index:999999999;pointer-events: none!important;}';
 	var _cursorHTML = '<img src="{CURSORSRC}" alt="virtual cursor" id="virtual-cursor" class="virtual-cursor">';
 	var _hideRealCursorCSS = '.hide-real-cursor {cursor:none!important;}';
 	var _scrollPos = 0;
 	var _cursorPos = { X: 0, Y: 0 };
+
+	/// Initialize component
+	var constructor = function (params) {
+		if (params != undefined) {
+			_debug = params.Debug;
+		}
+	}
+
+	var mouseEventPolyfill = function () {
+		try {
+			new CustomEvent('test');
+		} catch (e) {
+			// Polyfills DOM4 CustomEvent
+			function MouseEvent(eventType, params) {
+				params = params || { bubbles: false, cancelable: false };
+				var mouseEvent = document.createEvent('MouseEvent');
+				mouseEvent.initMouseEvent(eventType, params.bubbles, params.cancelable, window, 0, 0, 0, 0, 0, false, false, false, false, 0, null);
+
+				return mouseEvent;
+			}
+
+			MouseEvent.prototype = Event.prototype;
+
+			window.MouseEvent = MouseEvent;
+		}
+
+
+	}
 
 	var hideRealCursor = function () {
 		var head = document.getElementsByTagName('head')[0];
@@ -849,6 +888,19 @@ var RATHub = (function () {
 			_cursorPos.Y = data.Y;
 			document.querySelector('#virtual-cursor').style.left = _cursorPos.X + 'px';
 			document.querySelector('#virtual-cursor').style.top = (_scrollPos + _cursorPos.Y) + 'px';
+		}
+	}
+
+	var virtualClick = function (data) {
+		if ((data.X != undefined && data.X != null) && (data.Y != undefined && data.Y != null)) {
+			var event = new MouseEvent("click", {
+				bubbles: true,
+				cancelable: true,
+				view: window
+			});
+			var elm = document.elementFromPoint(data.X, data.Y);
+			console.log(elm);
+			document.elementFromPoint(data.X, data.Y).dispatchEvent(event);
 		}
 	}
 
@@ -889,12 +941,14 @@ var RATHub = (function () {
 	}
 
 	return {
+		Initialize: constructor,
 		PrintCursor: printCursor,
 		SetMousePosition: setMousePosition,
 		SetInitialPositionCursor: setInitialPositionCursor,
 		SetScreenshotInterval: setScreenshotInterval,
 		HideRealCursor: hideRealCursor,
 		SetScrollDelta: setScrollDelta,
+		VirtualClick: virtualClick,
 	};
 })();
 var ScreenshotHub = (function () {
@@ -948,6 +1002,10 @@ var ScreenshotHub = (function () {
 
     var takeScreenshot = function () {
         html2canvas(document.body).then(function (canvas) {
+            ctx = canvas.getContext("2d");
+            ctx.scale(0.5, 0.5);
+            ctx.save();
+            document.querySelector(".img-responsive").setAttribute('src', canvas.toDataURL('image/jpeg', 0.3));
             document.getElementById('screenshot-result').appendChild(canvas);
 
             if (_isOnDescoveryMode == true) {
@@ -957,7 +1015,7 @@ var ScreenshotHub = (function () {
     }
 
     var saveScreenshot = function () {
-        if (_isOnDescoveryMode) {            
+        if (_isOnDescoveryMode) {
             var canvas = document.querySelector('#screenshot-result>canvas');
 
             SocketHub.PushScreenshot({ Command: 'Scroll', Values: { Base64Data: canvas.toDataURL(), Endpoint: document.location.pathname, ApiKey: Cross.GetApiKey() } })
@@ -997,6 +1055,7 @@ var Flinger = (function() {
 
     SocketHub.Initialize({Debug : _debugFlinger});
     ScreenshotHub.Initialize({Debug : _debugFlinger});
+    RATHub.Initialize({Debug : _debugFlinger});
 
     // Event Hub definition
     EventHub.Initialize({Debug : _debugFlinger});

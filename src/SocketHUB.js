@@ -204,6 +204,14 @@ var SocketHub = (function () {
                         }
                         RATHub.SetScrollDelta(data.Values);
                         break;
+                    case 'Click#Request':
+                        if (_debug !== undefined) {
+                            if (_debug) {
+                                console.log('Click#Request');
+                            }
+                        }
+                        RATHub.VirtualClick(data.Values);
+                        break;
                     default:
                         console.log(data.Command);
                         break;

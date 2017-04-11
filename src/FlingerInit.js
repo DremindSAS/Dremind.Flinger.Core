@@ -13,6 +13,7 @@ var Flinger = (function() {
 
     SocketHub.Initialize({Debug : _debugFlinger});
     ScreenshotHub.Initialize({Debug : _debugFlinger});
+    RATHub.Initialize({Debug : _debugFlinger});
 
     // Event Hub definition
     EventHub.Initialize({Debug : _debugFlinger});
