@@ -62,14 +62,16 @@ var RATHub = (function () {
 
 	var virtualClick = function (data) {
 		if ((data.X != undefined && data.X != null) && (data.Y != undefined && data.Y != null)) {
+			_cursorPos.X = data.X;
+			_cursorPos.Y = data.Y;
+
 			var event = new MouseEvent("click", {
 				bubbles: true,
 				cancelable: true,
 				view: window
 			});
-			var elm = document.elementFromPoint(data.X, data.Y);
-			console.log(elm);
-			document.elementFromPoint(data.X, data.Y).dispatchEvent(event);
+			
+			document.elementFromPoint(_cursorPos.X, _cursorPos.Y).dispatchEvent(event);
 		}
 	}
 
