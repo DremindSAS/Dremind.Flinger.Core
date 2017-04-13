@@ -888,6 +888,18 @@ var RATHub = (function () {
 			_cursorPos.Y = data.Y;
 			document.querySelector('#virtual-cursor').style.left = _cursorPos.X + 'px';
 			document.querySelector('#virtual-cursor').style.top = (_scrollPos + _cursorPos.Y) + 'px';
+
+			var selectedElement = document.elementFromPoint(_cursorPos.X, _cursorPos.Y);
+			if (selectedElement != undefined && selectedElement != null) {
+				var event = new MouseEvent("mouseover", {
+					bubbles: true,
+					cancelable: true,
+					view: window
+				});
+
+				selectedElement.dispatchEvent(event);
+				console.log(selectedElement);
+			}
 		}
 	}
 
@@ -901,7 +913,7 @@ var RATHub = (function () {
 				cancelable: true,
 				view: window
 			});
-			
+
 			document.elementFromPoint(_cursorPos.X, _cursorPos.Y).dispatchEvent(event);
 		}
 	}
@@ -1007,7 +1019,7 @@ var ScreenshotHub = (function () {
             ctx = canvas.getContext("2d");
             ctx.scale(0.5, 0.5);
             ctx.save();
-            document.querySelector(".img-responsive").setAttribute('src', canvas.toDataURL('image/jpeg', 0.3));
+            //document.querySelector(".img-responsive").setAttribute('src', canvas.toDataURL('image/jpeg', 0.3));
             document.getElementById('screenshot-result').appendChild(canvas);
 
             if (_isOnDescoveryMode == true) {

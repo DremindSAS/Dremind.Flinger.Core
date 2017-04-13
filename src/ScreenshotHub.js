@@ -52,7 +52,7 @@ var ScreenshotHub = (function () {
             ctx = canvas.getContext("2d");
             ctx.scale(0.5, 0.5);
             ctx.save();
-            document.querySelector(".img-responsive").setAttribute('src', canvas.toDataURL('image/jpeg', 0.3));
+            //document.querySelector(".img-responsive").setAttribute('src', canvas.toDataURL('image/jpeg', 0.3));
             document.getElementById('screenshot-result').appendChild(canvas);
 
             if (_isOnDescoveryMode == true) {
