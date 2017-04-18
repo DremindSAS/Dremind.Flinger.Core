@@ -42,17 +42,21 @@ app.listen(normalizedPort);
 
 console.log('Dremind.Flinger.Core on: http://localhost:' + normalizedPort);
 
-var spawn = require('child_process').spawn,
-    ls = spawn('cmd.exe', ['/c', __dirname + "/run_npm_dev.cmd"]);
+var env = process.env.NODE_ENV || 'dev';
 
-ls.stdout.on('data', function (data) {
-    console.log('' + data);
-});
+if (env === 'dev') {
+    var spawn = require('child_process').spawn,
+        ls = spawn('cmd.exe', ['/c', __dirname + "/run_npm_dev.cmd"]);
 
-ls.stderr.on('data', function (data) {
-    console.log('stderr: ' + data);
-});
+    ls.stdout.on('data', function (data) {
+        console.log('' + data);
+    });
 
-ls.on('exit', function (code) {
-    console.log('child process exited with code ' + code);
-});
+    ls.stderr.on('data', function (data) {
+        console.log('stderr: ' + data);
+    });
+
+    ls.on('exit', function (code) {
+        console.log('child process exited with code ' + code);
+    });
+}
