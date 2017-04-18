@@ -56,6 +56,6 @@
   "scripts": {
     "build": "npm install && grunt",
     "dev": "grunt watch",
-    "start-dev": "node app.js"
+    "start": "node app.js"
   }
 }
