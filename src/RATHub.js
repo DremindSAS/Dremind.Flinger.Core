@@ -61,6 +61,7 @@ var RATHub = (function () {
 
 	var denyControl = function(){
 		SocketHub.PushEventRAT({Command:'UserDenyControl#Response', Values: {RoomId: _roomId}});
+		SocketHUB.ConnectUserPoolNamespaceSocket();
 	}
 
 	var allowControl = function(){

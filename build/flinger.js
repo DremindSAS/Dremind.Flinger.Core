@@ -427,7 +427,7 @@ var SocketHub = (function () {
 
     /// When Socket library is loaded 
     var socketLibrary_loaded = function () {
-        connectSocket();
+        connectUserPoolNamespaceSocket();
         if (_debug !== undefined) {
             if (_debug) {
                 console.log('Socket Library is loaded succesfully');
@@ -436,7 +436,7 @@ var SocketHub = (function () {
     }
 
     /// Connection to Socket Server
-    var connectSocket = function () {
+    var connectUserPoolNamespaceSocket = function () {
         if (_debug !== undefined) {
             if (_debug) {
                 console.log('Connecting to server...');
@@ -675,6 +675,7 @@ var SocketHub = (function () {
 
     return {
         Initialize: constructor,
+        ConnectUserPoolNamespaceSocket: connectUserPoolNamespaceSocket,
         GetSocket: getSocket,
         PushInsight: pushInsight,
         PushScreenshot: pushScreenshot,
@@ -951,6 +952,7 @@ var RATHub = (function () {
 
 	var denyControl = function(){
 		SocketHub.PushEventRAT({Command:'UserDenyControl#Response', Values: {RoomId: _roomId}});
+		SocketHUB.ConnectUserPoolNamespaceSocket();
 	}
 
 	var allowControl = function(){
