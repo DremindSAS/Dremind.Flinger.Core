@@ -894,7 +894,7 @@ var RATHub = (function () {
 			injectModalScripts(function () {
 				injectModalHTML(function () {
 					var $CrawlerSite = Cross.GetFlingerObj();
-					$CrawlerSite.Dialog = {
+					$CrawlerSite.RATDialog = {
 						_dlg: {},
 						Initialize: function () {
 							var dialog = document.getElementById("dialog");
@@ -905,7 +905,7 @@ var RATHub = (function () {
 						},
 						SetData: function (title, text, acceptBtnText, closeBtnText) {
 							document.querySelector("#dialog>.dialog__content>h2").textContent = title == undefined ? "Remote Administration Tool" : title;
-							document.querySelector("#dialog>.dialog__content>h4").textContent = text == undefined ? "Web site administrator want to control your session, did you accept?" : text;
+							document.querySelector("#dialog>.dialog__content>h4").textContent = text == undefined ? "Web site administrator want to control your session, do you want to accept?" : text;
 							document.querySelector("#dialog>.dialog__content>div>.accept-button").textContent = acceptBtnText == undefined ? "ALLOW" : acceptBtnText;
 							document.querySelector("#dialog>.dialog__content>div>.cancel-button").textContent = closeBtnText == undefined ? "CLOSE" : closeBtnText;
 						}
@@ -913,7 +913,8 @@ var RATHub = (function () {
 
 					Cross.SetFlingerObj($CrawlerSite);
 
-					$CrawlerSite.Dialog.Initialize();
+					Cross.GetFlingerObj().RATDialog.Initialize();
+					Cross.GetFlingerObj().RATDialog.Initialize();
 				});
 			});
 		});
