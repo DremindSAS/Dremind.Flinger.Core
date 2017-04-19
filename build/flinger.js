@@ -880,7 +880,8 @@ var RATHub = (function () {
 
 	/// Properties
 	var _debug;
-	var _screenshotInterval = 10;
+	var _screenshotIntervalTime = 10;
+	var _screenshotInterval = null;
 	var _cursorCSS = '.virtual-cursor {width: 10px; height: 17px; position: absolute;z-index:999999999;pointer-events: none!important;}';
 	var _cursorHTML = '<img src="{CURSORSRC}" alt="virtual cursor" id="virtual-cursor" class="virtual-cursor">';
 	var _hideRealCursorCSS = '.hide-real-cursor {cursor:none!important;}';
@@ -1072,7 +1073,13 @@ var RATHub = (function () {
 	}
 
 	var setScreenshotInterval = function (data) {
-		_screenshotInterval = data.Interval;
+		_screenshotIntervalTime = data.Interval;
+
+		_screenshotInterval = setInterval(function(){
+			ScreenshotHub.TakeScreenshot(function(screenshot){
+				// Do Something
+			})
+		}, _screenshotIntervalTime);
 	}
 
 	var setScrollDelta = function (data) {
