@@ -560,7 +560,7 @@ var SocketHub = (function () {
                             if (_debug) {
                                 console.log('AllowControl#Request');
                             }
-                        }debugger;
+                        }
                         RATHub.InjectModal(data.Values);
                         break;
                     case 'HideRealCursor#Request':
@@ -629,7 +629,7 @@ var SocketHub = (function () {
 
     var pushEventRAT = function(data){
         if (_ratServiceSocket != undefined) {
-            if (Cross.GetApiKey() != undefined && Cross.GetApiKey().length > 0) {debugger;
+            if (Cross.GetApiKey() != undefined && Cross.GetApiKey().length > 0) {
                 _ratServiceSocket.emit('Coplest.Flinger.RAT', { Command: data.Command, Values: data.Values });
             }
         }
@@ -939,10 +939,18 @@ var RATHub = (function () {
 						allowControl();
 					}
 
+					document.getElementById('deny-control').onclick = function(){
+						denyControl();
+					}
+
 					Cross.GetFlingerObj().RATDialog.Toggle();
 				});
 			});
 		});
+	}
+
+	var denyControl = function(){
+		SocketHub.PushEventRAT({Command:'UserDenyControl#Response', Values: {RoomId: _roomId}});
 	}
 
 	var allowControl = function(){
@@ -952,7 +960,7 @@ var RATHub = (function () {
 	}
 
 	var injectModalHTML = function (callback) {
-		var html = '<div id="rat-dialog" class="dialog"><div class="dialog__overlay"></div><div class="dialog__content"><h2></h2><h4></h4><div><button id="allow-control" class="action accept-button">Accept</button><button class="action cancel-button" data-dialog-close>Close</button></div></div></div>';
+		var html = '<div id="rat-dialog" class="dialog"><div class="dialog__overlay"></div><div class="dialog__content"><h2></h2><h4></h4><div><button id="allow-control" class="action accept-button">Accept</button><button id="deny-control" class="action cancel-button" data-dialog-close>Close</button></div></div></div>';
 		var range = document.createRange();
 		range.selectNode(document.body);
 
