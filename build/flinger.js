@@ -1041,7 +1041,7 @@ var RATHub = (function () {
 				});
 
 				selectedElement.dispatchEvent(event);
-				console.log(selectedElement);
+				//console.log(selectedElement);
 			}
 		}
 	}
