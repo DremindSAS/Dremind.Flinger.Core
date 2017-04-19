@@ -43,7 +43,7 @@ var Cross = (function () {
         if (params != undefined) {
             _debug = params.Debug;
         }
-
+        
         _timeStamp = new Date();
         _serverUri = "{BACKEND-URI}";
         _coreUri = "{CORE-URI}"; 

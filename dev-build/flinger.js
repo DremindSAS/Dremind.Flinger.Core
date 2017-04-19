@@ -1,4 +1,4 @@
-/*! coplest.flinger.core - v0.0.1 - 2017-04-12 */
+/*! crawlersite.kernel - v0.0.1 - 2017-04-18 */
 var Cross = (function () {
     var _timeStamp;
     var _serverUri;
@@ -44,7 +44,7 @@ var Cross = (function () {
         if (params != undefined) {
             _debug = params.Debug;
         }
-
+        
         _timeStamp = new Date();
         _serverUri = "http://localhost:3500";
         _coreUri = "http://localhost:3501"; 
