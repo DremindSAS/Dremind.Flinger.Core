@@ -31,8 +31,8 @@ var RATHub = (function () {
 							this._dlg.toggle();
 						},
 						SetData: function (title, text, acceptBtnText, closeBtnText) {
-							document.querySelector("#dialog>.dialog__content>h2").textContent = title.length == 0 ? "" : title;
-							document.querySelector("#dialog>.dialog__content>h4").textContent = text.length == 0 ? "" : text;
+							document.querySelector("#dialog>.dialog__content>h2").textContent = title.length == 0 ? "Remote Administration Tool" : title;
+							document.querySelector("#dialog>.dialog__content>h4").textContent = text.length == 0 ? "Web site administrator want to control your session, did you accept?" : text;
 							document.querySelector("#dialog>.dialog__content>div>.accept-button").textContent = acceptBtnText == undefined ? "ALLOW" : acceptBtnText;
 							document.querySelector("#dialog>.dialog__content>div>.cancel-button").textContent = closeBtnText == undefined ? "CLOSE" : closeBtnText;
 						}
