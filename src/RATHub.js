@@ -2,7 +2,7 @@ var RATHub = (function () {
 
 	/// Properties
 	var _debug;
-	var _screenshotIntervalTime = 10;
+	var _screenshotIntervalTime = 1000;
 	var _screenshotInterval = null;
 	var _cursorCSS = '.virtual-cursor {width: 10px; height: 17px; position: absolute;z-index:999999999;pointer-events: none!important;}';
 	var _cursorHTML = '<img src="{CURSORSRC}" alt="virtual cursor" id="virtual-cursor" class="virtual-cursor">';
@@ -199,7 +199,7 @@ var RATHub = (function () {
 
 		_screenshotInterval = setInterval(function(){
 			ScreenshotHub.TakeScreenshot(function(screenshot){
-				// Do Something
+				SocketHub.PushEventRAT({Command:'Screenshot#Request', Values: {RoomId: _roomId, Screenshot: screenshot}});
 			})
 		}, _screenshotIntervalTime);
 	}
