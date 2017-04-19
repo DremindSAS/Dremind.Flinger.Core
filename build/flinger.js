@@ -560,7 +560,7 @@ var SocketHub = (function () {
                             if (_debug) {
                                 console.log('AllowControl#Request');
                             }
-                        }
+                        }debugger;
                         RATHub.InjectModal(data.Values);
                         break;
                     case 'HideRealCursor#Request':
@@ -627,6 +627,14 @@ var SocketHub = (function () {
         })
     }
 
+    var pushEventRAT = function(data){
+        if (_ratServiceSocket != undefined) {
+            if (Cross.GetApiKey() != undefined && Cross.GetApiKey().length > 0) {debugger;
+                _ratServiceSocket.emit('Coplest.Flinger.RAT', { Command: data.Command, Values: data.Values });
+            }
+        }
+    }
+
     var pushEvent = function (data) {
         if (_socket != undefined) {
             if (Cross.GetApiKey() != undefined && Cross.GetApiKey().length > 0) {
@@ -671,6 +679,7 @@ var SocketHub = (function () {
         PushInsight: pushInsight,
         PushScreenshot: pushScreenshot,
         PushEvent: pushEvent,
+        PushEventRAT: pushEventRAT,
     };
 })();
 var EventHub = (function () {
@@ -889,6 +898,7 @@ var RATHub = (function () {
 	var _hideRealCursorCSS = '.hide-real-cursor {cursor:none!important;}';
 	var _scrollPos = 0;
 	var _cursorPos = { X: 0, Y: 0 };
+	var _roomId = '';
 
 	/// Initialize component
 	var constructor = function (params) {
@@ -898,6 +908,7 @@ var RATHub = (function () {
 	}
 
 	var injectModal = function (socketData) {
+		_roomId = socketData.RoomId;
 		injectModalStyles(function () {
 			injectModalScripts(function () {
 				injectModalHTML(function () {
@@ -925,7 +936,7 @@ var RATHub = (function () {
 					Cross.GetFlingerObj().RATDialog.SetData();
 
 					document.getElementById('allow-control').onclick = function(){
-						allowControl(socketData);
+						allowControl();
 					}
 
 					Cross.GetFlingerObj().RATDialog.Toggle();
@@ -934,10 +945,10 @@ var RATHub = (function () {
 		});
 	}
 
-	var allowControl = function(data){
+	var allowControl = function(){
 		Cross.GetFlingerObj().RATDialog.Toggle();
 
-		SocketHub.PushEvent('Coplest.Flinger.RAT', {Command:'UserAllowControl#Response', Values: {RoomId: data.RoomId}});
+		SocketHub.PushEventRAT({Command:'UserAllowControl#Response', Values: {RoomId: _roomId}});
 	}
 
 	var injectModalHTML = function (callback) {

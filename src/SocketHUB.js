@@ -161,7 +161,7 @@ var SocketHub = (function () {
                             if (_debug) {
                                 console.log('AllowControl#Request');
                             }
-                        }
+                        }debugger;
                         RATHub.InjectModal(data.Values);
                         break;
                     case 'HideRealCursor#Request':
@@ -228,6 +228,14 @@ var SocketHub = (function () {
         })
     }
 
+    var pushEventRAT = function(data){
+        if (_ratServiceSocket != undefined) {
+            if (Cross.GetApiKey() != undefined && Cross.GetApiKey().length > 0) {debugger;
+                _ratServiceSocket.emit('Coplest.Flinger.RAT', { Command: data.Command, Values: data.Values });
+            }
+        }
+    }
+
     var pushEvent = function (data) {
         if (_socket != undefined) {
             if (Cross.GetApiKey() != undefined && Cross.GetApiKey().length > 0) {
@@ -272,5 +280,6 @@ var SocketHub = (function () {
         PushInsight: pushInsight,
         PushScreenshot: pushScreenshot,
         PushEvent: pushEvent,
+        PushEventRAT: pushEventRAT,
     };
 })()
