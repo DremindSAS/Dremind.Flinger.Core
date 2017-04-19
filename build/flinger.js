@@ -1158,33 +1158,25 @@ var ScreenshotHub = (function () {
             var height = canvas.height * ratio;
             var width = canvas.width * ratio
 
-            var elm = document.querySelector('#screenshot-result');
             var element = new Image();
-            //img.style.display = 'none';
+            
             element.src = canvas.toDataURL();
             element.onload = function () {
-                //context.drawImage(img, 0, 0);
-
                 var _canvas = document.createElement("canvas");
                 _canvas.width = width;
                 _canvas.height = height;
+
                 var ctx = _canvas.getContext("2d");
-                ctx.scale(0.56, 0.56);
+                ctx.scale(ratio, ratio);
                 ctx.drawImage(element, 0, 0);
                 ctx.save();
 
-                var base64 = _canvas.toDataURL('image/jpeg',1);
-                document.querySelector(".img-responsive").setAttribute('src', base64);
+                var base64Result = _canvas.toDataURL('image/jpeg',1);
+                //document.querySelector(".img-responsive").setAttribute('src', base64Result);
                 document.getElementById('screenshot-result').appendChild(_canvas);
+
+                callback(base64Result);
             }
-
-            /*ctx = canvas.getContext("2d");
-            ctx.scale(0.5, 0.5);
-            ctx.save();*/
-
-
-
-            callback();
         });
     }
 
