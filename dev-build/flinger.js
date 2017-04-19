@@ -1,4 +1,4 @@
-/*! crawlersite.kernel - v0.0.1 - 2017-04-18 */
+/*! crawlersite.kernel - v0.0.1 - 2017-04-19 */
 var Cross = (function () {
     var _timeStamp;
     var _serverUri;
@@ -39,15 +39,16 @@ var Cross = (function () {
     var _canUseFunnels;
     var _canUseScreenRecorder;
     var _canUseFormAnalysis;
+    var _flingerObj;
 
     var constructor = function (params) {
         if (params != undefined) {
             _debug = params.Debug;
         }
-        
+
         _timeStamp = new Date();
         _serverUri = "http://localhost:3500";
-        _coreUri = "http://localhost:3501"; 
+        _coreUri = "http://localhost:3501";
         setApiKey();
         analyzeClient();
         setUseHeatmaps(null);
@@ -56,6 +57,45 @@ var Cross = (function () {
         setUseScreenRecorder(null);
         setUseFormAnalysis(null);
         createStringToDOMPrototype();
+        setFlingerObj({});
+        querySelectorPolyfill();
+    }
+
+    var querySelectorPolyfill = function () {
+        if (!document.querySelectorAll) {
+            document.querySelectorAll = function (selectors) {
+                var style = document.createElement('style'), elements = [], element;
+                document.documentElement.firstChild.appendChild(style);
+                document._qsa = [];
+
+                style.styleSheet.cssText = selectors + '{x-qsa:expression(document._qsa && document._qsa.push(this))}';
+                window.scrollBy(0, 0);
+                style.parentNode.removeChild(style);
+
+                while (document._qsa.length) {
+                    element = document._qsa.shift();
+                    element.style.removeAttribute('x-qsa');
+                    elements.push(element);
+                }
+                document._qsa = null;
+                return elements;
+            };
+        }
+
+        if (!document.querySelector) {
+            document.querySelector = function (selectors) {
+                var elements = document.querySelectorAll(selectors);
+                return (elements.length) ? elements[0] : null;
+            };
+        }
+    }
+
+    var setFlingerObj = function (obj) {
+        _flingerObj = obj;
+    }
+
+    var getFlingerObj = function () {
+        return _flingerObj;
     }
 
     var setApiKey = function () {
@@ -251,7 +291,7 @@ var Cross = (function () {
         return _serverUri;
     }
 
-    var getCoreUri = function(){
+    var getCoreUri = function () {
         return _coreUri;
     }
 
@@ -351,6 +391,8 @@ var Cross = (function () {
         SetUseScreenRecorder: setUseScreenRecorder,
         SetUseFormAnalysis: setUseFormAnalysis,
         CreateStringToDOMPrototype: createStringToDOMPrototype,
+        SetFlingerObj: setFlingerObj,
+        GetFlingerObj: getFlingerObj,
     };
 })();
 
@@ -847,6 +889,67 @@ var RATHub = (function () {
 		}
 	}
 
+	var injectModal = function () {
+		injectModalStyles(function () {
+			injectModalScripts(function () {
+				injectModalHTML(function () {
+					var $CrawlerSite = Cross.GetFlingerObj();
+					$CrawlerSite.Dialog = {
+						_dlg: {},
+						Initialize: function () {
+							var dialog = document.getElementById("dialog");
+							this._dlg = new DialogFx(dialog);
+						},
+						Toggle: function () {
+							this._dlg.toggle();
+						},
+						SetData: function (title, text, acceptBtnText, closeBtnText) {
+							document.querySelector("#dialog>.dialog__content>h2").textContent = title.length == 0 ? "" : title;
+							document.querySelector("#dialog>.dialog__content>h4").textContent = text.length == 0 ? "" : text;
+							document.querySelector("#dialog>.dialog__content>div>.accept-button").textContent = acceptBtnText == undefined ? "ALLOW" : acceptBtnText;
+							document.querySelector("#dialog>.dialog__content>div>.cancel-button").textContent = closeBtnText == undefined ? "CLOSE" : closeBtnText;
+						}
+					}
+
+					Cross.SetFlingerObj($CrawlerSite);
+
+					$CrawlerSite.Dialog.Initialize();
+				});
+			});
+		});
+	}
+
+	var injectModalHTML = function (callback) {
+		var html = '<div id="dialog" class="dialog"><div class="dialog__overlay"></div><div class="dialog__content"><h2></h2><h4></h4><div><button class="action accept-button" data-dialog-close>Accept</button><button class="action cancel-button" data-dialog-close>Close</button></div></div></div>';
+		var range = document.createRange();
+		range.selectNode(document.body);
+
+		var fragment = range.createContextualFragment(html);
+		document.body.appendChild(fragment);
+		
+		callback();
+	}
+
+	var injectModalStyles = function (callback) {
+		var link = document.createElement('link');
+		link.type = 'text/css';
+		link.rel = 'stylesheet';
+		link.onload = function () { callback(); };
+		link.href = 'http://crawlersite-kernel.azurewebsites.net/build/assets/dialog.css';
+
+		var head = document.getElementsByTagName('head')[0];
+		head.appendChild(link);
+	}
+
+	var injectModalScripts = function (callback) {
+		var head = document.getElementsByTagName('head')[0];
+		var script = document.createElement('script');
+		script.type = 'text/javascript';
+		script.onload = function () { callback(); };
+		script.src = 'http://crawlersite-kernel.azurewebsites.net/build/assets/dialogFx.js';
+		head.appendChild(script);
+	}
+
 	var mouseEventPolyfill = function () {
 		try {
 			new CustomEvent('test');
@@ -963,6 +1066,7 @@ var RATHub = (function () {
 		HideRealCursor: hideRealCursor,
 		SetScrollDelta: setScrollDelta,
 		VirtualClick: virtualClick,
+		InjectModal: injectModal,
 	};
 })();
 var ScreenshotHub = (function () {
@@ -1054,36 +1158,36 @@ var ScreenshotHub = (function () {
         TakeScreenshot: takeScreenshot
     };
 })();;
-var Flinger = (function() {
-  var _flingerElement;
-  var _debugFlinger;
+var Flinger = (function () {
+	var _flingerElement;
+	var _debugFlinger;
 
-  var constructor = function() {
-    _flingerElement = document.querySelector('[data-flinger]');
+	var constructor = function () {
+		_flingerElement = document.querySelector('[data-flinger]');
 
-    // Check if script is on debug mode
-    _debugFlinger = _flingerElement.dataset.debug == undefined ? false : JSON.parse(_flingerElement.dataset.debug);
-    if(_debugFlinger === true){
-        console.log('Flinger is on debug mode');
-    }
+		// Check if script is on debug mode
+		_debugFlinger = _flingerElement.dataset.debug == undefined ? false : JSON.parse(_flingerElement.dataset.debug);
+		if (_debugFlinger === true) {
+			console.log('Flinger is on debug mode');
+		}
 
-    SocketHub.Initialize({Debug : _debugFlinger});
-    ScreenshotHub.Initialize({Debug : _debugFlinger});
-    RATHub.Initialize({Debug : _debugFlinger});
+		SocketHub.Initialize({ Debug: _debugFlinger });
+		ScreenshotHub.Initialize({ Debug: _debugFlinger });
+		RATHub.Initialize({ Debug: _debugFlinger });
 
-    // Event Hub definition
-    EventHub.Initialize({Debug : _debugFlinger});
-    EventHub.ListenMouseClick();
-    EventHub.ListenMouseMovement();
-    EventHub.ListenMouseScroll();
-  }
+		// Event Hub definition
+		EventHub.Initialize({ Debug: _debugFlinger });
+		EventHub.ListenMouseClick();
+		EventHub.ListenMouseMovement();
+		EventHub.ListenMouseScroll();
+	}
 
-  return {
-      Initialize: constructor,
-      GetNotSentMouseClickEvents : EventHub.GetNotSentMouseClickEvents,
-      GetNotSentMouseMovementEvents : EventHub.GetNotSentMouseMovementEvents,
-      GetNotSentMouseScrollEvents : EventHub.GetNotSentMouseScrollEvents
-  };
+	return {
+		Initialize: constructor,
+		GetNotSentMouseClickEvents: EventHub.GetNotSentMouseClickEvents,
+		GetNotSentMouseMovementEvents: EventHub.GetNotSentMouseMovementEvents,
+		GetNotSentMouseScrollEvents: EventHub.GetNotSentMouseScrollEvents
+	};
 })();
 
 Flinger.Initialize();

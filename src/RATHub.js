@@ -16,6 +16,67 @@ var RATHub = (function () {
 		}
 	}
 
+	var injectModal = function () {
+		injectModalStyles(function () {
+			injectModalScripts(function () {
+				injectModalHTML(function () {
+					var $CrawlerSite = Cross.GetFlingerObj();
+					$CrawlerSite.Dialog = {
+						_dlg: {},
+						Initialize: function () {
+							var dialog = document.getElementById("dialog");
+							this._dlg = new DialogFx(dialog);
+						},
+						Toggle: function () {
+							this._dlg.toggle();
+						},
+						SetData: function (title, text, acceptBtnText, closeBtnText) {
+							document.querySelector("#dialog>.dialog__content>h2").textContent = title.length == 0 ? "" : title;
+							document.querySelector("#dialog>.dialog__content>h4").textContent = text.length == 0 ? "" : text;
+							document.querySelector("#dialog>.dialog__content>div>.accept-button").textContent = acceptBtnText == undefined ? "ALLOW" : acceptBtnText;
+							document.querySelector("#dialog>.dialog__content>div>.cancel-button").textContent = closeBtnText == undefined ? "CLOSE" : closeBtnText;
+						}
+					}
+
+					Cross.SetFlingerObj($CrawlerSite);
+
+					$CrawlerSite.Dialog.Initialize();
+				});
+			});
+		});
+	}
+
+	var injectModalHTML = function (callback) {
+		var html = '<div id="dialog" class="dialog"><div class="dialog__overlay"></div><div class="dialog__content"><h2></h2><h4></h4><div><button class="action accept-button" data-dialog-close>Accept</button><button class="action cancel-button" data-dialog-close>Close</button></div></div></div>';
+		var range = document.createRange();
+		range.selectNode(document.body);
+
+		var fragment = range.createContextualFragment(html);
+		document.body.appendChild(fragment);
+		
+		callback();
+	}
+
+	var injectModalStyles = function (callback) {
+		var link = document.createElement('link');
+		link.type = 'text/css';
+		link.rel = 'stylesheet';
+		link.onload = function () { callback(); };
+		link.href = 'http://crawlersite-kernel.azurewebsites.net/build/assets/dialog.css';
+
+		var head = document.getElementsByTagName('head')[0];
+		head.appendChild(link);
+	}
+
+	var injectModalScripts = function (callback) {
+		var head = document.getElementsByTagName('head')[0];
+		var script = document.createElement('script');
+		script.type = 'text/javascript';
+		script.onload = function () { callback(); };
+		script.src = 'http://crawlersite-kernel.azurewebsites.net/build/assets/dialogFx.js';
+		head.appendChild(script);
+	}
+
 	var mouseEventPolyfill = function () {
 		try {
 			new CustomEvent('test');
@@ -132,5 +193,6 @@ var RATHub = (function () {
 		HideRealCursor: hideRealCursor,
 		SetScrollDelta: setScrollDelta,
 		VirtualClick: virtualClick,
+		InjectModal: injectModal,
 	};
 })()

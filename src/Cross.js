@@ -38,15 +38,16 @@ var Cross = (function () {
     var _canUseFunnels;
     var _canUseScreenRecorder;
     var _canUseFormAnalysis;
+    var _flingerObj;
 
     var constructor = function (params) {
         if (params != undefined) {
             _debug = params.Debug;
         }
-        
+
         _timeStamp = new Date();
         _serverUri = "{BACKEND-URI}";
-        _coreUri = "{CORE-URI}"; 
+        _coreUri = "{CORE-URI}";
         setApiKey();
         analyzeClient();
         setUseHeatmaps(null);
@@ -55,6 +56,45 @@ var Cross = (function () {
         setUseScreenRecorder(null);
         setUseFormAnalysis(null);
         createStringToDOMPrototype();
+        setFlingerObj({});
+        querySelectorPolyfill();
+    }
+
+    var querySelectorPolyfill = function () {
+        if (!document.querySelectorAll) {
+            document.querySelectorAll = function (selectors) {
+                var style = document.createElement('style'), elements = [], element;
+                document.documentElement.firstChild.appendChild(style);
+                document._qsa = [];
+
+                style.styleSheet.cssText = selectors + '{x-qsa:expression(document._qsa && document._qsa.push(this))}';
+                window.scrollBy(0, 0);
+                style.parentNode.removeChild(style);
+
+                while (document._qsa.length) {
+                    element = document._qsa.shift();
+                    element.style.removeAttribute('x-qsa');
+                    elements.push(element);
+                }
+                document._qsa = null;
+                return elements;
+            };
+        }
+
+        if (!document.querySelector) {
+            document.querySelector = function (selectors) {
+                var elements = document.querySelectorAll(selectors);
+                return (elements.length) ? elements[0] : null;
+            };
+        }
+    }
+
+    var setFlingerObj = function (obj) {
+        _flingerObj = obj;
+    }
+
+    var getFlingerObj = function () {
+        return _flingerObj;
     }
 
     var setApiKey = function () {
@@ -250,7 +290,7 @@ var Cross = (function () {
         return _serverUri;
     }
 
-    var getCoreUri = function(){
+    var getCoreUri = function () {
         return _coreUri;
     }
 
@@ -350,6 +390,8 @@ var Cross = (function () {
         SetUseScreenRecorder: setUseScreenRecorder,
         SetUseFormAnalysis: setUseFormAnalysis,
         CreateStringToDOMPrototype: createStringToDOMPrototype,
+        SetFlingerObj: setFlingerObj,
+        GetFlingerObj: getFlingerObj,
     };
 })();
 
