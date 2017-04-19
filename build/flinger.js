@@ -555,6 +555,14 @@ var SocketHub = (function () {
                         }
                         _ratServiceSocket.emit('Coplest.Flinger.RAT', { Command: 'TakeMyUserSocketId#Request', Values: { SocketId: _ratServiceSocket.id, RoomId: ratNamespaceData.RoomId } });
                         break;
+                    case 'AllowControl#Request':
+                        if (_debug !== undefined) {
+                            if (_debug) {
+                                console.log('AllowControl#Request');
+                            }
+                        }
+                        RATHub.InjectModal(data.Values);
+                        break;
                     case 'HideRealCursor#Request':
                         if (_debug !== undefined) {
                             if (_debug) {
@@ -889,7 +897,7 @@ var RATHub = (function () {
 		}
 	}
 
-	var injectModal = function () {
+	var injectModal = function (socketData) {
 		injectModalStyles(function () {
 			injectModalScripts(function () {
 				injectModalHTML(function () {
@@ -915,13 +923,25 @@ var RATHub = (function () {
 
 					Cross.GetFlingerObj().RATDialog.Initialize();
 					Cross.GetFlingerObj().RATDialog.SetData();
+
+					document.getElementById('allow-control').onclick = function(){
+						allowControl(socketData);
+					}
+
+					Cross.GetFlingerObj().RATDialog.Toggle();
 				});
 			});
 		});
 	}
 
+	var allowControl = function(data){
+		Cross.GetFlingerObj().RATDialog.Toggle();
+
+		SocketHub.PushEvent('Coplest.Flinger.RAT', {Command:'UserAllowControl#Response', Values: {RoomId: data.RoomId}});
+	}
+
 	var injectModalHTML = function (callback) {
-		var html = '<div id="rat-dialog" class="dialog"><div class="dialog__overlay"></div><div class="dialog__content"><h2></h2><h4></h4><div><button class="action accept-button">Accept</button><button class="action cancel-button" data-dialog-close>Close</button></div></div></div>';
+		var html = '<div id="rat-dialog" class="dialog"><div class="dialog__overlay"></div><div class="dialog__content"><h2></h2><h4></h4><div><button id="allow-control" class="action accept-button">Accept</button><button class="action cancel-button" data-dialog-close>Close</button></div></div></div>';
 		var range = document.createRange();
 		range.selectNode(document.body);
 
