@@ -4,4 +4,4 @@
 
 # Developing library
 
-> npm run start
+> npm start

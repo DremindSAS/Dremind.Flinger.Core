@@ -17,7 +17,7 @@ var ScreenshotHub = (function () {
         var script = document.createElement('script');
         script.type = 'text/javascript';
         script.onload = injecthtml2canvasSVGLibrary;
-        script.src = 'https://cdn.rawgit.com/niklasvh/html2canvas/0.5.0-alpha1/dist/html2canvas.min.js';
+        script.src = '{CORE-URI}/build/assets/html2canvas.min.js';
         head.appendChild(script);
     }
 
@@ -26,7 +26,7 @@ var ScreenshotHub = (function () {
         var script2 = document.createElement('script');
         script2.type = 'text/javascript';
         script2.onload = html2canvasLibrary_loaded;
-        script2.src = 'https://cdn.rawgit.com/niklasvh/html2canvas/0.5.0-alpha1/dist/html2canvas.svg.min.js';
+        script2.src = '{CORE-URI}/build/assets/html2canvas.svg.min.js';
         head.appendChild(script2);
     }
 
@@ -44,10 +44,14 @@ var ScreenshotHub = (function () {
             }
         }
         body.appendChild(div);
-        takeScreenshot();
+        takeScreenshot(function(){
+            if (_isOnDescoveryMode == true) {
+                saveScreenshot();
+            }
+        });
     }
 
-    var takeScreenshot = function () {
+    var takeScreenshot = function (callback) {
         html2canvas(document.body).then(function (canvas) {
             ctx = canvas.getContext("2d");
             ctx.scale(0.5, 0.5);
@@ -55,9 +59,7 @@ var ScreenshotHub = (function () {
             //document.querySelector(".img-responsive").setAttribute('src', canvas.toDataURL('image/jpeg', 0.3));
             document.getElementById('screenshot-result').appendChild(canvas);
 
-            if (_isOnDescoveryMode == true) {
-                saveScreenshot();
-            }
+            callback();
         });
     }
 
