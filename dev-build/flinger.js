@@ -1144,7 +1144,7 @@ var ScreenshotHub = (function () {
             }
         }
         body.appendChild(div);
-        takeScreenshot(function(){
+        takeScreenshot(function () {
             if (_isOnDescoveryMode == true) {
                 saveScreenshot();
             }
@@ -1153,11 +1153,36 @@ var ScreenshotHub = (function () {
 
     var takeScreenshot = function (callback) {
         html2canvas(document.body).then(function (canvas) {
-            ctx = canvas.getContext("2d");
+            var maxWidth = 850;
+            var ratio = maxWidth / canvas.width;
+            var height = canvas.height * ratio;
+            var width = canvas.width * ratio
+
+            var elm = document.querySelector('#screenshot-result');
+            var element = new Image();
+            //img.style.display = 'none';
+            element.src = canvas.toDataURL();
+            element.onload = function () {
+                //context.drawImage(img, 0, 0);
+
+                var _canvas = document.createElement("canvas");
+                _canvas.width = width;
+                _canvas.height = height;
+                var ctx = _canvas.getContext("2d");
+                ctx.scale(0.56, 0.56);
+                ctx.drawImage(element, 0, 0);
+                ctx.save();
+
+                var base64 = _canvas.toDataURL('image/jpeg',1);
+                document.querySelector(".img-responsive").setAttribute('src', base64);
+                document.getElementById('screenshot-result').appendChild(_canvas);
+            }
+
+            /*ctx = canvas.getContext("2d");
             ctx.scale(0.5, 0.5);
-            ctx.save();
-            //document.querySelector(".img-responsive").setAttribute('src', canvas.toDataURL('image/jpeg', 0.3));
-            document.getElementById('screenshot-result').appendChild(canvas);
+            ctx.save();*/
+
+
 
             callback();
         });
