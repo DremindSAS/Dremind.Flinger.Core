@@ -897,31 +897,31 @@ var RATHub = (function () {
 					$CrawlerSite.RATDialog = {
 						_dlg: {},
 						Initialize: function () {
-							var dialog = document.getElementById("dialog");
+							var dialog = document.getElementById("rat-dialog");
 							this._dlg = new DialogFx(dialog);
 						},
 						Toggle: function () {
 							this._dlg.toggle();
 						},
 						SetData: function (title, text, acceptBtnText, closeBtnText) {
-							document.querySelector("#dialog>.dialog__content>h2").textContent = title == undefined ? "Remote Administration Tool" : title;
-							document.querySelector("#dialog>.dialog__content>h4").textContent = text == undefined ? "Web site administrator want to control your session, do you want to accept?" : text;
-							document.querySelector("#dialog>.dialog__content>div>.accept-button").textContent = acceptBtnText == undefined ? "ALLOW" : acceptBtnText;
-							document.querySelector("#dialog>.dialog__content>div>.cancel-button").textContent = closeBtnText == undefined ? "CLOSE" : closeBtnText;
+							document.querySelector("#rat-dialog>.dialog__content>h2").textContent = title == undefined ? "Remote Administration Tool" : title;
+							document.querySelector("#rat-dialog>.dialog__content>h4").textContent = text == undefined ? "Web site administrator want to control your session, do you want to accept?" : text;
+							document.querySelector("#rat-dialog>.dialog__content>div>.accept-button").textContent = acceptBtnText == undefined ? "ALLOW" : acceptBtnText;
+							document.querySelector("#rat-dialog>.dialog__content>div>.cancel-button").textContent = closeBtnText == undefined ? "CLOSE" : closeBtnText;
 						}
 					}
 
 					Cross.SetFlingerObj($CrawlerSite);
 
 					Cross.GetFlingerObj().RATDialog.Initialize();
-					Cross.GetFlingerObj().RATDialog.Initialize();
+					Cross.GetFlingerObj().RATDialog.SetData();
 				});
 			});
 		});
 	}
 
 	var injectModalHTML = function (callback) {
-		var html = '<div id="dialog" class="dialog"><div class="dialog__overlay"></div><div class="dialog__content"><h2></h2><h4></h4><div><button class="action accept-button" data-dialog-close>Accept</button><button class="action cancel-button" data-dialog-close>Close</button></div></div></div>';
+		var html = '<div id="rat-dialog" class="dialog"><div class="dialog__overlay"></div><div class="dialog__content"><h2></h2><h4></h4><div><button class="action accept-button" data-dialog-close>Accept</button><button class="action cancel-button" data-dialog-close>Close</button></div></div></div>';
 		var range = document.createRange();
 		range.selectNode(document.body);
 
