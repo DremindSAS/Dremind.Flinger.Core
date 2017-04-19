@@ -263,14 +263,6 @@ var Cross = (function () {
         }
     }
 
-    /*var injectUserLocationLibrary = function () {
-        var head = document.getElementsByTagName('head')[0];
-        var script = document.createElement('script');
-        script.onload = userLocationLibrary_loaded;
-        script.src = 'http://js.maxmind.com/js/apis/geoip2/v2.1/geoip2.js';
-        head.appendChild(script);
-    }*/
-
     var userLocationLibrary_loaded = function () {
         geoip2.city(locationSuccesfuly, locationFails);
     }
@@ -298,10 +290,6 @@ var Cross = (function () {
     var getClientInformation = function () {
         return _clientInformation;
     }
-
-    /*var getClientLocation = function () {
-        return _clientLocation;
-    }*/
 
     var getApiKey = function () {
         return _apiKey;
@@ -377,7 +365,6 @@ var Cross = (function () {
         GetServerUri: getServerUri,
         GetCoreUri: getCoreUri,
         GetClientInformation: getClientInformation,
-        /*GetClientLocation: getClientLocation,*/
         GetApiKey: getApiKey,
         SearchObjectByIdOnArray: searchObjectByIdOnArray,
         CanUseHeatmaps: canUseHeatmaps,
@@ -421,7 +408,7 @@ var SocketHub = (function () {
         var script = document.createElement('script');
         script.type = 'text/javascript';
         script.onload = socketLibrary_loaded;
-        script.src = 'https://cdn.socket.io/socket.io-1.4.5.js';
+        script.src = 'http://localhost:3501/build/assets/socket.io-1.4.5.js';
         head.appendChild(script);
     }
 

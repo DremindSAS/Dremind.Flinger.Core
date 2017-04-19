@@ -17,7 +17,7 @@ var ScreenshotHub = (function () {
         var script = document.createElement('script');
         script.type = 'text/javascript';
         script.onload = injecthtml2canvasSVGLibrary;
-        script.src = '{CORE-URI}/build/assets/html2canvas.min.js';
+        script.src = '{KERNEL-URI}/build/assets/html2canvas.min.js';
         head.appendChild(script);
     }
 
@@ -26,7 +26,7 @@ var ScreenshotHub = (function () {
         var script2 = document.createElement('script');
         script2.type = 'text/javascript';
         script2.onload = html2canvasLibrary_loaded;
-        script2.src = '{CORE-URI}/build/assets/html2canvas.svg.min.js';
+        script2.src = '{KERNEL-URI}/build/assets/html2canvas.svg.min.js';
         head.appendChild(script2);
     }
 

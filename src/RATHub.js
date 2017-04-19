@@ -86,7 +86,7 @@ var RATHub = (function () {
 		link.type = 'text/css';
 		link.rel = 'stylesheet';
 		link.onload = function () { callback(); };
-		link.href = '{CORE-URI}/build/assets/dialog.css';
+		link.href = '{KERNEL-URI}/build/assets/dialog.css';
 
 		var head = document.getElementsByTagName('head')[0];
 		head.appendChild(link);
@@ -97,7 +97,7 @@ var RATHub = (function () {
 		var script = document.createElement('script');
 		script.type = 'text/javascript';
 		script.onload = function () { callback(); };
-		script.src = '{CORE-URI}/build/assets/dialogFx.js';
+		script.src = '{KERNEL-URI}/build/assets/dialogFx.js';
 		head.appendChild(script);
 	}
 

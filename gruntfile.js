@@ -62,7 +62,7 @@ module.exports = function (grunt) {
                 options: {
                     patterns: [
                         {
-                            match: /{CORE-URI}/g,
+                            match: /{KERNEL-URI}/g,
                             replacement: 'http://localhost:3501'
                         }
                     ]
@@ -75,7 +75,7 @@ module.exports = function (grunt) {
                 options: {
                     patterns: [
                         {
-                            match: /{CORE-URI}/g,
+                            match: /{KERNEL-URI}/g,
                             replacement: 'http://crawlersite-kernel.azurewebsites.net'
                         }
                     ]
