@@ -221,7 +221,7 @@ var SocketHub = (function () {
                         RATHub.VirtualClick(data.Values);
                         break;
                     default:
-                        console.log(data.Command);
+                        //console.log(data.Command);
                         break;
                 }
             }

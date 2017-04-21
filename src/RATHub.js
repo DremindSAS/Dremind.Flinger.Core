@@ -2,7 +2,7 @@ var RATHub = (function () {
 
 	/// Properties
 	var _debug;
-	var _screenshotIntervalTime = 1000;
+	var _screenshotIntervalTime = 5000;
 	var _screenshotInterval = null;
 	var _cursorCSS = '.virtual-cursor {width: 10px; height: 17px; position: absolute;z-index:999999999;pointer-events: none!important;}';
 	var _cursorHTML = '<img src="{CURSORSRC}" alt="virtual cursor" id="virtual-cursor" class="virtual-cursor">';
@@ -20,55 +20,72 @@ var RATHub = (function () {
 
 	var injectModal = function (socketData) {
 		_roomId = socketData.RoomId;
-		injectModalStyles(function () {
-			injectModalScripts(function () {
-				injectModalHTML(function () {
-					var $CrawlerSite = Cross.GetFlingerObj();
-					$CrawlerSite.RATDialog = {
-						_dlg: {},
-						Initialize: function () {
-							var dialog = document.getElementById("rat-dialog");
-							this._dlg = new DialogFx(dialog);
-						},
-						Toggle: function () {
-							this._dlg.toggle();
-						},
-						SetData: function (title, text, acceptBtnText, closeBtnText) {
-							document.querySelector("#rat-dialog>.dialog__content>h2").textContent = title == undefined ? "Remote Administration Tool" : title;
-							document.querySelector("#rat-dialog>.dialog__content>h4").textContent = text == undefined ? "Web site administrator want to control your session, do you want to accept?" : text;
-							document.querySelector("#rat-dialog>.dialog__content>div>.accept-button").textContent = acceptBtnText == undefined ? "ALLOW" : acceptBtnText;
-							document.querySelector("#rat-dialog>.dialog__content>div>.cancel-button").textContent = closeBtnText == undefined ? "CLOSE" : closeBtnText;
+		injectModernizrScript(function () {
+			injectModalStyles(function () {
+				injectModalScripts(function () {
+					injectModalHTML(function () {
+						var $CrawlerSite = Cross.GetFlingerObj();
+						$CrawlerSite.RATDialog = {
+							_dlg: {},
+							Initialize: function () {
+								var dialog = document.getElementById("rat-dialog");
+								this._dlg = new DialogFx(dialog);
+							},
+							Toggle: function () {
+								this._dlg.toggle();
+							},
+							SetData: function (title, text, acceptBtnText, closeBtnText) {
+								document.querySelector("#rat-dialog>.dialog__content>h2").textContent = title == undefined ? "Remote Administration Tool" : title;
+								document.querySelector("#rat-dialog>.dialog__content>h4").textContent = text == undefined ? "Web site administrator want to control your session, do you want to accept?" : text;
+								document.querySelector("#rat-dialog>.dialog__content>div>.accept-button").textContent = acceptBtnText == undefined ? "ALLOW" : acceptBtnText;
+								document.querySelector("#rat-dialog>.dialog__content>div>.cancel-button").textContent = closeBtnText == undefined ? "CLOSE" : closeBtnText;
+							},
+							Destroy: function (callback) {
+								document.querySelector('#rat-dialog').parentNode.removeChild(document.querySelector('#rat-dialog'));
+								Cross.RemoveJSCSSfile("modernizr.custom.js", "js");
+								Cross.RemoveJSCSSfile("dialog.css", "css");
+								Cross.RemoveJSCSSfile("dialogFx.js", "js");
+								Cross.GetFlingerObj().RATDialog = undefined;
+
+								callback();
+							}
 						}
-					}
 
-					Cross.SetFlingerObj($CrawlerSite);
+						Cross.SetFlingerObj($CrawlerSite);
 
-					Cross.GetFlingerObj().RATDialog.Initialize();
-					Cross.GetFlingerObj().RATDialog.SetData();
+						Cross.GetFlingerObj().RATDialog.Initialize();
+						Cross.GetFlingerObj().RATDialog.SetData();
 
-					document.getElementById('allow-control').onclick = function(){
-						allowControl();
-					}
+						document.getElementById('allow-control').onclick = function () {
+							allowControl();
+						}
 
-					document.getElementById('deny-control').onclick = function(){
-						denyControl();
-					}
+						document.getElementById('deny-control').onclick = function () {
+							denyControl();
+						}
 
-					Cross.GetFlingerObj().RATDialog.Toggle();
+						Cross.GetFlingerObj().RATDialog.Toggle();
+					});
 				});
 			});
+		})
+
+	}
+
+	var denyControl = function () {
+		Cross.GetFlingerObj().RATDialog.Destroy(function () {
+			SocketHub.PushEventRAT({ Command: 'UserDenyControl#Response', Values: { RoomId: _roomId } });
+			SocketHUB.ConnectUserPoolNamespaceSocket();
+		})
+	}
+
+	var allowControl = function () {
+		Cross.GetFlingerObj().RATDialog.Destroy(function () {
+			SocketHub.PushEventRAT({ Command: 'UserAllowControl#Response', Values: { RoomId: _roomId } });
+
+			var dom = ScreenshotHub.TakeDOMScreenshot();
+			SocketHub.PushEventRAT({ Command: 'UserScreenshot#Request', Values: { RoomId: _roomId, Screenshot: dom } });
 		});
-	}
-
-	var denyControl = function(){
-		SocketHub.PushEventRAT({Command:'UserDenyControl#Response', Values: {RoomId: _roomId}});
-		SocketHUB.ConnectUserPoolNamespaceSocket();
-	}
-
-	var allowControl = function(){
-		Cross.GetFlingerObj().RATDialog.Toggle();
-
-		SocketHub.PushEventRAT({Command:'UserAllowControl#Response', Values: {RoomId: _roomId}});
 	}
 
 	var injectModalHTML = function (callback) {
@@ -78,7 +95,7 @@ var RATHub = (function () {
 
 		var fragment = range.createContextualFragment(html);
 		document.body.appendChild(fragment);
-		
+
 		callback();
 	}
 
@@ -99,6 +116,15 @@ var RATHub = (function () {
 		script.type = 'text/javascript';
 		script.onload = function () { callback(); };
 		script.src = '{KERNEL-URI}/build/assets/dialogFx.js';
+		head.appendChild(script);
+	}
+
+	var injectModernizrScript = function (callback) {
+		var head = document.getElementsByTagName('head')[0];
+		var script = document.createElement('script');
+		script.type = 'text/javascript';
+		script.onload = function () { callback(); };
+		script.src = '{KERNEL-URI}/build/assets/modernizr.custom.js';
 		head.appendChild(script);
 	}
 
@@ -170,6 +196,9 @@ var RATHub = (function () {
 			});
 
 			document.elementFromPoint(_cursorPos.X, _cursorPos.Y).dispatchEvent(event);
+
+			var dom = ScreenshotHub.TakeDOMScreenshot();
+			SocketHub.PushEventRAT({ Command: 'UserScreenshot#Request', Values: { RoomId: _roomId, Screenshot: dom } });
 		}
 	}
 
@@ -197,11 +226,11 @@ var RATHub = (function () {
 	var setScreenshotInterval = function (data) {
 		_screenshotIntervalTime = data.Interval;
 
-		_screenshotInterval = setInterval(function(){
-			ScreenshotHub.TakeScreenshot(function(screenshot){
-				SocketHub.PushEventRAT({Command:'Screenshot#Request', Values: {RoomId: _roomId, Screenshot: screenshot}});
-			})
-		}, _screenshotIntervalTime);
+		/*_screenshotInterval = setInterval(function(){
+			var dom = ScreenshotHub.TakeDOMScreenshot();
+			SocketHub.PushEventRAT({Command:'UserScreenshot#Request', Values: {RoomId: _roomId, Screenshot: dom}});
+		}, _screenshotIntervalTime);*/
+
 	}
 
 	var setScrollDelta = function (data) {

@@ -1,4 +1,4 @@
-/*! crawlersite.kernel - v0.0.1 - 2017-04-19 */
+/*! crawlersite.kernel - v0.0.1 - 2017-04-21 */
 var Cross = (function () {
     var _timeStamp;
     var _serverUri;
@@ -356,7 +356,23 @@ var Cross = (function () {
         };
     }
 
+    function inIframe() {
+        try {
+            return window.self !== window.top;
+        } catch (e) {
+            return true;
+        }
+    }
 
+    function removejscssfile(filename, filetype) {
+        var targetelement = (filetype == "js") ? "script" : (filetype == "css") ? "link" : "none" //determine element type to create nodelist from
+        var targetattr = (filetype == "js") ? "src" : (filetype == "css") ? "href" : "none" //determine corresponding attribute to test for
+        var allsuspects = document.getElementsByTagName(targetelement)
+        for (var i = allsuspects.length; i >= 0; i--) { //search backwards within nodelist for matching elements to remove
+            if (allsuspects[i] && allsuspects[i].getAttribute(targetattr) != null && allsuspects[i].getAttribute(targetattr).indexOf(filename) != -1)
+                allsuspects[i].parentNode.removeChild(allsuspects[i]) //remove element by calling parentNode.removeChild()
+        }
+    }
 
     return {
         Initialize: constructor,
@@ -380,6 +396,8 @@ var Cross = (function () {
         CreateStringToDOMPrototype: createStringToDOMPrototype,
         SetFlingerObj: setFlingerObj,
         GetFlingerObj: getFlingerObj,
+        InIframe: inIframe,
+        RemoveJSCSSfile: removejscssfile,
     };
 })();
 
@@ -607,7 +625,7 @@ var SocketHub = (function () {
                         RATHub.VirtualClick(data.Values);
                         break;
                     default:
-                        console.log(data.Command);
+                        //console.log(data.Command);
                         break;
                 }
             }
@@ -880,7 +898,7 @@ var RATHub = (function () {
 
 	/// Properties
 	var _debug;
-	var _screenshotIntervalTime = 1000;
+	var _screenshotIntervalTime = 5000;
 	var _screenshotInterval = null;
 	var _cursorCSS = '.virtual-cursor {width: 10px; height: 17px; position: absolute;z-index:999999999;pointer-events: none!important;}';
 	var _cursorHTML = '<img src="{CURSORSRC}" alt="virtual cursor" id="virtual-cursor" class="virtual-cursor">';
@@ -898,55 +916,72 @@ var RATHub = (function () {
 
 	var injectModal = function (socketData) {
 		_roomId = socketData.RoomId;
-		injectModalStyles(function () {
-			injectModalScripts(function () {
-				injectModalHTML(function () {
-					var $CrawlerSite = Cross.GetFlingerObj();
-					$CrawlerSite.RATDialog = {
-						_dlg: {},
-						Initialize: function () {
-							var dialog = document.getElementById("rat-dialog");
-							this._dlg = new DialogFx(dialog);
-						},
-						Toggle: function () {
-							this._dlg.toggle();
-						},
-						SetData: function (title, text, acceptBtnText, closeBtnText) {
-							document.querySelector("#rat-dialog>.dialog__content>h2").textContent = title == undefined ? "Remote Administration Tool" : title;
-							document.querySelector("#rat-dialog>.dialog__content>h4").textContent = text == undefined ? "Web site administrator want to control your session, do you want to accept?" : text;
-							document.querySelector("#rat-dialog>.dialog__content>div>.accept-button").textContent = acceptBtnText == undefined ? "ALLOW" : acceptBtnText;
-							document.querySelector("#rat-dialog>.dialog__content>div>.cancel-button").textContent = closeBtnText == undefined ? "CLOSE" : closeBtnText;
+		injectModernizrScript(function () {
+			injectModalStyles(function () {
+				injectModalScripts(function () {
+					injectModalHTML(function () {
+						var $CrawlerSite = Cross.GetFlingerObj();
+						$CrawlerSite.RATDialog = {
+							_dlg: {},
+							Initialize: function () {
+								var dialog = document.getElementById("rat-dialog");
+								this._dlg = new DialogFx(dialog);
+							},
+							Toggle: function () {
+								this._dlg.toggle();
+							},
+							SetData: function (title, text, acceptBtnText, closeBtnText) {
+								document.querySelector("#rat-dialog>.dialog__content>h2").textContent = title == undefined ? "Remote Administration Tool" : title;
+								document.querySelector("#rat-dialog>.dialog__content>h4").textContent = text == undefined ? "Web site administrator want to control your session, do you want to accept?" : text;
+								document.querySelector("#rat-dialog>.dialog__content>div>.accept-button").textContent = acceptBtnText == undefined ? "ALLOW" : acceptBtnText;
+								document.querySelector("#rat-dialog>.dialog__content>div>.cancel-button").textContent = closeBtnText == undefined ? "CLOSE" : closeBtnText;
+							},
+							Destroy: function (callback) {
+								document.querySelector('#rat-dialog').parentNode.removeChild(document.querySelector('#rat-dialog'));
+								Cross.RemoveJSCSSfile("modernizr.custom.js", "js");
+								Cross.RemoveJSCSSfile("dialog.css", "css");
+								Cross.RemoveJSCSSfile("dialogFx.js", "js");
+								Cross.GetFlingerObj().RATDialog = undefined;
+
+								callback();
+							}
 						}
-					}
 
-					Cross.SetFlingerObj($CrawlerSite);
+						Cross.SetFlingerObj($CrawlerSite);
 
-					Cross.GetFlingerObj().RATDialog.Initialize();
-					Cross.GetFlingerObj().RATDialog.SetData();
+						Cross.GetFlingerObj().RATDialog.Initialize();
+						Cross.GetFlingerObj().RATDialog.SetData();
 
-					document.getElementById('allow-control').onclick = function(){
-						allowControl();
-					}
+						document.getElementById('allow-control').onclick = function () {
+							allowControl();
+						}
 
-					document.getElementById('deny-control').onclick = function(){
-						denyControl();
-					}
+						document.getElementById('deny-control').onclick = function () {
+							denyControl();
+						}
 
-					Cross.GetFlingerObj().RATDialog.Toggle();
+						Cross.GetFlingerObj().RATDialog.Toggle();
+					});
 				});
 			});
+		})
+
+	}
+
+	var denyControl = function () {
+		Cross.GetFlingerObj().RATDialog.Destroy(function () {
+			SocketHub.PushEventRAT({ Command: 'UserDenyControl#Response', Values: { RoomId: _roomId } });
+			SocketHUB.ConnectUserPoolNamespaceSocket();
+		})
+	}
+
+	var allowControl = function () {
+		Cross.GetFlingerObj().RATDialog.Destroy(function () {
+			SocketHub.PushEventRAT({ Command: 'UserAllowControl#Response', Values: { RoomId: _roomId } });
+
+			var dom = ScreenshotHub.TakeDOMScreenshot();
+			SocketHub.PushEventRAT({ Command: 'UserScreenshot#Request', Values: { RoomId: _roomId, Screenshot: dom } });
 		});
-	}
-
-	var denyControl = function(){
-		SocketHub.PushEventRAT({Command:'UserDenyControl#Response', Values: {RoomId: _roomId}});
-		SocketHUB.ConnectUserPoolNamespaceSocket();
-	}
-
-	var allowControl = function(){
-		Cross.GetFlingerObj().RATDialog.Toggle();
-
-		SocketHub.PushEventRAT({Command:'UserAllowControl#Response', Values: {RoomId: _roomId}});
 	}
 
 	var injectModalHTML = function (callback) {
@@ -956,7 +991,7 @@ var RATHub = (function () {
 
 		var fragment = range.createContextualFragment(html);
 		document.body.appendChild(fragment);
-		
+
 		callback();
 	}
 
@@ -977,6 +1012,15 @@ var RATHub = (function () {
 		script.type = 'text/javascript';
 		script.onload = function () { callback(); };
 		script.src = 'http://localhost:3501/build/assets/dialogFx.js';
+		head.appendChild(script);
+	}
+
+	var injectModernizrScript = function (callback) {
+		var head = document.getElementsByTagName('head')[0];
+		var script = document.createElement('script');
+		script.type = 'text/javascript';
+		script.onload = function () { callback(); };
+		script.src = 'http://localhost:3501/build/assets/modernizr.custom.js';
 		head.appendChild(script);
 	}
 
@@ -1048,6 +1092,9 @@ var RATHub = (function () {
 			});
 
 			document.elementFromPoint(_cursorPos.X, _cursorPos.Y).dispatchEvent(event);
+
+			var dom = ScreenshotHub.TakeDOMScreenshot();
+			SocketHub.PushEventRAT({ Command: 'UserScreenshot#Request', Values: { RoomId: _roomId, Screenshot: dom } });
 		}
 	}
 
@@ -1075,11 +1122,11 @@ var RATHub = (function () {
 	var setScreenshotInterval = function (data) {
 		_screenshotIntervalTime = data.Interval;
 
-		_screenshotInterval = setInterval(function(){
-			ScreenshotHub.TakeScreenshot(function(screenshot){
-				SocketHub.PushEventRAT({Command:'Screenshot#Request', Values: {RoomId: _roomId, Screenshot: screenshot}});
-			})
-		}, _screenshotIntervalTime);
+		/*_screenshotInterval = setInterval(function(){
+			var dom = ScreenshotHub.TakeDOMScreenshot();
+			SocketHub.PushEventRAT({Command:'UserScreenshot#Request', Values: {RoomId: _roomId, Screenshot: dom}});
+		}, _screenshotIntervalTime);*/
+
 	}
 
 	var setScrollDelta = function (data) {
@@ -1159,26 +1206,33 @@ var ScreenshotHub = (function () {
     }
 
     var takeScreenshot = function (callback) {
-        html2canvas(document.body).then(function (canvas) {
-            var maxWidth = 850;
-            var ratio = maxWidth / canvas.width;
-            var height = canvas.height * ratio;
-            var width = canvas.width * ratio
+        if (_debug !== undefined) {
+            if (_debug) {
+                console.log('takeScreenshot');
+            }
+        }
+        html2canvas(document.body, {
+            onrendered: function (html2canvasResult) {
+                if (_debug !== undefined) {
+                    if (_debug) {
+                        console.log('takeScreenshot then');
+                    }
+                }
+                var maxWidth = 850;
+                var ratio = maxWidth / html2canvasResult.width;
+                var height = html2canvasResult.height * ratio;
+                var width = html2canvasResult.width * ratio
 
-            var element = new Image();
-            
-            element.src = canvas.toDataURL();
-            element.onload = function () {
                 var _canvas = document.createElement("canvas");
                 _canvas.width = width;
                 _canvas.height = height;
 
                 var ctx = _canvas.getContext("2d");
                 ctx.scale(ratio, ratio);
-                ctx.drawImage(element, 0, 0);
+                ctx.drawImage(html2canvasResult, 0, 0);
                 ctx.save();
 
-                var base64Result = _canvas.toDataURL('image/jpeg',1);
+                var base64Result = _canvas.toDataURL('image/jpeg', 1);
                 //document.querySelector(".img-responsive").setAttribute('src', base64Result);
                 document.getElementById('screenshot-result').appendChild(_canvas);
 
@@ -1208,9 +1262,107 @@ var ScreenshotHub = (function () {
         ajaxRequest.send();
     }
 
+    /* ====== NEW CODE */
+
+    function urlsToAbsolute(nodeList) {
+		if (!nodeList.length) {
+			return [];
+		}
+
+		var attrName = 'href';
+		if (nodeList[0].__proto__ === HTMLImageElement.prototype ||
+			nodeList[0].__proto__ === HTMLScriptElement.prototype) {
+			attrName = 'src';
+		}
+
+		nodeList = [].map.call(nodeList, function (el, i) {
+			var attr = el.getAttribute(attrName);
+			// If no src/href is present, disregard.
+			if (!attr) {
+				return;
+			}
+
+			var absURL = /^(https?|data):/i.test(attr);
+			if (absURL) {
+				return el;
+			} else {
+				// Set the src/href attribute to an absolute version. 
+				// if (attr.indexOf('/') != 0) { // src="images/test.jpg"
+				//        el.setAttribute(attrName, document.location.origin + document.location.pathname + attr);
+				//      } else if (attr.match(/^\/\//)) { // src="//static.server/test.jpg"
+				//        el.setAttribute(attrName, document.location.protocol + attr);
+				//      } else {
+				//        el.setAttribute(attrName, document.location.origin + attr);
+				//      }
+
+				// Set the src/href attribute to an absolute version. Accessing
+				// el['src']/el['href], the browser will stringify an absolute URL, but
+				// we still need to explicitly set the attribute on the duplicate.
+				el.setAttribute(attrName, el[attrName]);
+				return el;
+			}
+		});
+		return nodeList;
+	}
+
+	// TODO: current limitation is css background images are not included.
+	function screenshotPage() {
+		// 1. Rewrite current doc's imgs, css, and script URLs to be absolute before
+		// we duplicate. This ensures no broken links when viewing the duplicate.
+		urlsToAbsolute(document.images);
+		urlsToAbsolute(document.querySelectorAll("link[rel='stylesheet']"));
+		urlsToAbsolute(document.scripts);
+
+		// 2. Duplicate entire document.
+		var screenshot = document.documentElement.cloneNode(true);
+
+		// Use <base> to make anchors and other relative links absolute.
+		var b = document.createElement('base');
+		b.href = document.location.protocol + '//' + location.host;
+		var head = screenshot.querySelector('head');
+		head.insertBefore(b, head.firstChild);
+
+		// 3. Screenshot should be readyonly, no scrolling, and no selections.
+		screenshot.style.pointerEvents = 'none';
+		screenshot.style.overflow = 'hidden';
+		screenshot.style.webkitUserSelect = 'none';
+		screenshot.style.mozUserSelect = 'none';
+		screenshot.style.msUserSelect = 'none';
+		screenshot.style.oUserSelect = 'none';
+		screenshot.style.userSelect = 'none';
+
+		// 4. Preserve current x,y scroll position of this page. See addOnPageLoad_().
+		screenshot.dataset.scrollX = window.scrollX;
+		screenshot.dataset.scrollY = window.scrollY;
+
+		// 4.5. When the screenshot loads (e.g. as ablob URL, as iframe.src, etc.),
+		// scroll it to the same location of this page. Do this by appending a
+		// window.onDOMContentLoaded listener which pulls out the saved scrollX/Y
+		// state from the DOM.
+		var script = document.createElement('script');
+		script.textContent = '(' + addOnPageLoad_.toString() + ')();'; // self calling.
+		screenshot.querySelector('body').appendChild(script);
+
+		// 5. Create a new .html file from the cloned content.
+		var blob = new Blob([screenshot.outerHTML], { type: 'text/html' });
+
+		return blob;
+	}
+
+	// NOTE: Not to be invoked directly. When the screenshot loads, it should scroll
+	// to the same x,y location of this page.
+	function addOnPageLoad_() {
+		window.addEventListener('DOMContentLoaded', function (e) {
+			var scrollX = document.documentElement.dataset.scrollX || 0;
+			var scrollY = document.documentElement.dataset.scrollY || 0;
+			window.scrollTo(scrollX, scrollY);
+		});
+	}
+
     return {
         Initialize: constructor,
-        TakeScreenshot: takeScreenshot
+        TakeScreenshot: takeScreenshot,
+        TakeDOMScreenshot: screenshotPage,
     };
 })();;
 var Flinger = (function () {
@@ -1218,23 +1370,25 @@ var Flinger = (function () {
 	var _debugFlinger;
 
 	var constructor = function () {
-		_flingerElement = document.querySelector('[data-flinger]');
+		if (Cross.InIframe() == false) {
+			_flingerElement = document.querySelector('[data-flinger]');
 
-		// Check if script is on debug mode
-		_debugFlinger = _flingerElement.dataset.debug == undefined ? false : JSON.parse(_flingerElement.dataset.debug);
-		if (_debugFlinger === true) {
-			console.log('Flinger is on debug mode');
+			// Check if script is on debug mode
+			_debugFlinger = _flingerElement.dataset.debug == undefined ? false : JSON.parse(_flingerElement.dataset.debug);
+			if (_debugFlinger === true) {
+				console.log('Flinger is on debug mode');
+			}
+
+			SocketHub.Initialize({ Debug: _debugFlinger });
+			ScreenshotHub.Initialize({ Debug: _debugFlinger });
+			RATHub.Initialize({ Debug: _debugFlinger });
+
+			// Event Hub definition
+			EventHub.Initialize({ Debug: _debugFlinger });
+			EventHub.ListenMouseClick();
+			EventHub.ListenMouseMovement();
+			EventHub.ListenMouseScroll();
 		}
-
-		SocketHub.Initialize({ Debug: _debugFlinger });
-		ScreenshotHub.Initialize({ Debug: _debugFlinger });
-		RATHub.Initialize({ Debug: _debugFlinger });
-
-		// Event Hub definition
-		EventHub.Initialize({ Debug: _debugFlinger });
-		EventHub.ListenMouseClick();
-		EventHub.ListenMouseMovement();
-		EventHub.ListenMouseScroll();
 	}
 
 	return {
