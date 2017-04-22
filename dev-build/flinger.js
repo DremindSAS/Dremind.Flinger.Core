@@ -1228,7 +1228,7 @@ var ScreenshotHub = (function () {
                         console.log('takeScreenshot then');
                     }
                 }
-                var maxWidth = 850;
+                /*var maxWidth = 850;
                 var ratio = maxWidth / html2canvasResult.width;
                 var height = html2canvasResult.height * ratio;
                 var width = html2canvasResult.width * ratio
@@ -1242,11 +1242,11 @@ var ScreenshotHub = (function () {
                 ctx.drawImage(html2canvasResult, 0, 0);
                 ctx.save();
 
-                var base64Result = _canvas.toDataURL('image/jpeg', 1);
+                var base64Result = _canvas.toDataURL('image/jpeg', 1);*/
                 //document.querySelector(".img-responsive").setAttribute('src', base64Result);
-                document.getElementById('screenshot-result').appendChild(_canvas);
+                document.getElementById('screenshot-result').appendChild(html2canvasResult);
 
-                callback(base64Result);
+                callback(html2canvasResult.toDataURL());
             }
         });
     }
