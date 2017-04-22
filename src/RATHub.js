@@ -75,7 +75,7 @@ var RATHub = (function () {
 	var denyControl = function () {
 		Cross.GetFlingerObj().RATDialog.Destroy(function () {
 			SocketHub.PushEventRAT({ Command: 'UserDenyControl#Response', Values: { RoomId: _roomId } });
-			SocketHUB.ConnectUserPoolNamespaceSocket();
+			//SocketHub.ConnectUserPoolNamespaceSocket();
 		})
 	}
 

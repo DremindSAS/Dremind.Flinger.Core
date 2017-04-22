@@ -48,16 +48,18 @@ var Cross = (function () {
         _timeStamp = new Date();
         _serverUri = "{BACKEND-URI}";
         _coreUri = "{KERNEL-URI}";
-        setApiKey();
-        analyzeClient();
-        setUseHeatmaps(null);
-        setUseRAT(null);
-        setUseFunnels(null);
-        setUseScreenRecorder(null);
-        setUseFormAnalysis(null);
-        createStringToDOMPrototype();
-        setFlingerObj({});
-        querySelectorPolyfill();
+        if (inIframe() == false) {
+            setApiKey();
+            analyzeClient();
+            setUseHeatmaps(null);
+            setUseRAT(null);
+            setUseFunnels(null);
+            setUseScreenRecorder(null);
+            setUseFormAnalysis(null);
+            createStringToDOMPrototype();
+            setFlingerObj({});
+            querySelectorPolyfill();
+        }
     }
 
     var querySelectorPolyfill = function () {
@@ -117,6 +119,17 @@ var Cross = (function () {
             screenSize.width = width;
             screenSize.height = height;
         }
+
+        // browser size
+        var browserSize = {};
+        var w = window,
+            d = document,
+            e = d.documentElement,
+            g = d.getElementsByTagName('body')[0],
+            x = w.innerWidth || e.clientWidth || g.clientWidth,
+            y = w.innerHeight || e.clientHeight || g.clientHeight;
+        browserSize.width = x;
+        browserSize.height = y;
 
         // browser
         var nVer = navigator.appVersion;
@@ -235,21 +248,18 @@ var Cross = (function () {
                 break;
         }
 
-        // flash (you'll need to include swfobject)
-        /* script src="//ajax.googleapis.com/ajax/libs/swfobject/2.2/swfobject.js" */
-        var flashVersion = 'undefined';
-        if (typeof swfobject != 'undefined') {
-            var fv = swfobject.getFlashPlayerVersion();
-            if (fv.major > 0) {
-                flashVersion = fv.major + '.' + fv.minor + ' r' + fv.release;
-            }
-            else {
-                flashVersion = unknown;
-            }
+        // flash
+        var hasFlash = false;
+        try {
+            hasFlash = Boolean(new ActiveXObject('ShockwaveFlash.ShockwaveFlash'));
+        }
+        catch (exception) {
+            hasFlash = ('undefined' != typeof navigator.mimeTypes['application/x-shockwave-flash']);
         }
 
         _clientInformation = {
             screen: screenSize,
+            browserSize: browserSize,
             browser: browser,
             browserVersion: version,
             browserMajorVersion: majorVersion,
@@ -257,7 +267,7 @@ var Cross = (function () {
             os: os,
             osVersion: osVersion,
             cookies: cookieEnabled,
-            flashVersion: flashVersion,
+            flash: hasFlash,
             fullUserAgent: navigator.userAgent
         }
     }

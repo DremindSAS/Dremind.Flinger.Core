@@ -1,4 +1,4 @@
-/*! crawlersite.kernel - v0.0.1 - 2017-04-21 */
+/*! crawlersite.kernel - v0.0.1 - 2017-04-22 */
 var Cross = (function () {
     var _timeStamp;
     var _serverUri;
@@ -49,16 +49,18 @@ var Cross = (function () {
         _timeStamp = new Date();
         _serverUri = "http://crawlerbackend.azurewebsites.net";
         _coreUri = "http://crawlersite-kernel.azurewebsites.net";
-        setApiKey();
-        analyzeClient();
-        setUseHeatmaps(null);
-        setUseRAT(null);
-        setUseFunnels(null);
-        setUseScreenRecorder(null);
-        setUseFormAnalysis(null);
-        createStringToDOMPrototype();
-        setFlingerObj({});
-        querySelectorPolyfill();
+        if (inIframe() == false) {
+            setApiKey();
+            analyzeClient();
+            setUseHeatmaps(null);
+            setUseRAT(null);
+            setUseFunnels(null);
+            setUseScreenRecorder(null);
+            setUseFormAnalysis(null);
+            createStringToDOMPrototype();
+            setFlingerObj({});
+            querySelectorPolyfill();
+        }
     }
 
     var querySelectorPolyfill = function () {
@@ -118,6 +120,17 @@ var Cross = (function () {
             screenSize.width = width;
             screenSize.height = height;
         }
+
+        // browser size
+        var browserSize = {};
+        var w = window,
+            d = document,
+            e = d.documentElement,
+            g = d.getElementsByTagName('body')[0],
+            x = w.innerWidth || e.clientWidth || g.clientWidth,
+            y = w.innerHeight || e.clientHeight || g.clientHeight;
+        browserSize.width = x;
+        browserSize.height = y;
 
         // browser
         var nVer = navigator.appVersion;
@@ -236,21 +249,18 @@ var Cross = (function () {
                 break;
         }
 
-        // flash (you'll need to include swfobject)
-        /* script src="//ajax.googleapis.com/ajax/libs/swfobject/2.2/swfobject.js" */
-        var flashVersion = 'undefined';
-        if (typeof swfobject != 'undefined') {
-            var fv = swfobject.getFlashPlayerVersion();
-            if (fv.major > 0) {
-                flashVersion = fv.major + '.' + fv.minor + ' r' + fv.release;
-            }
-            else {
-                flashVersion = unknown;
-            }
+        // flash
+        var hasFlash = false;
+        try {
+            hasFlash = Boolean(new ActiveXObject('ShockwaveFlash.ShockwaveFlash'));
+        }
+        catch (exception) {
+            hasFlash = ('undefined' != typeof navigator.mimeTypes['application/x-shockwave-flash']);
         }
 
         _clientInformation = {
             screen: screenSize,
+            browserSize: browserSize,
             browser: browser,
             browserVersion: version,
             browserMajorVersion: majorVersion,
@@ -258,7 +268,7 @@ var Cross = (function () {
             os: os,
             osVersion: osVersion,
             cookies: cookieEnabled,
-            flashVersion: flashVersion,
+            flash: hasFlash,
             fullUserAgent: navigator.userAgent
         }
     }
@@ -447,7 +457,7 @@ var SocketHub = (function () {
                 console.log('Connecting to server...');
             }
         }
-        _socket = io(Cross.GetServerUri() + '/user-pool-namespace', { query: 'ApiKey=' + Cross.GetApiKey() });
+        _socket = io(Cross.GetServerUri() + '/user-pool-namespace', { query: 'ApiKey=' + Cross.GetApiKey() + '&ClientInformation=' + JSON.stringify(Cross.GetClientInformation()) });
         socketDefinition();
     }
 
@@ -490,7 +500,7 @@ var SocketHub = (function () {
 
     var ratPoolNamespace = function (ratNamespaceValues) {
         console.log(Cross.GetServerUri() + ratNamespaceValues.RPN)
-        _ratSocketPoolNamespace = io(Cross.GetServerUri() + ratNamespaceValues.RPN, { query: 'ApiKey=' + Cross.GetApiKey() });
+        _ratSocketPoolNamespace = io(Cross.GetServerUri() + ratNamespaceValues.RPN, { query: 'ApiKey=' + Cross.GetApiKey() + '&ClientInformation=' + JSON.stringify(Cross.GetClientInformation()) });
         ratPoolSocketDefinition(ratNamespaceValues);
     }
 
@@ -534,7 +544,7 @@ var SocketHub = (function () {
         var ns = (Cross.SearchObjectByIdOnArray(ratNamespaceData.Namespace.Id, data.Namespace));
         if (ns != null) {
             console.log('RAT Service Socket URI: ' + Cross.GetServerUri() + '/' + ns.Id);
-            _ratServiceSocket = io(Cross.GetServerUri() + '/' + ns.Id, { query: 'ApiKey=' + Cross.GetApiKey() });
+            _ratServiceSocket = io(Cross.GetServerUri() + '/' + ns.Id, { query: 'ApiKey=' + Cross.GetApiKey() + '&ClientInformation=' + JSON.stringify(Cross.GetClientInformation())});
             ratServiceSocketDefinition(data, ratNamespaceData);
         }
     }
@@ -632,7 +642,7 @@ var SocketHub = (function () {
         })
     }
 
-    var pushEventRAT = function(data){
+    var pushEventRAT = function (data) {
         if (_ratServiceSocket != undefined) {
             if (Cross.GetApiKey() != undefined && Cross.GetApiKey().length > 0) {
                 _ratServiceSocket.emit('Coplest.Flinger.RAT', { Command: data.Command, Values: data.Values });
@@ -971,7 +981,7 @@ var RATHub = (function () {
 	var denyControl = function () {
 		Cross.GetFlingerObj().RATDialog.Destroy(function () {
 			SocketHub.PushEventRAT({ Command: 'UserDenyControl#Response', Values: { RoomId: _roomId } });
-			SocketHUB.ConnectUserPoolNamespaceSocket();
+			//SocketHub.ConnectUserPoolNamespaceSocket();
 		})
 	}
 

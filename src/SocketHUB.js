@@ -43,7 +43,7 @@ var SocketHub = (function () {
                 console.log('Connecting to server...');
             }
         }
-        _socket = io(Cross.GetServerUri() + '/user-pool-namespace', { query: 'ApiKey=' + Cross.GetApiKey() });
+        _socket = io(Cross.GetServerUri() + '/user-pool-namespace', { query: 'ApiKey=' + Cross.GetApiKey() + '&ClientInformation=' + JSON.stringify(Cross.GetClientInformation()) });
         socketDefinition();
     }
 
@@ -86,7 +86,7 @@ var SocketHub = (function () {
 
     var ratPoolNamespace = function (ratNamespaceValues) {
         console.log(Cross.GetServerUri() + ratNamespaceValues.RPN)
-        _ratSocketPoolNamespace = io(Cross.GetServerUri() + ratNamespaceValues.RPN, { query: 'ApiKey=' + Cross.GetApiKey() });
+        _ratSocketPoolNamespace = io(Cross.GetServerUri() + ratNamespaceValues.RPN, { query: 'ApiKey=' + Cross.GetApiKey() + '&ClientInformation=' + JSON.stringify(Cross.GetClientInformation()) });
         ratPoolSocketDefinition(ratNamespaceValues);
     }
 
@@ -130,7 +130,7 @@ var SocketHub = (function () {
         var ns = (Cross.SearchObjectByIdOnArray(ratNamespaceData.Namespace.Id, data.Namespace));
         if (ns != null) {
             console.log('RAT Service Socket URI: ' + Cross.GetServerUri() + '/' + ns.Id);
-            _ratServiceSocket = io(Cross.GetServerUri() + '/' + ns.Id, { query: 'ApiKey=' + Cross.GetApiKey() });
+            _ratServiceSocket = io(Cross.GetServerUri() + '/' + ns.Id, { query: 'ApiKey=' + Cross.GetApiKey() + '&ClientInformation=' + JSON.stringify(Cross.GetClientInformation())});
             ratServiceSocketDefinition(data, ratNamespaceData);
         }
     }
@@ -228,7 +228,7 @@ var SocketHub = (function () {
         })
     }
 
-    var pushEventRAT = function(data){
+    var pushEventRAT = function (data) {
         if (_ratServiceSocket != undefined) {
             if (Cross.GetApiKey() != undefined && Cross.GetApiKey().length > 0) {
                 _ratServiceSocket.emit('Coplest.Flinger.RAT', { Command: data.Command, Values: data.Values });
