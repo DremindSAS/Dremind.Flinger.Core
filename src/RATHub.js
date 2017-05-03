@@ -17,7 +17,7 @@ var RATHub = (function () {
 			_debug = params.Debug;
 		}
 	}
-
+ 
 	var injectModal = function (socketData) {
 		_roomId = socketData.RoomId;
 		injectModernizrScript(function () {
