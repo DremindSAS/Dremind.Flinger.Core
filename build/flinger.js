@@ -48,7 +48,7 @@ var Cross = (function () {
 
         _timeStamp = new Date();
         _serverUri = "http://crawlerbackend.azurewebsites.net";
-        _coreUri = "http://crawlersite-kernel.azurewebsites.net";
+        _coreUri = "//crawlersite-kernel.azurewebsites.net";
         if (inIframe() == false) {
             setApiKey();
             analyzeClient();
@@ -436,7 +436,7 @@ var SocketHub = (function () {
         var script = document.createElement('script');
         script.type = 'text/javascript';
         script.onload = socketLibrary_loaded;
-        script.src = 'http://crawlersite-kernel.azurewebsites.net/build/assets/socket.io-1.4.5.js';
+        script.src = '//crawlersite-kernel.azurewebsites.net/build/assets/socket.io-1.4.5.js';
         head.appendChild(script);
     }
 
@@ -1010,7 +1010,7 @@ var RATHub = (function () {
 		link.type = 'text/css';
 		link.rel = 'stylesheet';
 		link.onload = function () { callback(); };
-		link.href = 'http://crawlersite-kernel.azurewebsites.net/build/assets/dialog.css';
+		link.href = '//crawlersite-kernel.azurewebsites.net/build/assets/dialog.css';
 
 		var head = document.getElementsByTagName('head')[0];
 		head.appendChild(link);
@@ -1021,7 +1021,7 @@ var RATHub = (function () {
 		var script = document.createElement('script');
 		script.type = 'text/javascript';
 		script.onload = function () { callback(); };
-		script.src = 'http://crawlersite-kernel.azurewebsites.net/build/assets/dialogFx.js';
+		script.src = '//crawlersite-kernel.azurewebsites.net/build/assets/dialogFx.js';
 		head.appendChild(script);
 	}
 
@@ -1030,7 +1030,7 @@ var RATHub = (function () {
 		var script = document.createElement('script');
 		script.type = 'text/javascript';
 		script.onload = function () { callback(); };
-		script.src = 'http://crawlersite-kernel.azurewebsites.net/build/assets/modernizr.custom.js';
+		script.src = '//crawlersite-kernel.azurewebsites.net/build/assets/modernizr.custom.js';
 		head.appendChild(script);
 	}
 
@@ -1181,7 +1181,7 @@ var ScreenshotHub = (function () {
         var script = document.createElement('script');
         script.type = 'text/javascript';
         script.onload = injecthtml2canvasSVGLibrary;
-        script.src = 'http://crawlersite-kernel.azurewebsites.net/build/assets/html2canvas.min.js';
+        script.src = '//crawlersite-kernel.azurewebsites.net/build/assets/html2canvas.min.js';
         head.appendChild(script);
     }
 
@@ -1190,7 +1190,7 @@ var ScreenshotHub = (function () {
         var script2 = document.createElement('script');
         script2.type = 'text/javascript';
         script2.onload = html2canvasLibrary_loaded;
-        script2.src = 'http://crawlersite-kernel.azurewebsites.net/build/assets/html2canvas.svg.min.js';
+        script2.src = '//crawlersite-kernel.azurewebsites.net/build/assets/html2canvas.svg.min.js';
         head.appendChild(script2);
     }
 

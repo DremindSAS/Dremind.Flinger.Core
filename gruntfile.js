@@ -76,7 +76,7 @@ module.exports = function (grunt) {
                     patterns: [
                         {
                             match: /{KERNEL-URI}/g,
-                            replacement: 'http://crawlersite-kernel.azurewebsites.net'
+                            replacement: '//crawlersite-kernel.azurewebsites.net'
                         }
                     ]
                 },
