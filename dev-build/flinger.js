@@ -1,4 +1,4 @@
-/*! crawlersite.kernel - v0.0.1 - 2017-04-22 */
+/*! crawlersite.kernel - v0.0.1 - 2017-05-16 */
 var Cross = (function () {
     var _timeStamp;
     var _serverUri;
@@ -1209,9 +1209,9 @@ var ScreenshotHub = (function () {
         }
         body.appendChild(div);
         takeScreenshot(function () {
-            if (_isOnDescoveryMode == true) {
+            //if (_isOnDescoveryMode == true) {
                 saveScreenshot();
-            }
+            //}
         });
     }
 
@@ -1252,15 +1252,15 @@ var ScreenshotHub = (function () {
     }
 
     var saveScreenshot = function () {
-        if (_isOnDescoveryMode) {
+        //if (_isOnDescoveryMode) {
             var canvas = document.querySelector('#screenshot-result>canvas');
 
             SocketHub.PushScreenshot({ Command: 'Scroll', Values: { Base64Data: canvas.toDataURL(), Endpoint: document.location.pathname, ApiKey: Cross.GetApiKey() } })
-        }
+        //}
     }
 
     var getIfSiteIsInDiscoveryMode = function () {
-        var endpoint = '/api/Site/DiscoveryMode/' + Cross.GetApiKey();
+        /*var endpoint = '/api/Site/DiscoveryMode/' + Cross.GetApiKey();
 
         function reqListener() {
             _isOnDescoveryMode = JSON.parse(this.responseText).result == undefined ? false : JSON.parse(this.responseText).result;
@@ -1269,7 +1269,7 @@ var ScreenshotHub = (function () {
         var ajaxRequest = new XMLHttpRequest();
         ajaxRequest.addEventListener("load", reqListener);
         ajaxRequest.open("GET", Cross.GetServerUri() + endpoint);
-        ajaxRequest.send();
+        ajaxRequest.send();*/
     }
 
     /* ====== NEW CODE */
