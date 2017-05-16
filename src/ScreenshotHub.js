@@ -17,7 +17,7 @@ var ScreenshotHub = (function () {
         var script = document.createElement('script');
         script.type = 'text/javascript';
         script.onload = injecthtml2canvasSVGLibrary;
-        script.src = '{KERNEL-URI}/build/assets/html2canvas.min.js';
+        script.src = '{KERNEL-URI}/build/assets/html2canvas.min.js'; 
         head.appendChild(script);
     }
 

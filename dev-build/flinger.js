@@ -1181,7 +1181,7 @@ var ScreenshotHub = (function () {
         var script = document.createElement('script');
         script.type = 'text/javascript';
         script.onload = injecthtml2canvasSVGLibrary;
-        script.src = 'http://localhost:3501/build/assets/html2canvas.min.js';
+        script.src = 'http://localhost:3501/build/assets/html2canvas.min.js'; 
         head.appendChild(script);
     }
 

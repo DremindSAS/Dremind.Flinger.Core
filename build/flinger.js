@@ -47,7 +47,7 @@ var Cross = (function () {
         }
 
         _timeStamp = new Date();
-        _serverUri = "http://crawlerbackend.azurewebsites.net";
+        _serverUri = "//crawlerbackend.azurewebsites.net";
         _coreUri = "//crawlersite-kernel.azurewebsites.net";
         if (inIframe() == false) {
             setApiKey();
@@ -1181,7 +1181,7 @@ var ScreenshotHub = (function () {
         var script = document.createElement('script');
         script.type = 'text/javascript';
         script.onload = injecthtml2canvasSVGLibrary;
-        script.src = '//crawlersite-kernel.azurewebsites.net/build/assets/html2canvas.min.js';
+        script.src = '//crawlersite-kernel.azurewebsites.net/build/assets/html2canvas.min.js'; 
         head.appendChild(script);
     }
 
