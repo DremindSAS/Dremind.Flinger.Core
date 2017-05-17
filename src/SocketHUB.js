@@ -22,7 +22,7 @@ var SocketHub = (function () {
         var script = document.createElement('script');
         script.type = 'text/javascript';
         script.onload = socketLibrary_loaded;
-        script.src = '{BACKEND-URI}/socket.io-1.4.5.js';
+        script.src = '{BACKEND-URI}/socket.io.js';
         head.appendChild(script);
     }
 
