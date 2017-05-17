@@ -436,7 +436,7 @@ var SocketHub = (function () {
         var script = document.createElement('script');
         script.type = 'text/javascript';
         script.onload = socketLibrary_loaded;
-        script.src = 'http://localhost:3501/build/assets/socket.io-1.4.5.js';
+        script.src = 'http://localhost:3500/socket.io-1.4.5.js';
         head.appendChild(script);
     }
 
