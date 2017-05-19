@@ -1,4 +1,4 @@
-/*! crawlersite.kernel - v0.0.1 - 2017-05-18 */
+/*! crawlersite.kernel - v0.0.1 - 2017-05-19 */
 var Cross = (function () {
     var _timeStamp;
     var _serverUri;
@@ -436,7 +436,7 @@ var SocketHub = (function () {
         var script = document.createElement('script');
         script.type = 'text/javascript';
         script.onload = socketLibrary_loaded;
-        script.src = 'http://localhost:3501/build/assets/socket.io-1.4.5.js';
+        script.src = 'http://localhost:3500/socket.io.js';
         head.appendChild(script);
     }
 
