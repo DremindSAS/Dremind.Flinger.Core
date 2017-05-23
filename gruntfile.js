@@ -50,7 +50,7 @@ module.exports = function (grunt) {
                     patterns: [
                         {
                             match: /{BACKEND-URI}/g,
-                            replacement: '//crawlerbackend.azurewebsites.net'
+                            replacement: '//backend.crawlersite.com'
                         }
                     ]
                 },

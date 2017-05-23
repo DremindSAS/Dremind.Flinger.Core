@@ -4,6 +4,10 @@ var Flinger = (function () {
 
 	var constructor = function () {
 		if (Cross.InIframe() == false) {
+			String.prototype.replaceAll = function (search, replacement) {
+				var target = this;
+				return target.replace(new RegExp(search, 'g'), replacement);
+			};
 			_flingerElement = document.querySelector('[data-flinger]');
 
 			// Check if script is on debug mode

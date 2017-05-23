@@ -43,7 +43,8 @@ var SocketHub = (function () {
                 console.log('Connecting to server...');
             }
         }
-        _socket = io(Cross.GetServerUri() + '/user-pool-namespace', { query: 'ApiKey=' + Cross.GetApiKey() + '&ClientInformation=' + JSON.stringify(Cross.GetClientInformation()) });
+        
+        _socket = io(Cross.GetServerUri() + '/user-pool-namespace', { query: 'ApiKey=' + Cross.GetApiKey() });
         socketDefinition();
     }
 
@@ -56,7 +57,7 @@ var SocketHub = (function () {
                 }
             }
 
-            _socket.emit('Coplest.Flinger.AddApiKeyToSocket', { ApiKey: Cross.GetApiKey() })
+            _socket.emit('Coplest.Flinger.AddApiKeyToSocket', { ApiKey: Cross.GetApiKey(), ClientInformation: Cross.GetClientInformation() })
 
             _socket.emit('Coplest.Flinger.CanISendData', { ApiKey: Cross.GetApiKey() })
         });
@@ -130,7 +131,7 @@ var SocketHub = (function () {
         var ns = (Cross.SearchObjectByIdOnArray(ratNamespaceData.Namespace.Id, data.Namespace));
         if (ns != null) {
             console.log('RAT Service Socket URI: ' + Cross.GetServerUri() + '/' + ns.Id);
-            _ratServiceSocket = io(Cross.GetServerUri() + '/' + ns.Id, { query: 'ApiKey=' + Cross.GetApiKey() + '&ClientInformation=' + JSON.stringify(Cross.GetClientInformation())});
+            _ratServiceSocket = io(Cross.GetServerUri() + '/' + ns.Id, { query: 'ApiKey=' + Cross.GetApiKey() + '&ClientInformation=' + JSON.stringify(Cross.GetClientInformation()) });
             ratServiceSocketDefinition(data, ratNamespaceData);
         }
     }
