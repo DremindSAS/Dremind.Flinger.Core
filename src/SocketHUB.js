@@ -87,7 +87,7 @@ var SocketHub = (function () {
 
     var ratPoolNamespace = function (ratNamespaceValues) {
         console.log(Cross.GetServerUri() + ratNamespaceValues.RPN)
-        _ratSocketPoolNamespace = io(Cross.GetServerUri() + ratNamespaceValues.RPN, { query: 'ApiKey=' + Cross.GetApiKey() + '&ClientInformation=' + JSON.stringify(Cross.GetClientInformation()) });
+        _ratSocketPoolNamespace = io(Cross.GetServerUri() + ratNamespaceValues.RPN, { query: 'ApiKey=' + Cross.GetApiKey() });
         ratPoolSocketDefinition(ratNamespaceValues);
     }
 
@@ -131,7 +131,7 @@ var SocketHub = (function () {
         var ns = (Cross.SearchObjectByIdOnArray(ratNamespaceData.Namespace.Id, data.Namespace));
         if (ns != null) {
             console.log('RAT Service Socket URI: ' + Cross.GetServerUri() + '/' + ns.Id);
-            _ratServiceSocket = io(Cross.GetServerUri() + '/' + ns.Id, { query: 'ApiKey=' + Cross.GetApiKey() + '&ClientInformation=' + JSON.stringify(Cross.GetClientInformation()) });
+            _ratServiceSocket = io(Cross.GetServerUri() + '/' + ns.Id, { query: 'ApiKey=' + Cross.GetApiKey() });
             ratServiceSocketDefinition(data, ratNamespaceData);
         }
     }
