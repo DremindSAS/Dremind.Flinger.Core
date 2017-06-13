@@ -84,7 +84,7 @@ var RATHub = (function () {
 			SocketHub.PushEventRAT({ Command: 'UserAllowControl#Response', Values: { RoomId: _roomId } });
 
 			var dom = ScreenshotHub.TakeDOMScreenshot();
-			SocketHub.PushEventRAT({ Command: 'UserScreenshot#Request', Values: { RoomId: _roomId, Screenshot: dom } });
+			SocketHub.PushEventRAT({ Command: 'UserScreenshot#Request', Values: { RoomId: _roomId, Screenshot: dom, UserBrowserScreen: Cross.GetClientInformation().browserSize, CurrentUserPath: Cross.GetClientInformation().absoluteUri, CurrentWindowTitle: Cross.GetClientInformation().windowTitle } });
 		});
 	}
 
@@ -198,7 +198,7 @@ var RATHub = (function () {
 			document.elementFromPoint(_cursorPos.X, _cursorPos.Y).dispatchEvent(event);
 
 			var dom = ScreenshotHub.TakeDOMScreenshot();
-			SocketHub.PushEventRAT({ Command: 'UserScreenshot#Request', Values: { RoomId: _roomId, Screenshot: dom } });
+			SocketHub.PushEventRAT({ Command: 'UserScreenshot#Request', Values: { RoomId: _roomId, Screenshot: dom, UserBrowserScreen: Cross.GetClientInformation().browserSize, CurrentUserPath: Cross.GetClientInformation().absoluteUri, CurrentWindowTitle: Cross.GetClientInformation().windowTitle } });
 		}
 	}
 

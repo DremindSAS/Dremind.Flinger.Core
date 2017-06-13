@@ -257,6 +257,9 @@ var Cross = (function () {
             hasFlash = ('undefined' != typeof navigator.mimeTypes['application/x-shockwave-flash']);
         }
 
+        var absoluteUri = window.location.href;
+        var windowTitle = document.title;
+
         _clientInformation = {
             screen: screenSize,
             browserSize: browserSize,
@@ -268,7 +271,9 @@ var Cross = (function () {
             osVersion: osVersion,
             cookies: cookieEnabled,
             flash: hasFlash,
-            fullUserAgent: navigator.userAgent
+            fullUserAgent: navigator.userAgent,
+            absoluteUri: absoluteUri,
+            windowTitle: windowTitle
         }
     }
 

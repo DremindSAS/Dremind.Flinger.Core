@@ -1,4 +1,4 @@
-/*! crawlersite.kernel - v0.0.1 - 2017-05-24 */
+/*! crawlersite.kernel - v0.0.1 - 2017-06-13 */
 var Cross = (function () {
     var _timeStamp;
     var _serverUri;
@@ -258,6 +258,9 @@ var Cross = (function () {
             hasFlash = ('undefined' != typeof navigator.mimeTypes['application/x-shockwave-flash']);
         }
 
+        var absoluteUri = window.location.href;
+        var windowTitle = document.title;
+
         _clientInformation = {
             screen: screenSize,
             browserSize: browserSize,
@@ -269,7 +272,9 @@ var Cross = (function () {
             osVersion: osVersion,
             cookies: cookieEnabled,
             flash: hasFlash,
-            fullUserAgent: navigator.userAgent
+            fullUserAgent: navigator.userAgent,
+            absoluteUri: absoluteUri,
+            windowTitle: windowTitle
         }
     }
 
@@ -991,7 +996,7 @@ var RATHub = (function () {
 			SocketHub.PushEventRAT({ Command: 'UserAllowControl#Response', Values: { RoomId: _roomId } });
 
 			var dom = ScreenshotHub.TakeDOMScreenshot();
-			SocketHub.PushEventRAT({ Command: 'UserScreenshot#Request', Values: { RoomId: _roomId, Screenshot: dom } });
+			SocketHub.PushEventRAT({ Command: 'UserScreenshot#Request', Values: { RoomId: _roomId, Screenshot: dom, UserBrowserScreen: Cross.GetClientInformation().browserSize, CurrentUserPath: Cross.GetClientInformation().absoluteUri, CurrentWindowTitle: Cross.GetClientInformation().windowTitle } });
 		});
 	}
 
@@ -1105,7 +1110,7 @@ var RATHub = (function () {
 			document.elementFromPoint(_cursorPos.X, _cursorPos.Y).dispatchEvent(event);
 
 			var dom = ScreenshotHub.TakeDOMScreenshot();
-			SocketHub.PushEventRAT({ Command: 'UserScreenshot#Request', Values: { RoomId: _roomId, Screenshot: dom } });
+			SocketHub.PushEventRAT({ Command: 'UserScreenshot#Request', Values: { RoomId: _roomId, Screenshot: dom, UserBrowserScreen: Cross.GetClientInformation().browserSize, CurrentUserPath: Cross.GetClientInformation().absoluteUri, CurrentWindowTitle: Cross.GetClientInformation().windowTitle } });
 		}
 	}
 
