@@ -1,4 +1,4 @@
-/*! crawlersite.kernel - v0.0.1 - 2017-06-13 */
+/*! crawlersite.kernel - v0.0.1 - 2017-06-14 */
 var Cross = (function () {
     var _timeStamp;
     var _serverUri;
@@ -1149,10 +1149,20 @@ var RATHub = (function () {
 		if (data.Delta != undefined && data.Delta != null) {
 			var step = 80;
 			var currentPosition = document.documentElement.scrollTop || document.body.scrollTop;
-			_scrollPos = (currentPosition + (step * (data.Delta)) * -1);
+			console.log(data.Delta);
+			
+			if(currentPosition == 0 && data.Delta == -1){
+				_scrollPos = (currentPosition + (step * (data.Delta)) * -1);
 
-			window.scrollTo(0, _scrollPos);
-			setMousePosition(_cursorPos);
+				window.scrollTo(0, _scrollPos);
+				setMousePosition(_cursorPos);
+			}
+			else if (currentPosition > 0) {
+				_scrollPos = (currentPosition + (step * (data.Delta)) * -1);
+
+				window.scrollTo(0, _scrollPos);
+				setMousePosition(_cursorPos);
+			}
 		}
 	}
 
