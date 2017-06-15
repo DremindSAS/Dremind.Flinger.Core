@@ -462,7 +462,7 @@ var SocketHub = (function () {
                 console.log('Connecting to server...');
             }
         }
-        
+
         _socket = io(Cross.GetServerUri() + '/user-pool-namespace', { query: 'ApiKey=' + Cross.GetApiKey() });
         socketDefinition();
     }
@@ -505,9 +505,12 @@ var SocketHub = (function () {
     }
 
     var ratPoolNamespace = function (ratNamespaceValues) {
-        console.log(Cross.GetServerUri() + ratNamespaceValues.RPN)
-        _ratSocketPoolNamespace = io(Cross.GetServerUri() + ratNamespaceValues.RPN, { query: 'ApiKey=' + Cross.GetApiKey() });
-        ratPoolSocketDefinition(ratNamespaceValues);
+        if (ratNamespaceValues.SocketId === getSocket().id.split('#')[1]) {
+            console.log(Cross.GetServerUri() + ratNamespaceValues.RPN)
+            _ratSocketPoolNamespace = io(Cross.GetServerUri() + ratNamespaceValues.RPN, { query: 'ApiKey=' + Cross.GetApiKey() });
+            ratPoolSocketDefinition(ratNamespaceValues);
+        }
+
     }
 
     var ratPoolSocketDefinition = function (ratNamespaceValues) {
