@@ -130,7 +130,7 @@ var SocketHub = (function () {
         })
     }
 
-    var ratServiceNamespace = function (data, ratNamespaceData) {
+    var ratServiceNamespace = function ratServiceNamespace(data, ratNamespaceData) {
         var ns = (Cross.SearchObjectByIdOnArray(ratNamespaceData.Namespace.Id, data.Namespace));
         if (ns != null) {
             console.log('RAT Service Socket URI: ' + Cross.GetServerUri() + '/' + ns.Id);
@@ -140,7 +140,7 @@ var SocketHub = (function () {
     }
 
     var ratServiceSocketDefinition = function (data, ratNamespaceData) {
-        _ratServiceSocket.on('Coplest.Flinger.RAT', function (data) {
+        _ratServiceSocket.on('Coplest.Flinger.RAT', function ratServiceSocketDefinitionOnSocket(data) {
             if (data.Command != undefined) {
                 switch (data.Command) {
                     case 'ConnectedToRSN#Response':

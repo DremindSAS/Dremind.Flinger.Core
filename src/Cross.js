@@ -388,6 +388,23 @@ var Cross = (function () {
         }
     }
 
+    var getStacktrace = function () {
+        function st2(f) {
+            var args = [];
+            if (f) {
+                for (var i = 0; i < f.arguments.length; i++) {
+                    args.push(f.arguments[i]);
+                }
+                
+                var function_name = f.toString().split('(')[0].substring(9);
+                return st2(f.caller) + (function_name.length > 0 ? function_name + '();' : '();');
+            } else {
+                return "";
+            }
+        }
+        return st2(arguments.callee.caller);
+    }
+
     return {
         Initialize: constructor,
         TimeStamp: timeStamp,
@@ -412,6 +429,7 @@ var Cross = (function () {
         GetFlingerObj: getFlingerObj,
         InIframe: inIframe,
         RemoveJSCSSfile: removejscssfile,
+        GetStacktrace: getStacktrace,
     };
 })();
 

