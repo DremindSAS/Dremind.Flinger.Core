@@ -240,10 +240,14 @@ var SocketHub = (function () {
         })
     }
 
-    var pushEventRAT = function (data) {
+    var pushEventRAT = function (data, callback) {
         if (_ratServiceSocket != undefined) {
             if (Cross.GetApiKey() != undefined && Cross.GetApiKey().length > 0) {
-                _ratServiceSocket.emit('Coplest.Flinger.RAT', { Command: data.Command, Values: data.Values });
+                _ratServiceSocket.emit('Coplest.Flinger.RAT', { Command: data.Command, Values: data.Values }, function(data){
+                    if(callback != undefined){
+                        callback(data);
+                    }
+                });
             }
         }
     }

