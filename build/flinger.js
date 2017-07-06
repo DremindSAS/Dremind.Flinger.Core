@@ -54,13 +54,13 @@ Cross.prototype = function () {
         if (inIframe() == false) {
             setApiKey(this);
             analyzeClient(this);
-            setUseHeatmaps(this,null);
-            setUseRAT(this,null);
-            setUseFunnels(this,null);
-            setUseScreenRecorder(this,null);
-            setUseFormAnalysis(this,null);
+            setUseHeatmaps(this, null);
+            setUseRAT(this, null);
+            setUseFunnels(this, null);
+            setUseScreenRecorder(this, null);
+            setUseFormAnalysis(this, null);
             createStringToDOMPrototype();
-            setFlingerObj(this,{});
+            setFlingerObj(this, {});
             querySelectorPolyfill();
         }
     }
@@ -94,7 +94,7 @@ Cross.prototype = function () {
         }
     }
 
-    var setFlingerObj = function (crossObj,obj) {
+    var setFlingerObj = function (crossObj, obj) {
         crossObj._flingerObj = obj;
     }
 
