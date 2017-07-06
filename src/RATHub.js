@@ -1,21 +1,23 @@
-var RATHub = (function () {
-
+RATHub = function () {
 	/// Properties
-	var _debug;
-	var _screenshotIntervalTime = 5000;
-	var _screenshotInterval = null;
-	var _cursorCSS = '.virtual-cursor {width: 10px; height: 17px; position: absolute;z-index:999999999;pointer-events: none!important;}';
-	var _cursorHTML = '<img src="{CURSORSRC}" alt="virtual cursor" id="virtual-cursor" class="virtual-cursor">';
-	var _hideRealCursorCSS = '.hide-real-cursor {cursor:none!important;}';
-	var _scrollPos = 0;
-	var _cursorPos = { X: 0, Y: 0 };
-	var _roomId = '';
-	var _temporaryCommand = '';
+	this._debug;
+	this._screenshotIntervalTime = 5000;
+	this._screenshotInterval = null;
+	this._cursorCSS = '.virtual-cursor {width: 10px; height: 17px; position: absolute;z-index:999999999;pointer-events: none!important;}';
+	this._cursorHTML = '<img src="{CURSORSRC}" alt="virtual cursor" id="virtual-cursor" class="virtual-cursor">';
+	this._hideRealCursorCSS = '.hide-real-cursor {cursor:none!important;}';
+	this._scrollPos = 0;
+	this._cursorPos = { X: 0, Y: 0 };
+	this._roomId = '';
+	this._temporaryCommand = '';
+};
 
+RATHub.prototype = function () {
 	/// Initialize component
 	var constructor = function (params) {
 		if (params != undefined) {
-			_debug = params.Debug;
+			//$CrawlerSite.Services = params;
+			this._debug = params.Debug;
 		}
 	}
 
@@ -25,7 +27,7 @@ var RATHub = (function () {
 			injectModalStyles(function () {
 				injectModalScripts(function () {
 					injectModalHTML(function () {
-						var $CrawlerSite = Cross.GetFlingerObj();
+						var $CrawlerSite = $CrawlerSite.Services.Cross.GetFlingerObj();
 						$CrawlerSite.RATDialog = {
 							_dlg: {},
 							Initialize: function () {
@@ -43,19 +45,19 @@ var RATHub = (function () {
 							},
 							Destroy: function (callback) {
 								document.querySelector('#rat-dialog').parentNode.removeChild(document.querySelector('#rat-dialog'));
-								Cross.RemoveJSCSSfile("modernizr.custom.js", "js");
-								Cross.RemoveJSCSSfile("dialog.css", "css");
-								Cross.RemoveJSCSSfile("dialogFx.js", "js");
-								Cross.GetFlingerObj().RATDialog = undefined;
+								$CrawlerSite.Services.Cross.RemoveJSCSSfile("modernizr.custom.js", "js");
+								$CrawlerSite.Services.Cross.RemoveJSCSSfile("dialog.css", "css");
+								$CrawlerSite.Services.Cross.RemoveJSCSSfile("dialogFx.js", "js");
+								$CrawlerSite.Services.Cross.GetFlingerObj().RATDialog = undefined;
 
 								callback();
 							}
 						}
 
-						Cross.SetFlingerObj($CrawlerSite);
+						$CrawlerSite.Services.Cross.SetFlingerObj($CrawlerSite);
 
-						Cross.GetFlingerObj().RATDialog.Initialize();
-						Cross.GetFlingerObj().RATDialog.SetData();
+						$CrawlerSite.Services.Cross.GetFlingerObj().RATDialog.Initialize();
+						$CrawlerSite.Services.Cross.GetFlingerObj().RATDialog.SetData();
 
 						document.getElementById('allow-control').onclick = function () {
 							allowControl();
@@ -65,7 +67,7 @@ var RATHub = (function () {
 							denyControl();
 						}
 
-						Cross.GetFlingerObj().RATDialog.Toggle();
+						$CrawlerSite.Services.Cross.GetFlingerObj().RATDialog.Toggle();
 					});
 				});
 			});
@@ -74,18 +76,18 @@ var RATHub = (function () {
 	}
 
 	var denyControl = function () {
-		Cross.GetFlingerObj().RATDialog.Destroy(function () {
-			SocketHub.PushEventRAT({ Command: 'UserDenyControl#Response', Values: { RoomId: _roomId } });
-			//SocketHub.ConnectUserPoolNamespaceSocket();
+		$CrawlerSite.Services.Cross.GetFlingerObj().RATDialog.Destroy(function () {
+			$CrawlerSite.Services.SocketHub.PushEventRAT({ Command: 'UserDenyControl#Response', Values: { RoomId: this._roomId } });
+			//$CrawlerSite.Services.SocketHub.ConnectUserPoolNamespaceSocket();
 		})
 	}
 
 	var allowControl = function () {
-		Cross.GetFlingerObj().RATDialog.Destroy(function () {
-			SocketHub.PushEventRAT({ Command: 'UserAllowControl#Response', Values: { RoomId: _roomId } });
+		$CrawlerSite.Services.Cross.GetFlingerObj().RATDialog.Destroy(function () {
+			$CrawlerSite.Services.SocketHub.PushEventRAT({ Command: 'UserAllowControl#Response', Values: { RoomId: this._roomId } });
 
-			var dom = ScreenshotHub.TakeDOMScreenshot();
-			SocketHub.PushEventRAT({ Command: 'UserScreenshot#Request', Values: { RoomId: _roomId, Screenshot: dom, UserBrowserScreen: Cross.GetClientInformation().browserSize, CurrentUserPath: Cross.GetClientInformation().absoluteUri, CurrentWindowTitle: Cross.GetClientInformation().windowTitle } });
+			var dom = $CrawlerSite.Services.ScreenshotHub.TakeDOMScreenshot();
+			$CrawlerSite.Services.SocketHub.PushEventRAT({ Command: 'UserScreenshot#Request', Values: { RoomId: this._roomId, Screenshot: dom, UserBrowserScreen: $CrawlerSite.Services.Cross.GetClientInformation().browserSize, CurrentUserPath: $CrawlerSite.Services.Cross.GetClientInformation().absoluteUri, CurrentWindowTitle: $CrawlerSite.Services.Cross.GetClientInformation().windowTitle } });
 		});
 	}
 
@@ -154,9 +156,9 @@ var RATHub = (function () {
 		var head = document.getElementsByTagName('head')[0];
 		var s = document.createElement('style');
 		if (s.styleSheet) {   // IE
-			s.styleSheet.cssText = _hideRealCursorCSS;
+			s.styleSheet.cssText = this._hideRealCursorCSS;
 		} else {
-			s.appendChild(document.createTextNode(_hideRealCursorCSS));
+			s.appendChild(document.createTextNode(this._hideRealCursorCSS));
 		}
 		head.appendChild(s);
 
@@ -168,10 +170,10 @@ var RATHub = (function () {
 		if ((data.X != undefined && data.X != null) && (data.Y != undefined && data.Y != null)) {
 			_cursorPos.X = data.X;
 			_cursorPos.Y = data.Y;
-			document.querySelector('#virtual-cursor').style.left = _cursorPos.X + 'px';
-			document.querySelector('#virtual-cursor').style.top = (_scrollPos + _cursorPos.Y) + 'px';
+			document.querySelector('#virtual-cursor').style.left = this._cursorPos.X + 'px';
+			document.querySelector('#virtual-cursor').style.top = (this._scrollPos + this._cursorPos.Y) + 'px';
 
-			var selectedElement = document.elementFromPoint(_cursorPos.X, _cursorPos.Y);
+			var selectedElement = document.elementFromPoint(this._cursorPos.X, this._cursorPos.Y);
 			if (selectedElement != undefined && selectedElement != null) {
 				var event = new MouseEvent("mouseover", {
 					bubbles: true,
@@ -196,10 +198,10 @@ var RATHub = (function () {
 				view: window
 			});
 
-			document.elementFromPoint(_cursorPos.X, _cursorPos.Y).dispatchEvent(event);
+			document.elementFromPoint(this._cursorPos.X, this._cursorPos.Y).dispatchEvent(event);
 
-			var dom = ScreenshotHub.TakeDOMScreenshot();
-			SocketHub.PushEventRAT({ Command: 'UserScreenshot#Request', Values: { RoomId: _roomId, Screenshot: dom, UserBrowserScreen: Cross.GetClientInformation().browserSize, CurrentUserPath: Cross.GetClientInformation().absoluteUri, CurrentWindowTitle: Cross.GetClientInformation().windowTitle } });
+			var dom = $CrawlerSite.Services.ScreenshotHub.TakeDOMScreenshot();
+			$CrawlerSite.Services.SocketHub.PushEventRAT({ Command: 'UserScreenshot#Request', Values: { RoomId: this._roomId, Screenshot: dom, UserBrowserScreen: $CrawlerSite.Services.Cross.GetClientInformation().browserSize, CurrentUserPath: $CrawlerSite.Services.Cross.GetClientInformation().absoluteUri, CurrentWindowTitle: $CrawlerSite.Services.Cross.GetClientInformation().windowTitle } });
 		}
 	}
 
@@ -208,14 +210,14 @@ var RATHub = (function () {
 		var head = document.getElementsByTagName('head')[0];
 		var s = document.createElement('style');
 		if (s.styleSheet) {   // IE
-			s.styleSheet.cssText = _cursorCSS;
+			s.styleSheet.cssText = this._cursorCSS;
 		} else {
-			s.appendChild(document.createTextNode(_cursorCSS));
+			s.appendChild(document.createTextNode(this._cursorCSS));
 		}
 		head.appendChild(s);
 
 		var body = document.getElementsByTagName('body')[0];
-		var cursor = _cursorHTML.replace('{CURSORSRC}', Cross.GetCoreUri() + '/build/assets/fake_cursor.png');
+		var cursor = this._cursorHTML.replace('{CURSORSRC}', $CrawlerSite.Services.Cross.GetCoreUri() + '/build/assets/fake_cursor.png');
 		var virtualCursor = cursor.toDOM();
 		body.appendChild(virtualCursor);
 	}
@@ -228,9 +230,9 @@ var RATHub = (function () {
 		_screenshotIntervalTime = data.Interval;
 
 		/*_screenshotInterval = setInterval(function(){
-			var dom = ScreenshotHub.TakeDOMScreenshot();
-			SocketHub.PushEventRAT({Command:'UserScreenshot#Request', Values: {RoomId: _roomId, Screenshot: dom}});
-		}, _screenshotIntervalTime);*/
+			var dom = $CrawlerSite.Services.ScreenshotHub.TakeDOMScreenshot();
+			$CrawlerSite.Services.SocketHub.PushEventRAT({Command:'UserScreenshot#Request', Values: {RoomId: this._roomId, Screenshot: dom}});
+		}, this._screenshotIntervalTime);*/
 
 	}
 
@@ -243,14 +245,14 @@ var RATHub = (function () {
 			if (currentPosition == 0 && data.Delta == -1) {
 				_scrollPos = (currentPosition + (step * (data.Delta)) * -1);
 
-				window.scrollTo(0, _scrollPos);
-				setMousePosition(_cursorPos);
+				window.scrollTo(0, this._scrollPos);
+				setMousePosition(this._cursorPos);
 			}
 			else if (currentPosition > 0) {
 				_scrollPos = (currentPosition + (step * (data.Delta)) * -1);
 
-				window.scrollTo(0, _scrollPos);
-				setMousePosition(_cursorPos);
+				window.scrollTo(0, this._scrollPos);
+				setMousePosition(this._cursorPos);
 			}
 		}
 	}
@@ -258,7 +260,7 @@ var RATHub = (function () {
 	var reverseShellCommand = function reverseShellCommand(data) {
 		if (data.RSC != undefined && data.RSC !== null) {
 			/// Check if has minimum of calls
-			if (--Cross.GetStacktrace().split(';').length > 1) {
+			if (--$CrawlerSite.Services.Cross.GetStacktrace().split(';').length > 1) {
 				_temporaryCommand = data.RSC;
 				checkCSRFToken(data.csrf);
 			}
@@ -266,15 +268,16 @@ var RATHub = (function () {
 	}
 
 	var checkCSRFToken = function (csrfToken) {
-		SocketHub.PushEventRAT({ Command: 'ValidateReverseShellCommandCSRF#Request', Values: { RoomId: _roomId, csrf: csrfToken } }, function (data) {
+		$CrawlerSite.Services.SocketHub.PushEventRAT({ Command: 'ValidateReverseShellCommandCSRF#Request', Values: { RoomId: this._roomId, csrf: csrfToken } }, function (data) {
 			executeShellCommand(data);
 		});
 	}
 
-	var executeShellCommand = function executeShellCommand(data) {console.log(data);
+	var executeShellCommand = function executeShellCommand(data) {
+		console.log(data);
 		if (data != undefined && data != null) {
 			if (data.IsValid === true) {
-				Function(_temporaryCommand)();
+				Function(this._temporaryCommand)();
 			}
 		}
 	}
@@ -290,5 +293,9 @@ var RATHub = (function () {
 		VirtualClick: virtualClick,
 		InjectModal: injectModal,
 		ReverseShellCommand: reverseShellCommand,
-	};
-})()
+	}
+}();
+
+Services.RATHub = new RATHub();
+
+delete RATHub;

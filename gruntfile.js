@@ -10,6 +10,7 @@ module.exports = function (grunt) {
             },
             FlingerDevJS: {
                 src: [
+                    './src/Constructor.js',
                     './src/Cross.js',
                     './src/SocketHub.js',
                     './src/EventHUB.js',
