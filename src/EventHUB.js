@@ -57,25 +57,25 @@ EventHub.prototype = function () {
             if (this._debug === true) {
                 injectMouseDotStyle();
             }
-            
-            
-            injectMouseClickEventListener();
-            injectMouseMovementEventListener();
-            injectMouseScrollEventListener();
+
+
+            injectMouseClickEventListener(this);
+            injectMouseMovementEventListener(this);
+            injectMouseScrollEventListener(this);
         }
     }
 
     /// Make a click listener to all document 
-    var injectMouseClickEventListener = function () {
-        document.addEventListener('click', getMouseClickCoords);
+    var injectMouseClickEventListener = function (context) {
+        document.addEventListener('click', function (event) { getMouseClickCoords(context, event); });
     }
 
-    var injectMouseMovementEventListener = function () {
-        document.onmousemove = getMouseMovementCoords;
+    var injectMouseMovementEventListener = function (context) {
+        document.onmousemove = function (event) { getMouseMovementCoords(context, event); };
     }
 
-    var injectMouseScrollEventListener = function () {
-        window.addEventListener("scroll", getMouseScrollCoords, false);
+    var injectMouseScrollEventListener = function (context) {
+        window.addEventListener("scroll", function (event) { getMouseScrollCoords(context, event) }, false);
     }
 
     var injectMouseDotStyle = function () {
@@ -91,9 +91,9 @@ EventHub.prototype = function () {
     }
 
     /// Catch all mouse scroll movement
-    var getMouseScrollCoords = function (event) {
+    var getMouseScrollCoords = function (context, event) {
         //console.log($crawlerSite.Services);
-        
+
         var scrollEvent = {
             Position: { X: this.scrollX, Y: this.scrollY },
             TimeStamp: $CrawlerSite.Services.Cross.TimeStamp(),
@@ -109,12 +109,12 @@ EventHub.prototype = function () {
             }
         }
         else {
-            this._mouseScrollEvents.push(scrollEvent);
+            context._mouseScrollEvents.push(scrollEvent);
         }
     }
 
     /// Catch all mouse movement
-    var getMouseMovementCoords = function (event) {
+    var getMouseMovementCoords = function (context, event) {
         var dot, eventDoc, doc, body, pageX, pageY;
 
         event = event || window.event; // IE-ism
@@ -164,12 +164,12 @@ EventHub.prototype = function () {
             }
         }
         else {
-            this._mouseMovementEvents.push(movementEvent);
+            context._mouseMovementEvents.push(movementEvent);
         }
     }
 
     /// Catch all mouse click
-    var getMouseClickCoords = function (event) {
+    var getMouseClickCoords = function (context, event) {
         var clickEvent = {
             Position: { X: event.clientX, Y: event.clientY },
             Scroll: $CrawlerSite.Services.Cross.GetScrollPosition(),
@@ -191,7 +191,7 @@ EventHub.prototype = function () {
             }
         }
         else {
-            this._mouseClickEvents.push(clickEvent);
+            context._mouseClickEvents.push(clickEvent);
         }
     }
 
