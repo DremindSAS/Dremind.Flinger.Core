@@ -93,24 +93,24 @@ Cross.prototype = function () {
         }
     }
 
-    var setFlingerObj = function (crossObj, obj) {
-        crossObj._flingerObj = obj;
+    var setFlingerObj = function (context, obj) {
+        context._flingerObj = obj;
     }
 
     var getFlingerObj = function () {
         return this._flingerObj;
     }
 
-    var setApiKey = function (crossObj) {
-        crossObj._flingerElement = document.querySelector('[data-flinger]');
-        crossObj._apiKey = crossObj._flingerElement.dataset.flinger == undefined ? false : crossObj._flingerElement.dataset.flinger;
+    var setApiKey = function (context) {
+        context._flingerElement = document.querySelector('[data-flinger]');
+        context._apiKey = context._flingerElement.dataset.flinger == undefined ? false : context._flingerElement.dataset.flinger;
     }
 
     var timeStamp = function () {
         return this._timeStamp.getTime();
     }
 
-    var analyzeClient = function () {
+    var analyzeClient = function (context) {
         var unknown = '-';
 
         // screen
@@ -220,8 +220,8 @@ Cross.prototype = function () {
         // system
         var os = unknown;
 
-        for (var id in this._clientStrings) {
-            var cs = this._clientStrings[id];
+        for (var id in context._clientStrings) {
+            var cs = context._clientStrings[id];
             if (cs.r.test(nAgt)) {
                 os = cs.s;
                 break;
@@ -260,9 +260,11 @@ Cross.prototype = function () {
         }
 
         var absoluteUri = window.location.href;
+        var endpoint = document.location.pathname;
         var windowTitle = document.title;
+        var referrer = document.referrer;
 
-        this._clientInformation = {
+        context._clientInformation = {
             screen: screenSize,
             browserSize: browserSize,
             browser: browser,
@@ -275,7 +277,9 @@ Cross.prototype = function () {
             flash: hasFlash,
             fullUserAgent: navigator.userAgent,
             absoluteUri: absoluteUri,
-            windowTitle: windowTitle
+            endpoint: endpoint,
+            windowTitle: windowTitle,
+            referrer: referrer,
         }
     }
 
@@ -311,24 +315,24 @@ Cross.prototype = function () {
         return this._apiKey;
     }
 
-    var setUseHeatmaps = function (crossObj, canUse) {
-        crossObj._canUseHeatmaps = canUse;
+    var setUseHeatmaps = function (context, canUse) {
+        context._canUseHeatmaps = canUse;
     }
 
-    var setUseRAT = function (crossObj, canUse) {
-        crossObj._canUseRAT = canUse;
+    var setUseRAT = function (context, canUse) {
+        context._canUseRAT = canUse;
     }
 
-    var setUseFunnels = function (crossObj, canUse) {
-        crossObj._canUseFunnels = canUse;
+    var setUseFunnels = function (context, canUse) {
+        context._canUseFunnels = canUse;
     }
 
-    var setUseScreenRecorder = function canUse(crossObj) {
-        crossObj._canUseScreenRecorder = canUse;
+    var setUseScreenRecorder = function (context, canUse) {
+        context._canUseScreenRecorder = canUse;
     }
 
-    var setUseFormAnalysis = function (crossObj, canUse) {
-        crossObj._canUseFormAnalysis = canUse;
+    var setUseFormAnalysis = function (context, canUse) {
+        context._canUseFormAnalysis = canUse;
     }
 
     var canUseHeatmaps = function () {
