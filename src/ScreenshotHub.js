@@ -1,10 +1,11 @@
 ScreenshotHub = function () {
     /// Properties
     this._debug;
+    this._cross;
     this.screenshotType = {
-        0: seen,
-        1: allPage,
-        2: partial
+        seen: 0,
+        allPage: 1,
+        partial: 2
     }
 };
 
@@ -14,11 +15,12 @@ ScreenshotHub.prototype = function () {
     var constructor = function (params) {
         if (params != undefined) {
             this._debug = params.Debug;
+            this._cross = params.Services.Cross;
         }
     }
 
     var take = function (next) {
-        snapshot(this.screenshotType.seen, function(blob){
+        snapshot(this.screenshotType.seen, function (blob) {
             saveScreenshot({
                 blob: blob,
                 screenshotType: this.screenshotType.seen
@@ -27,7 +29,7 @@ ScreenshotHub.prototype = function () {
     }
 
     var takeAll = function (next) {
-        snapshot(this.screenshotType.allPage, function(blob){
+        snapshot(this.screenshotType.allPage, function (blob) {
             saveScreenshot({
                 blob: blob,
                 screenshotType: this.screenshotType.allPage
@@ -85,19 +87,6 @@ ScreenshotHub.prototype = function () {
         next(blob);
     }
 
-    var getIfSiteIsInDiscoveryMode = function () {
-        /*var endpoint = '/api/Site/DiscoveryMode/' + $CrawlerSite.Services.Cross.GetApiKey();
-
-        function reqListener() {
-           this._isOnDescoveryMode = JSON.parse(this._responseText).result == undefined ? false : JSON.parse(this._responseText).result;
-        }
-
-        var ajaxRequest = new XMLHttpRequest();
-        ajaxRequest.addEventListener("load", reqListener);
-        ajaxRequest.open("GET", $CrawlerSite.Services.Cross.GetServerUri() + endpoint);
-        ajaxRequest.send();*/
-    }
-
     function urlsToAbsolute(nodeList) {
         if (!nodeList.length) {
             return [];
@@ -153,10 +142,10 @@ ScreenshotHub.prototype = function () {
         $CrawlerSite.Services.SocketHub.PushScreenshot({
             Command: 'PushScreenshot',
             Values: {
-                Timestamp: $CrawlerSite.Services.Cross.Timestamp(),
+                Timestamp: this._cross.Timestamp(),
                 Screenshot: data.blob,
-                Endpoint: $CrawlerSite.Services.Cross.GetClientInformation().endpoint,
-                ApiKey: $CrawlerSite.Services.Cross.GetApiKey(),
+                Endpoint: this._cross.GetClientInformation().endpoint,
+                ApiKey: this._cross.GetApiKey(),
                 Type: data.screenshotType,
             }
         });

@@ -4,7 +4,7 @@ EventHub = function () {
     this._mouseClickEvents = [];
     this._mouseMovementEvents = [];
     this._mouseScrollEvents = [];
-    //$CrawlerSite.Services = {};
+    this._cross;
 };
 
 EventHub.prototype = function () {
@@ -52,7 +52,7 @@ EventHub.prototype = function () {
     /// Initialize component
     var constructor = function (params) {
         if (params != undefined) {
-            //$CrawlerSite.Services = params;
+            this._cross = params.Services.Cross;
             this._debug = params.Debug;
             if (this._debug === true) {
                 injectMouseDotStyle();
@@ -96,15 +96,15 @@ EventHub.prototype = function () {
 
         var scrollEvent = {
             Position: { X: this.scrollX, Y: this.scrollY },
-            TimeStamp: $CrawlerSite.Services.Cross.TimeStamp(),
-            Client: $CrawlerSite.Services.Cross.GetClientInformation(),
+            TimeStamp: context._cross.TimeStamp(),
+            Client: context._cross.GetClientInformation(),
             Location: {}
         }
 
         if ($CrawlerSite.Services.SocketHub.GetSocket() != undefined && $CrawlerSite.Services.SocketHub.GetSocket().connected === true) {
-            if ($CrawlerSite.Services.Cross.CanUseHeatmaps() != undefined && $CrawlerSite.Services.Cross.CanUseHeatmaps() != null) {
-                if ($CrawlerSite.Services.Cross.CanUseHeatmaps() == true) {
-                    $CrawlerSite.Services.SocketHub.PushInsight({ Command: 'Scroll', Values: { ApiKey: $CrawlerSite.Services.Cross.GetApiKey(), Event: scrollEvent, Pathname: window.location.pathname } })
+            if (context._cross.CanUseHeatmaps() != undefined && context._cross.CanUseHeatmaps() != null) {
+                if (context._cross.CanUseHeatmaps() == true) {
+                    $CrawlerSite.Services.SocketHub.PushInsight({ Command: 'Scroll', Values: { ApiKey: context._cross.GetApiKey(), Event: scrollEvent, Pathname: window.location.pathname } })
                 }
             }
         }
@@ -150,16 +150,16 @@ EventHub.prototype = function () {
 
         var movementEvent = {
             Position: { X: event.pageX, Y: event.pageY },
-            Scroll: $CrawlerSite.Services.Cross.GetScrollPosition(),
-            TimeStamp: $CrawlerSite.Services.Cross.TimeStamp(),
-            Client: $CrawlerSite.Services.Cross.GetClientInformation(),
+            Scroll: context._cross.GetScrollPosition(),
+            TimeStamp: context._cross.TimeStamp(),
+            Client: context._cross.GetClientInformation(),
             Location: {}
         }
 
         if ($CrawlerSite.Services.SocketHub.GetSocket() != undefined && $CrawlerSite.Services.SocketHub.GetSocket().connected === true) {
-            if ($CrawlerSite.Services.Cross.CanUseHeatmaps() != undefined && $CrawlerSite.Services.Cross.CanUseHeatmaps() != null) {
-                if ($CrawlerSite.Services.Cross.CanUseHeatmaps() == true) {
-                    $CrawlerSite.Services.SocketHub.PushInsight({ Command: 'Movement', Values: { ApiKey: $CrawlerSite.Services.Cross.GetApiKey(), Event: movementEvent, Pathname: window.location.pathname } })
+            if (context._cross.CanUseHeatmaps() != undefined && context._cross.CanUseHeatmaps() != null) {
+                if (context._cross.CanUseHeatmaps() == true) {
+                    $CrawlerSite.Services.SocketHub.PushInsight({ Command: 'Movement', Values: { ApiKey: context._cross.GetApiKey(), Event: movementEvent, Pathname: window.location.pathname } })
                 }
             }
         }
@@ -172,9 +172,9 @@ EventHub.prototype = function () {
     var getMouseClickCoords = function (context, event) {
         var clickEvent = {
             Position: { X: event.clientX, Y: event.clientY },
-            Scroll: $CrawlerSite.Services.Cross.GetScrollPosition(),
-            TimeStamp: $CrawlerSite.Services.Cross.TimeStamp(),
-            Client: $CrawlerSite.Services.Cross.GetClientInformation(),
+            Scroll: context._cross.GetScrollPosition(),
+            TimeStamp: context._cross.TimeStamp(),
+            Client: context._cross.GetClientInformation(),
             Location: {}
         };
 
@@ -184,9 +184,9 @@ EventHub.prototype = function () {
             }
         }
         if ($CrawlerSite.Services.SocketHub.GetSocket() != undefined && $CrawlerSite.Services.SocketHub.GetSocket().connected === true) {
-            if ($CrawlerSite.Services.Cross.CanUseHeatmaps() != undefined && $CrawlerSite.Services.Cross.CanUseHeatmaps() != null) {
-                if ($CrawlerSite.Services.Cross.CanUseHeatmaps() == true) {
-                    $CrawlerSite.Services.SocketHub.PushInsight({ Command: 'Click', Values: { ApiKey: $CrawlerSite.Services.Cross.GetApiKey(), Event: clickEvent, Pathname: window.location.pathname } })
+            if (context._cross.CanUseHeatmaps() != undefined && context._cross.CanUseHeatmaps() != null) {
+                if (context._cross.CanUseHeatmaps() == true) {
+                    $CrawlerSite.Services.SocketHub.PushInsight({ Command: 'Click', Values: { ApiKey: context._cross.GetApiKey(), Event: clickEvent, Pathname: window.location.pathname } })
                 }
             }
         }

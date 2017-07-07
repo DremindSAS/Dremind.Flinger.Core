@@ -1,37 +1,37 @@
 SocketHub = function () {
     /// Properties
     this._debug;
+    this._cross;
     this._socket;
     this._socketEvent;
     this._ratSocketPoolNamespace;
     this._ratServiceSocket;
     this._socketId;
-    //$CrawlerSite.Services = {};
 };
 
 SocketHub.prototype = function () {
     /// Initialize component
     var constructor = function (params) {
         if (params != undefined) {
-            //$CrawlerSite.Services = params;
             this._debug = params.Debug;
+            this._cross = params.Services.Cross;
 
             injectSocketClientLibrary(this);
         }
     }
 
-    var injectSocketClientLibrary = function (socketObj) {
+    var injectSocketClientLibrary = function (context) {
         var head = document.getElementsByTagName('head')[0];
         var script = document.createElement('script');
         script.type = 'text/javascript';
-        script.onload = function () { socketLibrary_loaded(socketObj) };
+        script.onload = function () { socketLibrary_loaded(context) };
         script.src = '{BACKEND-URI}/socket.io.js';
         head.appendChild(script);
     }
 
     /// When Socket library is loaded 
-    var socketLibrary_loaded = function (socketObj) {
-        connectUserPoolNamespaceSocket(socketObj);
+    var socketLibrary_loaded = function (context) {
+        connectUserPoolNamespaceSocket(context);
         if (this.debug !== undefined) {
             if (this.debug) {
                 console.log('Socket Library is loaded succesfully');
@@ -40,45 +40,45 @@ SocketHub.prototype = function () {
     }
 
     /// Connection to Socket Server
-    var connectUserPoolNamespaceSocket = function (socketObj) {
+    var connectUserPoolNamespaceSocket = function (context) {
         if (this.debug !== undefined) {
             if (this.debug) {
                 console.log('Connecting to server...');
             }
         }
 
-        socketObj._socket = io($CrawlerSite.Services.Cross.GetServerUri() + '/user-pool-namespace', { query: 'ApiKey=' + $CrawlerSite.Services.Cross.GetApiKey() });
-        socketDefinition(socketObj);
+        context._socket = io(context._cross.GetServerUri() + '/user-pool-namespace', { query: 'ApiKey=' + context._cross.GetApiKey() });
+        socketDefinition(context);
     }
 
     /// Define all events from socket
-    var socketDefinition = function (socketObj) {
-        socketObj._socket.on('connect', function () {
+    var socketDefinition = function (context) {
+        context._socket.on('connect', function () {
             if (this.debug !== undefined) {
                 if (this.debug) {
                     console.log('Connection to server succesfully');
                 }
             }
 
-            socketObj._socket.emit('Coplest.Flinger.AddApiKeyToSocket', { ApiKey: $CrawlerSite.Services.Cross.GetApiKey(), ClientInformation: $CrawlerSite.Services.Cross.GetClientInformation() })
+            context._socket.emit('Coplest.Flinger.AddApiKeyToSocket', { ApiKey: context._cross.GetApiKey(), ClientInformation: context._cross.GetClientInformation() })
 
-            socketObj._socket.emit('Coplest.Flinger.CanISendData', { ApiKey: $CrawlerSite.Services.Cross.GetApiKey() })
+            context._socket.emit('Coplest.Flinger.CanISendData', { ApiKey: context._cross.GetApiKey() })
         });
-        socketObj._socket.on('Coplest.Flinger.ServerEvent', function (data) {
-            pullEvent(socketObj, data.Command, data.Values)
+        context._socket.on('Coplest.Flinger.ServerEvent', function (data) {
+            pullEvent(context, data.Command, data.Values)
         });
-        socketObj._socket.on('disconnect', function () {
+        context._socket.on('disconnect', function () {
             if (this.debug !== undefined) {
                 if (this.debug) {
                     console.log('Disconected from server')
                 }
             }
         });
-        socketObj._socket.on('Coplest.Flinger.RAT', function (data) {
+        context._socket.on('Coplest.Flinger.RAT', function (data) {
             if (data.Command != undefined) {
                 switch (data.Command) {
                     case 'RATPoolConnection#Request':
-                        ratPoolNamespace(socketObj, data.Values);
+                        ratPoolNamespace(context, data.Values);
                         break;
 
                     default:
@@ -88,17 +88,17 @@ SocketHub.prototype = function () {
         })
     }
 
-    var ratPoolNamespace = function (socketObj, ratNamespaceValues) {
+    var ratPoolNamespace = function (context, ratNamespaceValues) {
         if (ratNamespaceValues.SocketId === getSocket().id.split('#')[1]) {
-            console.log($CrawlerSite.Services.Cross.GetServerUri() + ratNamespaceValues.RPN)
-            socketObj._ratSocketPoolNamespace = io($CrawlerSite.Services.Cross.GetServerUri() + ratNamespaceValues.RPN, { query: 'ApiKey=' + $CrawlerSite.Services.Cross.GetApiKey() });
-            ratPoolSocketDefinition(socketObj, ratNamespaceValues);
+            console.log(context._cross.GetServerUri() + ratNamespaceValues.RPN)
+            context._ratSocketPoolNamespace = io(context.GetServerUri() + ratNamespaceValues.RPN, { query: 'ApiKey=' + context._cross.GetApiKey() });
+            ratPoolSocketDefinition(context, ratNamespaceValues);
         }
 
     }
 
-    var ratPoolSocketDefinition = function (socketObj, ratNamespaceValues) {
-        socketObj._ratSocketPoolNamespace.on('connect', function (data) {
+    var ratPoolSocketDefinition = function (context, ratNamespaceValues) {
+        context._ratSocketPoolNamespace.on('connect', function (data) {
             if (this.debug !== undefined) {
                 if (this.debug) {
                     console.log('Connection to RAT Pool Namespace succesfully');
@@ -106,7 +106,7 @@ SocketHub.prototype = function () {
             }
         })
 
-        socketObj._ratSocketPoolNamespace.on('Coplest.Flinger.RAT', function (data) {
+        context._ratSocketPoolNamespace.on('Coplest.Flinger.RAT', function (data) {
             if (data.Command != undefined) {
                 switch (data.Command) {
                     case 'ConnectedToRPN#Response':
@@ -115,14 +115,14 @@ SocketHub.prototype = function () {
                                 console.log('Socket Event: ConnectedToRPN#Response');
                             }
                         }
-                        socketObj._socketId = data.Values.SocketId;
-                        socketObj._ratSocketPoolNamespace.emit('Coplest.Flinger.RAT', { Command: 'ConnectToRATServiceNamespace#Request', Values: { Namespace: ratNamespaceValues.Namespace } }, function (data) {
+                        context._socketId = data.Values.SocketId;
+                        context._ratSocketPoolNamespace.emit('Coplest.Flinger.RAT', { Command: 'ConnectToRATServiceNamespace#Request', Values: { Namespace: ratNamespaceValues.Namespace } }, function (data) {
                             if (this.debug !== undefined) {
                                 if (this.debug) {
                                     console.log('Socket Event: ConnectToRATServiceNamespace#Request');
                                 }
                             }
-                            ratServiceNamespace(socketObj, data.Values, ratNamespaceValues);
+                            ratServiceNamespace(context, data.Values, ratNamespaceValues);
                         });
                         break;
 
@@ -133,17 +133,17 @@ SocketHub.prototype = function () {
         })
     }
 
-    var ratServiceNamespace = function ratServiceNamespace(socketObj, data, ratNamespaceData) {
-        var ns = ($CrawlerSite.Services.Cross.SearchObjectByIdOnArray(ratNamespaceData.Namespace.Id, data.Namespace));
+    var ratServiceNamespace = function ratServiceNamespace(context, data, ratNamespaceData) {
+        var ns = (context._cross.SearchObjectByIdOnArray(ratNamespaceData.Namespace.Id, data.Namespace));
         if (ns != null) {
-            console.log('RAT Service Socket URI: ' + $CrawlerSite.Services.Cross.GetServerUri() + '/' + ns.Id);
-            socketObj._ratServiceSocket = io($CrawlerSite.Services.Cross.GetServerUri() + '/' + ns.Id, { query: 'ApiKey=' + $CrawlerSite.Services.Cross.GetApiKey() });
-            ratServiceSocketDefinition(socketObj, data, ratNamespaceData);
+            console.log('RAT Service Socket URI: ' + context._cross.GetServerUri() + '/' + ns.Id);
+            context._ratServiceSocket = io(context._cross.GetServerUri() + '/' + ns.Id, { query: 'ApiKey=' + context._cross.GetApiKey() });
+            ratServiceSocketDefinition(context, data, ratNamespaceData);
         }
     }
 
-    var ratServiceSocketDefinition = function (socketObj, data, ratNamespaceData) {
-        socketObj._ratServiceSocket.on('Coplest.Flinger.RAT', function ratServiceSocketDefinitionOnSocket(data) {
+    var ratServiceSocketDefinition = function (context, data, ratNamespaceData) {
+        context._ratServiceSocket.on('Coplest.Flinger.RAT', function ratServiceSocketDefinitionOnSocket(data) {
             if (data.Command != undefined) {
                 switch (data.Command) {
                     case 'ConnectedToRSN#Response':
@@ -152,8 +152,8 @@ SocketHub.prototype = function () {
                                 console.log('Socket Event: ConnectedToRSN#Response');
                             }
                         }
-                        socketObj._socketId = data.Values.SocketId;
-                        socketObj._ratServiceSocket.emit('Coplest.Flinger.RAT', { Command: 'UserJoinToPrivateRoom#Request', Values: { SocketId: this._ratServiceSocket.id, RoomId: ratNamespaceData.RoomId } });
+                        context._socketId = data.Values.SocketId;
+                        context._ratServiceSocket.emit('Coplest.Flinger.RAT', { Command: 'UserJoinToPrivateRoom#Request', Values: { SocketId: this._ratServiceSocket.id, RoomId: ratNamespaceData.RoomId } });
                         break;
                     case 'UserJoinToPrivateRoom#Response':
                         if (this.debug !== undefined) {
@@ -161,7 +161,7 @@ SocketHub.prototype = function () {
                                 console.log('Socket Event: UserJoinToPrivateRoom#Response');
                             }
                         }
-                        socketObj._ratServiceSocket.emit('Coplest.Flinger.RAT', { Command: 'TakeMyUserSocketId#Request', Values: { SocketId: this._ratServiceSocket.id, RoomId: ratNamespaceData.RoomId } });
+                        context._ratServiceSocket.emit('Coplest.Flinger.RAT', { Command: 'TakeMyUserSocketId#Request', Values: { SocketId: this._ratServiceSocket.id, RoomId: ratNamespaceData.RoomId } });
                         break;
                     case 'AllowControl#Request':
                         if (this.debug !== undefined) {
@@ -243,9 +243,9 @@ SocketHub.prototype = function () {
         })
     }
 
-    var pushEventRAT = function (socketObj, data, callback) {
+    var pushEventRAT = function (context, data, callback) {
         if (this.ratServiceSocket != undefined) {
-            if ($CrawlerSite.Services.Cross.GetApiKey() != undefined && $CrawlerSite.Services.Cross.GetApiKey().length > 0) {
+            if (context._cross.GetApiKey() != undefined && context._cross.GetApiKey().length > 0) {
                 this._ratServiceSocket.emit('Coplest.Flinger.RAT', { Command: data.Command, Values: data.Values }, function (data) {
                     if (callback != undefined) {
                         callback(data);
@@ -257,7 +257,7 @@ SocketHub.prototype = function () {
 
     var pushEvent = function (data) {
         if (this.socket != undefined) {
-            if ($CrawlerSite.Services.Cross.GetApiKey() != undefined && $CrawlerSite.Services.Cross.GetApiKey().length > 0) {
+            if (this._cross.GetApiKey() != undefined && this._cross.GetApiKey().length > 0) {
                 this._socket.emit(data.Command, data.Values);
             }
         }
@@ -266,7 +266,7 @@ SocketHub.prototype = function () {
     /// Push an insight to server
     var pushInsight = function (data) {
         if (this.socket != undefined) {
-            if ($CrawlerSite.Services.Cross.GetApiKey() != undefined && $CrawlerSite.Services.Cross.GetApiKey().length > 0) {
+            if (this._cross.GetApiKey() != undefined && this._cross.GetApiKey().length > 0) {
                 this._socket.emit('Coplest.Flinger.PushInsight', data);
             }
         }
@@ -274,17 +274,17 @@ SocketHub.prototype = function () {
 
     var pushScreenshot = function (data) {
         if (this.socket != undefined) {
-            if ($CrawlerSite.Services.Cross.GetApiKey() != undefined && $CrawlerSite.Services.Cross.GetApiKey().length > 0) {
+            if (this._cross.GetApiKey() != undefined && this._cross.GetApiKey().length > 0) {
                 this._socket.emit('Coplest.Flinger.PushScreenshot', data);
             }
         }
     }
 
     /// Pull an event when server send a message
-    var pullEvent = function (socketObj, type, data) {
-        socketObj._socketEvent = new CustomEvent(type, { detail: data });
+    var pullEvent = function (context, type, data) {
+        context._socketEvent = new CustomEvent(type, { detail: data });
 
-        document.dispatchEvent(socketObj._socketEvent);
+        document.dispatchEvent(context._socketEvent);
         /// Example to cath event
         //document.addEventListener("type", handlerFunction, false);
     }

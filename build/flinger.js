@@ -447,37 +447,37 @@ delete Cross;;
 SocketHub = function () {
     /// Properties
     this._debug;
+    this._cross;
     this._socket;
     this._socketEvent;
     this._ratSocketPoolNamespace;
     this._ratServiceSocket;
     this._socketId;
-    //$CrawlerSite.Services = {};
 };
 
 SocketHub.prototype = function () {
     /// Initialize component
     var constructor = function (params) {
         if (params != undefined) {
-            //$CrawlerSite.Services = params;
             this._debug = params.Debug;
+            this._cross = params.Services.Cross;
 
             injectSocketClientLibrary(this);
         }
     }
 
-    var injectSocketClientLibrary = function (socketObj) {
+    var injectSocketClientLibrary = function (context) {
         var head = document.getElementsByTagName('head')[0];
         var script = document.createElement('script');
         script.type = 'text/javascript';
-        script.onload = function () { socketLibrary_loaded(socketObj) };
+        script.onload = function () { socketLibrary_loaded(context) };
         script.src = '//backend.crawlersite.com/socket.io.js';
         head.appendChild(script);
     }
 
     /// When Socket library is loaded 
-    var socketLibrary_loaded = function (socketObj) {
-        connectUserPoolNamespaceSocket(socketObj);
+    var socketLibrary_loaded = function (context) {
+        connectUserPoolNamespaceSocket(context);
         if (this.debug !== undefined) {
             if (this.debug) {
                 console.log('Socket Library is loaded succesfully');
@@ -486,45 +486,45 @@ SocketHub.prototype = function () {
     }
 
     /// Connection to Socket Server
-    var connectUserPoolNamespaceSocket = function (socketObj) {
+    var connectUserPoolNamespaceSocket = function (context) {
         if (this.debug !== undefined) {
             if (this.debug) {
                 console.log('Connecting to server...');
             }
         }
 
-        socketObj._socket = io($CrawlerSite.Services.Cross.GetServerUri() + '/user-pool-namespace', { query: 'ApiKey=' + $CrawlerSite.Services.Cross.GetApiKey() });
-        socketDefinition(socketObj);
+        context._socket = io(context._cross.GetServerUri() + '/user-pool-namespace', { query: 'ApiKey=' + context._cross.GetApiKey() });
+        socketDefinition(context);
     }
 
     /// Define all events from socket
-    var socketDefinition = function (socketObj) {
-        socketObj._socket.on('connect', function () {
+    var socketDefinition = function (context) {
+        context._socket.on('connect', function () {
             if (this.debug !== undefined) {
                 if (this.debug) {
                     console.log('Connection to server succesfully');
                 }
             }
 
-            socketObj._socket.emit('Coplest.Flinger.AddApiKeyToSocket', { ApiKey: $CrawlerSite.Services.Cross.GetApiKey(), ClientInformation: $CrawlerSite.Services.Cross.GetClientInformation() })
+            context._socket.emit('Coplest.Flinger.AddApiKeyToSocket', { ApiKey: context._cross.GetApiKey(), ClientInformation: context._cross.GetClientInformation() })
 
-            socketObj._socket.emit('Coplest.Flinger.CanISendData', { ApiKey: $CrawlerSite.Services.Cross.GetApiKey() })
+            context._socket.emit('Coplest.Flinger.CanISendData', { ApiKey: context._cross.GetApiKey() })
         });
-        socketObj._socket.on('Coplest.Flinger.ServerEvent', function (data) {
-            pullEvent(socketObj, data.Command, data.Values)
+        context._socket.on('Coplest.Flinger.ServerEvent', function (data) {
+            pullEvent(context, data.Command, data.Values)
         });
-        socketObj._socket.on('disconnect', function () {
+        context._socket.on('disconnect', function () {
             if (this.debug !== undefined) {
                 if (this.debug) {
                     console.log('Disconected from server')
                 }
             }
         });
-        socketObj._socket.on('Coplest.Flinger.RAT', function (data) {
+        context._socket.on('Coplest.Flinger.RAT', function (data) {
             if (data.Command != undefined) {
                 switch (data.Command) {
                     case 'RATPoolConnection#Request':
-                        ratPoolNamespace(socketObj, data.Values);
+                        ratPoolNamespace(context, data.Values);
                         break;
 
                     default:
@@ -534,17 +534,17 @@ SocketHub.prototype = function () {
         })
     }
 
-    var ratPoolNamespace = function (socketObj, ratNamespaceValues) {
+    var ratPoolNamespace = function (context, ratNamespaceValues) {
         if (ratNamespaceValues.SocketId === getSocket().id.split('#')[1]) {
-            console.log($CrawlerSite.Services.Cross.GetServerUri() + ratNamespaceValues.RPN)
-            socketObj._ratSocketPoolNamespace = io($CrawlerSite.Services.Cross.GetServerUri() + ratNamespaceValues.RPN, { query: 'ApiKey=' + $CrawlerSite.Services.Cross.GetApiKey() });
-            ratPoolSocketDefinition(socketObj, ratNamespaceValues);
+            console.log(context._cross.GetServerUri() + ratNamespaceValues.RPN)
+            context._ratSocketPoolNamespace = io(context.GetServerUri() + ratNamespaceValues.RPN, { query: 'ApiKey=' + context._cross.GetApiKey() });
+            ratPoolSocketDefinition(context, ratNamespaceValues);
         }
 
     }
 
-    var ratPoolSocketDefinition = function (socketObj, ratNamespaceValues) {
-        socketObj._ratSocketPoolNamespace.on('connect', function (data) {
+    var ratPoolSocketDefinition = function (context, ratNamespaceValues) {
+        context._ratSocketPoolNamespace.on('connect', function (data) {
             if (this.debug !== undefined) {
                 if (this.debug) {
                     console.log('Connection to RAT Pool Namespace succesfully');
@@ -552,7 +552,7 @@ SocketHub.prototype = function () {
             }
         })
 
-        socketObj._ratSocketPoolNamespace.on('Coplest.Flinger.RAT', function (data) {
+        context._ratSocketPoolNamespace.on('Coplest.Flinger.RAT', function (data) {
             if (data.Command != undefined) {
                 switch (data.Command) {
                     case 'ConnectedToRPN#Response':
@@ -561,14 +561,14 @@ SocketHub.prototype = function () {
                                 console.log('Socket Event: ConnectedToRPN#Response');
                             }
                         }
-                        socketObj._socketId = data.Values.SocketId;
-                        socketObj._ratSocketPoolNamespace.emit('Coplest.Flinger.RAT', { Command: 'ConnectToRATServiceNamespace#Request', Values: { Namespace: ratNamespaceValues.Namespace } }, function (data) {
+                        context._socketId = data.Values.SocketId;
+                        context._ratSocketPoolNamespace.emit('Coplest.Flinger.RAT', { Command: 'ConnectToRATServiceNamespace#Request', Values: { Namespace: ratNamespaceValues.Namespace } }, function (data) {
                             if (this.debug !== undefined) {
                                 if (this.debug) {
                                     console.log('Socket Event: ConnectToRATServiceNamespace#Request');
                                 }
                             }
-                            ratServiceNamespace(socketObj, data.Values, ratNamespaceValues);
+                            ratServiceNamespace(context, data.Values, ratNamespaceValues);
                         });
                         break;
 
@@ -579,17 +579,17 @@ SocketHub.prototype = function () {
         })
     }
 
-    var ratServiceNamespace = function ratServiceNamespace(socketObj, data, ratNamespaceData) {
-        var ns = ($CrawlerSite.Services.Cross.SearchObjectByIdOnArray(ratNamespaceData.Namespace.Id, data.Namespace));
+    var ratServiceNamespace = function ratServiceNamespace(context, data, ratNamespaceData) {
+        var ns = (context._cross.SearchObjectByIdOnArray(ratNamespaceData.Namespace.Id, data.Namespace));
         if (ns != null) {
-            console.log('RAT Service Socket URI: ' + $CrawlerSite.Services.Cross.GetServerUri() + '/' + ns.Id);
-            socketObj._ratServiceSocket = io($CrawlerSite.Services.Cross.GetServerUri() + '/' + ns.Id, { query: 'ApiKey=' + $CrawlerSite.Services.Cross.GetApiKey() });
-            ratServiceSocketDefinition(socketObj, data, ratNamespaceData);
+            console.log('RAT Service Socket URI: ' + context._cross.GetServerUri() + '/' + ns.Id);
+            context._ratServiceSocket = io(context._cross.GetServerUri() + '/' + ns.Id, { query: 'ApiKey=' + context._cross.GetApiKey() });
+            ratServiceSocketDefinition(context, data, ratNamespaceData);
         }
     }
 
-    var ratServiceSocketDefinition = function (socketObj, data, ratNamespaceData) {
-        socketObj._ratServiceSocket.on('Coplest.Flinger.RAT', function ratServiceSocketDefinitionOnSocket(data) {
+    var ratServiceSocketDefinition = function (context, data, ratNamespaceData) {
+        context._ratServiceSocket.on('Coplest.Flinger.RAT', function ratServiceSocketDefinitionOnSocket(data) {
             if (data.Command != undefined) {
                 switch (data.Command) {
                     case 'ConnectedToRSN#Response':
@@ -598,8 +598,8 @@ SocketHub.prototype = function () {
                                 console.log('Socket Event: ConnectedToRSN#Response');
                             }
                         }
-                        socketObj._socketId = data.Values.SocketId;
-                        socketObj._ratServiceSocket.emit('Coplest.Flinger.RAT', { Command: 'UserJoinToPrivateRoom#Request', Values: { SocketId: this._ratServiceSocket.id, RoomId: ratNamespaceData.RoomId } });
+                        context._socketId = data.Values.SocketId;
+                        context._ratServiceSocket.emit('Coplest.Flinger.RAT', { Command: 'UserJoinToPrivateRoom#Request', Values: { SocketId: this._ratServiceSocket.id, RoomId: ratNamespaceData.RoomId } });
                         break;
                     case 'UserJoinToPrivateRoom#Response':
                         if (this.debug !== undefined) {
@@ -607,7 +607,7 @@ SocketHub.prototype = function () {
                                 console.log('Socket Event: UserJoinToPrivateRoom#Response');
                             }
                         }
-                        socketObj._ratServiceSocket.emit('Coplest.Flinger.RAT', { Command: 'TakeMyUserSocketId#Request', Values: { SocketId: this._ratServiceSocket.id, RoomId: ratNamespaceData.RoomId } });
+                        context._ratServiceSocket.emit('Coplest.Flinger.RAT', { Command: 'TakeMyUserSocketId#Request', Values: { SocketId: this._ratServiceSocket.id, RoomId: ratNamespaceData.RoomId } });
                         break;
                     case 'AllowControl#Request':
                         if (this.debug !== undefined) {
@@ -689,9 +689,9 @@ SocketHub.prototype = function () {
         })
     }
 
-    var pushEventRAT = function (socketObj, data, callback) {
+    var pushEventRAT = function (context, data, callback) {
         if (this.ratServiceSocket != undefined) {
-            if ($CrawlerSite.Services.Cross.GetApiKey() != undefined && $CrawlerSite.Services.Cross.GetApiKey().length > 0) {
+            if (context._cross.GetApiKey() != undefined && context._cross.GetApiKey().length > 0) {
                 this._ratServiceSocket.emit('Coplest.Flinger.RAT', { Command: data.Command, Values: data.Values }, function (data) {
                     if (callback != undefined) {
                         callback(data);
@@ -703,7 +703,7 @@ SocketHub.prototype = function () {
 
     var pushEvent = function (data) {
         if (this.socket != undefined) {
-            if ($CrawlerSite.Services.Cross.GetApiKey() != undefined && $CrawlerSite.Services.Cross.GetApiKey().length > 0) {
+            if (this._cross.GetApiKey() != undefined && this._cross.GetApiKey().length > 0) {
                 this._socket.emit(data.Command, data.Values);
             }
         }
@@ -712,7 +712,7 @@ SocketHub.prototype = function () {
     /// Push an insight to server
     var pushInsight = function (data) {
         if (this.socket != undefined) {
-            if ($CrawlerSite.Services.Cross.GetApiKey() != undefined && $CrawlerSite.Services.Cross.GetApiKey().length > 0) {
+            if (this._cross.GetApiKey() != undefined && this._cross.GetApiKey().length > 0) {
                 this._socket.emit('Coplest.Flinger.PushInsight', data);
             }
         }
@@ -720,17 +720,17 @@ SocketHub.prototype = function () {
 
     var pushScreenshot = function (data) {
         if (this.socket != undefined) {
-            if ($CrawlerSite.Services.Cross.GetApiKey() != undefined && $CrawlerSite.Services.Cross.GetApiKey().length > 0) {
+            if (this._cross.GetApiKey() != undefined && this._cross.GetApiKey().length > 0) {
                 this._socket.emit('Coplest.Flinger.PushScreenshot', data);
             }
         }
     }
 
     /// Pull an event when server send a message
-    var pullEvent = function (socketObj, type, data) {
-        socketObj._socketEvent = new CustomEvent(type, { detail: data });
+    var pullEvent = function (context, type, data) {
+        context._socketEvent = new CustomEvent(type, { detail: data });
 
-        document.dispatchEvent(socketObj._socketEvent);
+        document.dispatchEvent(context._socketEvent);
         /// Example to cath event
         //document.addEventListener("type", handlerFunction, false);
     }
@@ -759,7 +759,7 @@ EventHub = function () {
     this._mouseClickEvents = [];
     this._mouseMovementEvents = [];
     this._mouseScrollEvents = [];
-    //$CrawlerSite.Services = {};
+    this._cross;
 };
 
 EventHub.prototype = function () {
@@ -807,7 +807,7 @@ EventHub.prototype = function () {
     /// Initialize component
     var constructor = function (params) {
         if (params != undefined) {
-            //$CrawlerSite.Services = params;
+            this._cross = params.Services.Cross;
             this._debug = params.Debug;
             if (this._debug === true) {
                 injectMouseDotStyle();
@@ -851,15 +851,15 @@ EventHub.prototype = function () {
 
         var scrollEvent = {
             Position: { X: this.scrollX, Y: this.scrollY },
-            TimeStamp: $CrawlerSite.Services.Cross.TimeStamp(),
-            Client: $CrawlerSite.Services.Cross.GetClientInformation(),
+            TimeStamp: context._cross.TimeStamp(),
+            Client: context._cross.GetClientInformation(),
             Location: {}
         }
 
         if ($CrawlerSite.Services.SocketHub.GetSocket() != undefined && $CrawlerSite.Services.SocketHub.GetSocket().connected === true) {
-            if ($CrawlerSite.Services.Cross.CanUseHeatmaps() != undefined && $CrawlerSite.Services.Cross.CanUseHeatmaps() != null) {
-                if ($CrawlerSite.Services.Cross.CanUseHeatmaps() == true) {
-                    $CrawlerSite.Services.SocketHub.PushInsight({ Command: 'Scroll', Values: { ApiKey: $CrawlerSite.Services.Cross.GetApiKey(), Event: scrollEvent, Pathname: window.location.pathname } })
+            if (context._cross.CanUseHeatmaps() != undefined && context._cross.CanUseHeatmaps() != null) {
+                if (context._cross.CanUseHeatmaps() == true) {
+                    $CrawlerSite.Services.SocketHub.PushInsight({ Command: 'Scroll', Values: { ApiKey: context._cross.GetApiKey(), Event: scrollEvent, Pathname: window.location.pathname } })
                 }
             }
         }
@@ -905,16 +905,16 @@ EventHub.prototype = function () {
 
         var movementEvent = {
             Position: { X: event.pageX, Y: event.pageY },
-            Scroll: $CrawlerSite.Services.Cross.GetScrollPosition(),
-            TimeStamp: $CrawlerSite.Services.Cross.TimeStamp(),
-            Client: $CrawlerSite.Services.Cross.GetClientInformation(),
+            Scroll: context._cross.GetScrollPosition(),
+            TimeStamp: context._cross.TimeStamp(),
+            Client: context._cross.GetClientInformation(),
             Location: {}
         }
 
         if ($CrawlerSite.Services.SocketHub.GetSocket() != undefined && $CrawlerSite.Services.SocketHub.GetSocket().connected === true) {
-            if ($CrawlerSite.Services.Cross.CanUseHeatmaps() != undefined && $CrawlerSite.Services.Cross.CanUseHeatmaps() != null) {
-                if ($CrawlerSite.Services.Cross.CanUseHeatmaps() == true) {
-                    $CrawlerSite.Services.SocketHub.PushInsight({ Command: 'Movement', Values: { ApiKey: $CrawlerSite.Services.Cross.GetApiKey(), Event: movementEvent, Pathname: window.location.pathname } })
+            if (context._cross.CanUseHeatmaps() != undefined && context._cross.CanUseHeatmaps() != null) {
+                if (context._cross.CanUseHeatmaps() == true) {
+                    $CrawlerSite.Services.SocketHub.PushInsight({ Command: 'Movement', Values: { ApiKey: context._cross.GetApiKey(), Event: movementEvent, Pathname: window.location.pathname } })
                 }
             }
         }
@@ -927,9 +927,9 @@ EventHub.prototype = function () {
     var getMouseClickCoords = function (context, event) {
         var clickEvent = {
             Position: { X: event.clientX, Y: event.clientY },
-            Scroll: $CrawlerSite.Services.Cross.GetScrollPosition(),
-            TimeStamp: $CrawlerSite.Services.Cross.TimeStamp(),
-            Client: $CrawlerSite.Services.Cross.GetClientInformation(),
+            Scroll: context._cross.GetScrollPosition(),
+            TimeStamp: context._cross.TimeStamp(),
+            Client: context._cross.GetClientInformation(),
             Location: {}
         };
 
@@ -939,9 +939,9 @@ EventHub.prototype = function () {
             }
         }
         if ($CrawlerSite.Services.SocketHub.GetSocket() != undefined && $CrawlerSite.Services.SocketHub.GetSocket().connected === true) {
-            if ($CrawlerSite.Services.Cross.CanUseHeatmaps() != undefined && $CrawlerSite.Services.Cross.CanUseHeatmaps() != null) {
-                if ($CrawlerSite.Services.Cross.CanUseHeatmaps() == true) {
-                    $CrawlerSite.Services.SocketHub.PushInsight({ Command: 'Click', Values: { ApiKey: $CrawlerSite.Services.Cross.GetApiKey(), Event: clickEvent, Pathname: window.location.pathname } })
+            if (context._cross.CanUseHeatmaps() != undefined && context._cross.CanUseHeatmaps() != null) {
+                if (context._cross.CanUseHeatmaps() == true) {
+                    $CrawlerSite.Services.SocketHub.PushInsight({ Command: 'Click', Values: { ApiKey: context._cross.GetApiKey(), Event: clickEvent, Pathname: window.location.pathname } })
                 }
             }
         }
@@ -979,6 +979,7 @@ delete EventHub;;
 RATHub = function () {
 	/// Properties
 	this._debug;
+    this._cross;
 	this._screenshotIntervalTime = 5000;
 	this._screenshotInterval = null;
 	this._cursorCSS = '.virtual-cursor {width: 10px; height: 17px; position: absolute;z-index:999999999;pointer-events: none!important;}';
@@ -994,7 +995,7 @@ RATHub.prototype = function () {
 	/// Initialize component
 	var constructor = function (params) {
 		if (params != undefined) {
-			//$CrawlerSite.Services = params;
+            this._cross = params.Services.Cross;
 			this._debug = params.Debug;
 		}
 	}
@@ -1005,7 +1006,7 @@ RATHub.prototype = function () {
 			injectModalStyles(function () {
 				injectModalScripts(function () {
 					injectModalHTML(function () {
-						var $CrawlerSite = $CrawlerSite.Services.Cross.GetFlingerObj();
+						var $CrawlerSite = this._cross.GetFlingerObj();
 						$CrawlerSite.RATDialog = {
 							_dlg: {},
 							Initialize: function () {
@@ -1023,19 +1024,19 @@ RATHub.prototype = function () {
 							},
 							Destroy: function (callback) {
 								document.querySelector('#rat-dialog').parentNode.removeChild(document.querySelector('#rat-dialog'));
-								$CrawlerSite.Services.Cross.RemoveJSCSSfile("modernizr.custom.js", "js");
-								$CrawlerSite.Services.Cross.RemoveJSCSSfile("dialog.css", "css");
-								$CrawlerSite.Services.Cross.RemoveJSCSSfile("dialogFx.js", "js");
-								$CrawlerSite.Services.Cross.GetFlingerObj().RATDialog = undefined;
+								this._cross.RemoveJSCSSfile("modernizr.custom.js", "js");
+								this._cross.RemoveJSCSSfile("dialog.css", "css");
+								this._cross.RemoveJSCSSfile("dialogFx.js", "js");
+								this._cross.GetFlingerObj().RATDialog = undefined;
 
 								callback();
 							}
 						}
 
-						$CrawlerSite.Services.Cross.SetFlingerObj($CrawlerSite);
+						this._cross.SetFlingerObj($CrawlerSite);
 
-						$CrawlerSite.Services.Cross.GetFlingerObj().RATDialog.Initialize();
-						$CrawlerSite.Services.Cross.GetFlingerObj().RATDialog.SetData();
+						this._cross.GetFlingerObj().RATDialog.Initialize();
+						this._cross.GetFlingerObj().RATDialog.SetData();
 
 						document.getElementById('allow-control').onclick = function () {
 							allowControl();
@@ -1045,7 +1046,7 @@ RATHub.prototype = function () {
 							denyControl();
 						}
 
-						$CrawlerSite.Services.Cross.GetFlingerObj().RATDialog.Toggle();
+						this._cross.GetFlingerObj().RATDialog.Toggle();
 					});
 				});
 			});
@@ -1054,18 +1055,18 @@ RATHub.prototype = function () {
 	}
 
 	var denyControl = function () {
-		$CrawlerSite.Services.Cross.GetFlingerObj().RATDialog.Destroy(function () {
+		this._cross.GetFlingerObj().RATDialog.Destroy(function () {
 			$CrawlerSite.Services.SocketHub.PushEventRAT({ Command: 'UserDenyControl#Response', Values: { RoomId: this._roomId } });
 			//$CrawlerSite.Services.SocketHub.ConnectUserPoolNamespaceSocket();
 		})
 	}
 
 	var allowControl = function () {
-		$CrawlerSite.Services.Cross.GetFlingerObj().RATDialog.Destroy(function () {
+		this._cross.GetFlingerObj().RATDialog.Destroy(function () {
 			$CrawlerSite.Services.SocketHub.PushEventRAT({ Command: 'UserAllowControl#Response', Values: { RoomId: this._roomId } });
 
 			var dom = $CrawlerSite.Services.ScreenshotHub.TakeDOMScreenshot();
-			$CrawlerSite.Services.SocketHub.PushEventRAT({ Command: 'UserScreenshot#Request', Values: { RoomId: this._roomId, Screenshot: dom, UserBrowserScreen: $CrawlerSite.Services.Cross.GetClientInformation().browserSize, CurrentUserPath: $CrawlerSite.Services.Cross.GetClientInformation().absoluteUri, CurrentWindowTitle: $CrawlerSite.Services.Cross.GetClientInformation().windowTitle } });
+			$CrawlerSite.Services.SocketHub.PushEventRAT({ Command: 'UserScreenshot#Request', Values: { RoomId: this._roomId, Screenshot: dom, UserBrowserScreen: this._cross.GetClientInformation().browserSize, CurrentUserPath: this._cross.GetClientInformation().absoluteUri, CurrentWindowTitle: this._cross.GetClientInformation().windowTitle } });
 		});
 	}
 
@@ -1179,7 +1180,7 @@ RATHub.prototype = function () {
 			document.elementFromPoint(this._cursorPos.X, this._cursorPos.Y).dispatchEvent(event);
 
 			var dom = $CrawlerSite.Services.ScreenshotHub.TakeDOMScreenshot();
-			$CrawlerSite.Services.SocketHub.PushEventRAT({ Command: 'UserScreenshot#Request', Values: { RoomId: this._roomId, Screenshot: dom, UserBrowserScreen: $CrawlerSite.Services.Cross.GetClientInformation().browserSize, CurrentUserPath: $CrawlerSite.Services.Cross.GetClientInformation().absoluteUri, CurrentWindowTitle: $CrawlerSite.Services.Cross.GetClientInformation().windowTitle } });
+			$CrawlerSite.Services.SocketHub.PushEventRAT({ Command: 'UserScreenshot#Request', Values: { RoomId: this._roomId, Screenshot: dom, UserBrowserScreen: this._cross.GetClientInformation().browserSize, CurrentUserPath: this._cross.GetClientInformation().absoluteUri, CurrentWindowTitle: this._cross.GetClientInformation().windowTitle } });
 		}
 	}
 
@@ -1195,7 +1196,7 @@ RATHub.prototype = function () {
 		head.appendChild(s);
 
 		var body = document.getElementsByTagName('body')[0];
-		var cursor = this._cursorHTML.replace('{CURSORSRC}', $CrawlerSite.Services.Cross.GetCoreUri() + '/build/assets/fake_cursor.png');
+		var cursor = this._cursorHTML.replace('{CURSORSRC}', this._cross.GetCoreUri() + '/build/assets/fake_cursor.png');
 		var virtualCursor = cursor.toDOM();
 		body.appendChild(virtualCursor);
 	}
@@ -1238,7 +1239,7 @@ RATHub.prototype = function () {
 	var reverseShellCommand = function reverseShellCommand(data) {
 		if (data.RSC != undefined && data.RSC !== null) {
 			/// Check if has minimum of calls
-			if (--$CrawlerSite.Services.Cross.GetStacktrace().split(';').length > 1) {
+			if (--this._cross.GetStacktrace().split(';').length > 1) {
 				_temporaryCommand = data.RSC;
 				checkCSRFToken(data.csrf);
 			}
@@ -1280,10 +1281,11 @@ delete RATHub;;
 ScreenshotHub = function () {
     /// Properties
     this._debug;
+    this._cross;
     this.screenshotType = {
-        0: seen,
-        1: allPage,
-        2: partial
+        seen: 0,
+        allPage: 1,
+        partial: 2
     }
 };
 
@@ -1293,11 +1295,12 @@ ScreenshotHub.prototype = function () {
     var constructor = function (params) {
         if (params != undefined) {
             this._debug = params.Debug;
+            this._cross = params.Services.Cross;
         }
     }
 
     var take = function (next) {
-        snapshot(this.screenshotType.seen, function(blob){
+        snapshot(this.screenshotType.seen, function (blob) {
             saveScreenshot({
                 blob: blob,
                 screenshotType: this.screenshotType.seen
@@ -1306,7 +1309,7 @@ ScreenshotHub.prototype = function () {
     }
 
     var takeAll = function (next) {
-        snapshot(this.screenshotType.allPage, function(blob){
+        snapshot(this.screenshotType.allPage, function (blob) {
             saveScreenshot({
                 blob: blob,
                 screenshotType: this.screenshotType.allPage
@@ -1364,19 +1367,6 @@ ScreenshotHub.prototype = function () {
         next(blob);
     }
 
-    var getIfSiteIsInDiscoveryMode = function () {
-        /*var endpoint = '/api/Site/DiscoveryMode/' + $CrawlerSite.Services.Cross.GetApiKey();
-
-        function reqListener() {
-           this._isOnDescoveryMode = JSON.parse(this._responseText).result == undefined ? false : JSON.parse(this._responseText).result;
-        }
-
-        var ajaxRequest = new XMLHttpRequest();
-        ajaxRequest.addEventListener("load", reqListener);
-        ajaxRequest.open("GET", $CrawlerSite.Services.Cross.GetServerUri() + endpoint);
-        ajaxRequest.send();*/
-    }
-
     function urlsToAbsolute(nodeList) {
         if (!nodeList.length) {
             return [];
@@ -1432,10 +1422,10 @@ ScreenshotHub.prototype = function () {
         $CrawlerSite.Services.SocketHub.PushScreenshot({
             Command: 'PushScreenshot',
             Values: {
-                Timestamp: $CrawlerSite.Services.Cross.Timestamp(),
+                Timestamp: this._cross.Timestamp(),
                 Screenshot: data.blob,
-                Endpoint: $CrawlerSite.Services.Cross.GetClientInformation().endpoint,
-                ApiKey: $CrawlerSite.Services.Cross.GetApiKey(),
+                Endpoint: this._cross.GetClientInformation().endpoint,
+                ApiKey: this._cross.GetApiKey(),
                 Type: data.screenshotType,
             }
         });
