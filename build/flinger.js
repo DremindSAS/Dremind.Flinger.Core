@@ -1,4 +1,5 @@
 /*! crawlersite.kernel - v2.0.1 - 2017-07-07 */
+var Services = {};
 Cross = function () {
     this._timeStamp;
     this._serverUri;
@@ -1442,6 +1443,34 @@ ScreenshotHub.prototype = function () {
 Services.ScreenshotHub = new ScreenshotHub();
 
 delete ScreenshotHub;;
+ScreenWatcher = function () {
+	this._privateVariable = 10;
+	this._dependencies = {};
+};
+
+ScreenWatcher.prototype = function () {
+	var privateMethod = function () {
+		console.log('Inside a private method!');
+		this._privateVariable++;
+	} 
+
+	var methodToExpose = function () {
+		console.log('This is a method I want to expose!');
+	}
+
+	var otherMethodIWantToExpose = function () {
+		privateMethod();
+	}
+
+	return {
+		first: methodToExpose,
+		second: otherMethodIWantToExpose
+	}
+}();
+
+Services.ScreenWatcher = new ScreenWatcher();
+
+delete ScreenWatcher;;
 $CrawlerSite = (function () {
 	var _flingerElement;
 	var _debugFlinger;

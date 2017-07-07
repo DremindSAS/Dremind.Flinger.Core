@@ -16,17 +16,20 @@ module.exports = function (grunt) {
                     './src/EventHUB.js',
                     './src/RATHub.js',
                     './src/ScreenshotHub.js',
+                    './src/ScreenWatcher.js',
                     './src/FlingerInit.js'
                 ],
                 dest: './dev-build/flinger.js'
             },
             FlingerProductionJS: {
                 src: [
+                    './src/Constructor.js',
                     './src/Cross.js',
                     './src/SocketHub.js',
                     './src/EventHUB.js',
                     './src/RATHub.js',
                     './src/ScreenshotHub.js',
+                    './src/ScreenWatcher.js',
                     './src/FlingerInit.js'
                 ],
                 dest: './build/flinger.js'
