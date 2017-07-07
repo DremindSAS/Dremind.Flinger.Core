@@ -19,29 +19,39 @@ ScreenshotHub.prototype = function () {
         }
     }
 
-    var checkIfIsObsolete = function(){
-        // TODO
-    }
+    document.addEventListener("GetIfLastScreenshotIsObsoleteByApiKey#Response", function (result) {
+        if (result.detail.data != undefined && result.detail.data != null) {
+            if(result.detail.data.success === true){
+                if(result.detail.data.result === true){
+                    $CrawlerSite.Services.ScreenshotHub.TakeAll(result.detail.context);
+                }
+            }
+        }
+    });
 
-    var take = function (next) {
-        snapshot(this.screenshotType.seen, function (blob) {
-            saveScreenshot({
+    document.addEventListener('SocketConnected', function(data){
+        $CrawlerSite.Services.ScreenshotHub.CheckIfScreenshotIsObsolete(data.detail.context);
+    })
+
+    var take = function (context, next) {
+        snapshot(context._services.ScreenshotHub.screenshotType.seen, function (blob) {
+            saveScreenshot(context, {
                 blob: blob,
-                screenshotType: this.screenshotType.seen
+                screenshotType: context._services.ScreenshotHub.screenshotType.seen
             });
         });
     }
 
-    var takeAll = function (next) {
-        snapshot(this.screenshotType.allPage, function (blob) {
-            saveScreenshot({
+    var takeAll = function (context, next) {
+        snapshot(context._services.ScreenshotHub.screenshotType.allPage, context, function (blob) {
+            saveScreenshot(context,{
                 blob: blob,
-                screenshotType: this.screenshotType.allPage
+                screenshotType: context._services.ScreenshotHub.screenshotType.allPage
             });
         });
     }
 
-    var snapshot = function (screenshotType, next) {
+    var snapshot = function (screenshotType, context, next) {
         /// TODO: current limitation is css background images are not included.
         // 1. Rewrite current doc's imgs, css, and script URLs to be absolute before
         // we duplicate. This ensures no broken links when viewing the duplicate.
@@ -76,13 +86,12 @@ ScreenshotHub.prototype = function () {
         // window.onDOMContentLoaded listener which pulls out the saved scrollX/Y
         // state from the DOM.
         //
-        // if
-        if (screenshotType === this.screenshotType.seen) {
+        
+        if (screenshotType === _services.ScreenshotHub.screenshotType.seen) {
             var script = document.createElement('script');
             script.textContent = '(' + addOnPageLoad_.toString() + ')();'; // self calling.
             screenshot.querySelector('body').appendChild(script);
         }
-
 
         // 5. Create a new .html file from the cloned content.
         var blob = new Blob([screenshot.outerHTML], { type: 'text/html' });
@@ -142,15 +151,25 @@ ScreenshotHub.prototype = function () {
         });
     }
 
-    var saveScreenshot = function (data) {
-        $CrawlerSite.Services.SocketHub.PushScreenshot({
-            Command: 'PushScreenshot',
+    var saveScreenshot = function (context, data) {
+        $CrawlerSite.Services.SocketHub.Screenshot({
+            Command: 'PushScreenshot#Request',
             Values: {
-                Timestamp: this._cross.Timestamp(),
+                Timestamp: context._cross.TimeStamp(),
                 Screenshot: data.blob,
-                Endpoint: this._cross.GetClientInformation().endpoint,
-                ApiKey: this._cross.GetApiKey(),
+                Endpoint: context._cross.GetClientInformation().endpoint,
+                ApiKey: context._cross.GetApiKey(),
                 Type: data.screenshotType,
+            }
+        });
+    }
+
+
+    var checkIfIsObsolete = function () {
+        $CrawlerSite.Services.SocketHub.Screenshot({
+            Command: 'GetIfLastScreenshotIsObsoleteByApiKey#Request',
+            Values: {
+                ApiKey: this._cross.GetApiKey()
             }
         });
     }
@@ -159,6 +178,7 @@ ScreenshotHub.prototype = function () {
         Initialize: constructor,
         Take: take,
         TakeAll: takeAll,
+        CheckIfScreenshotIsObsolete: checkIfIsObsolete,
     }
 
 }();

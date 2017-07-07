@@ -7,6 +7,7 @@ SocketHub = function () {
     this._ratSocketPoolNamespace;
     this._ratServiceSocket;
     this._socketId;
+    this._services;
 };
 
 SocketHub.prototype = function () {
@@ -15,6 +16,7 @@ SocketHub.prototype = function () {
         if (params != undefined) {
             this._debug = params.Debug;
             this._cross = params.Services.Cross;
+            this._services = params.Services;
 
             injectSocketClientLibrary(this);
         }
@@ -60,13 +62,17 @@ SocketHub.prototype = function () {
                 }
             }
 
+            pullEvent(context, 'SocketConnected', {});
+
             context._socket.emit('Coplest.Flinger.AddApiKeyToSocket', { ApiKey: context._cross.GetApiKey(), ClientInformation: context._cross.GetClientInformation() })
 
             context._socket.emit('Coplest.Flinger.CanISendData', { ApiKey: context._cross.GetApiKey() })
         });
+
         context._socket.on('Coplest.Flinger.ServerEvent', function (data) {
             pullEvent(context, data.Command, data.Values)
         });
+
         context._socket.on('disconnect', function () {
             if (this.debug !== undefined) {
                 if (this.debug) {
@@ -256,7 +262,7 @@ SocketHub.prototype = function () {
     }
 
     var pushEvent = function (data) {
-        if (this.socket != undefined) {
+        if (this._socket != undefined) {
             if (this._cross.GetApiKey() != undefined && this._cross.GetApiKey().length > 0) {
                 this._socket.emit(data.Command, data.Values);
             }
@@ -265,24 +271,29 @@ SocketHub.prototype = function () {
 
     /// Push an insight to server
     var pushInsight = function (data) {
-        if (this.socket != undefined) {
+        if (this._socket != undefined) {
             if (this._cross.GetApiKey() != undefined && this._cross.GetApiKey().length > 0) {
                 this._socket.emit('Coplest.Flinger.PushInsight', data);
             }
         }
     }
 
-    var pushScreenshot = function (data) {
-        if (this.socket != undefined) {
+    var screenshot = function (data) {
+        if (this._socket != undefined) {
             if (this._cross.GetApiKey() != undefined && this._cross.GetApiKey().length > 0) {
-                this._socket.emit('Coplest.Flinger.PushScreenshot', data);
+                this._socket.emit('Coplest.Flinger.Screenshot', data);
             }
         }
     }
 
     /// Pull an event when server send a message
     var pullEvent = function (context, type, data) {
-        context._socketEvent = new CustomEvent(type, { detail: data });
+        context._socketEvent = new CustomEvent(type, { 
+            detail: {
+                context: context,
+                data: data
+            }
+         });
 
         document.dispatchEvent(context._socketEvent);
         /// Example to cath event
@@ -298,7 +309,7 @@ SocketHub.prototype = function () {
         ConnectUserPoolNamespaceSocket: connectUserPoolNamespaceSocket,
         GetSocket: getSocket,
         PushInsight: pushInsight,
-        PushScreenshot: pushScreenshot,
+        Screenshot: screenshot,
         PushEvent: pushEvent,
         PushEventRAT: pushEventRAT,
     }
