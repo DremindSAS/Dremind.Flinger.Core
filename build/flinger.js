@@ -1300,6 +1300,10 @@ ScreenshotHub.prototype = function () {
         }
     }
 
+    var checkIfIsObsolete = function(){
+        // TODO
+    }
+
     var take = function (next) {
         snapshot(this.screenshotType.seen, function (blob) {
             saveScreenshot({
