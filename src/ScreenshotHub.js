@@ -14,12 +14,12 @@ ScreenshotHub.prototype = function () {
     /**
      * Function: Constructor
      * This function initialize this component and setting up principal members
-     * @param {object} params - Injected dependencies
+     * @param {object} dependencies - Injected dependencies
      */
-    var constructor = function (params) {
-        if (params != undefined) {
-            this._debug = params.Debug;
-            this._cross = params.Services.Cross;
+    var constructor = function (dependencies) {
+        if (dependencies != undefined) {
+            this._debug = dependencies.Debug;
+            this._cross = dependencies.Services.Cross;
         }
     }
 

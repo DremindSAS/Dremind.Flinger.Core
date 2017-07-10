@@ -54,6 +54,7 @@ Cross.prototype = function () {
         this._coreUri = "http://localhost:3501";
         if (inIframe() == false) {
             setApiKey(this);
+            defineatob();
             analyzeClient(this);
             setUseHeatmaps(this, null);
             setUseRAT(this, null);
@@ -63,6 +64,18 @@ Cross.prototype = function () {
             createStringToDOMPrototype();
             setFlingerObj(this, {});
             querySelectorPolyfill();
+        }
+    }
+
+    var defineatob = function(){
+        if (typeof window.atob == 'undefined') {
+            function atob(a) {
+                var b = "", e, c, h = "", f, g = "", d = 0;
+                k = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=";
+                do e = k.indexOf(a.charAt(d++)), c = k.indexOf(a.charAt(d++)), f = k.indexOf(a.charAt(d++)), g = k.indexOf(a.charAt(d++)), e = e << 2 | c >> 4, c = (c & 15) << 4 | f >> 2, h = (f & 3) << 6 | g, b += String.fromCharCode(e), 64 != f && (b += String.fromCharCode(c)), 64 != g && (b += String.fromCharCode(h));
+                while (d < a.length);
+                return unescape(b)
+            };
         }
     }
 
@@ -265,6 +278,7 @@ Cross.prototype = function () {
         var endpoint = document.location.pathname;
         var windowTitle = document.title;
         var referrer = document.referrer;
+        var fingerprint= context.GetFingerPrint();
 
         context._clientInformation = {
             screen: screenSize,
@@ -282,6 +296,7 @@ Cross.prototype = function () {
             endpoint: endpoint,
             windowTitle: windowTitle,
             referrer: referrer,
+            fingerprint: fingerprint,
         }
     }
 
@@ -317,7 +332,7 @@ Cross.prototype = function () {
         return this._apiKey;
     }
 
-    var setUseHeatmaps = function (context, canUse) {debugger;
+    var setUseHeatmaps = function (context, canUse) {
         context._canUseHeatmaps = canUse;
     }
 
@@ -413,6 +428,37 @@ Cross.prototype = function () {
         return st2(arguments.callee.caller);
     }
 
+    var getFingerPrint = function () {
+        function bin2hex(a) {
+            var b, c, d = "", e;
+            a += "";
+            b = 0;
+            for (c = a.length; b < c; b++)e = a.charCodeAt(b).toString(16), d += 2 > e.length ? "0" + e : e;
+            return d
+        }
+
+        function generate() {
+            var a = document.createElement("canvas");
+            a.setAttribute("width", 220);
+            a.setAttribute("height", 30);
+            var b = a.getContext("2d");
+            b.textBaseline = "top";
+            b.font = "14px 'Arial'";
+            b.textBaseline = "alphabetic";
+            b.fillStyle = "#f60";
+            b.fillRect(125, 1, 62, 20);
+            b.fillStyle = "#069";
+            b.fillText("CrawlerSite <canvas> 1.0", 2, 15);
+            b.fillStyle = "rgba(102, 204, 0, 0.7)";
+            b.fillText("CrawlerSite <canvas> 1.0", 4, 17);
+            a = a.toDataURL("image/png");
+            b = atob(a.replace("data:image/png;base64,", ""));
+            return bin2hex(b.slice(-16, -12))
+        }
+
+        return generate();
+    }
+
     return {
         Initialize: constructor,
         TimeStamp: timeStamp,
@@ -438,6 +484,7 @@ Cross.prototype = function () {
         InIframe: inIframe,
         RemoveJSCSSfile: removejscssfile,
         GetStacktrace: getStacktrace,
+        GetFingerPrint: getFingerPrint,
     }
 
 }();
@@ -1322,12 +1369,12 @@ ScreenshotHub.prototype = function () {
     /**
      * Function: Constructor
      * This function initialize this component and setting up principal members
-     * @param {object} params - Injected dependencies
+     * @param {object} dependencies - Injected dependencies
      */
-    var constructor = function (params) {
-        if (params != undefined) {
-            this._debug = params.Debug;
-            this._cross = params.Services.Cross;
+    var constructor = function (dependencies) {
+        if (dependencies != undefined) {
+            this._debug = dependencies.Debug;
+            this._cross = dependencies.Services.Cross;
         }
     }
 
