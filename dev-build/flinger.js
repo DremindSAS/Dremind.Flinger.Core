@@ -1,4 +1,4 @@
-/*! crawlersite.kernel - v2.0.1 - 2017-07-07 */
+/*! crawlersite.kernel - v2.0.1 - 2017-07-10 */
 var Services = {};
 Cross = function () {
     this._timeStamp;
@@ -317,7 +317,7 @@ Cross.prototype = function () {
         return this._apiKey;
     }
 
-    var setUseHeatmaps = function (context, canUse) {
+    var setUseHeatmaps = function (context, canUse) {debugger;
         context._canUseHeatmaps = canUse;
     }
 
@@ -772,46 +772,41 @@ EventHub = function () {
     this._mouseMovementEvents = [];
     this._mouseScrollEvents = [];
     this._cross;
+    this._services;
 };
 
 EventHub.prototype = function () {
     /// Global Events
-    document.addEventListener("InsightsQueue", function () {
-        if (_mouseClickEvents.length > 0) {
-            this._mouseClickEvents.forEach(function (clickEvent) {
-                $CrawlerSite.Services.SocketHub.PushInsight({ Command: 'Click', Values: { ApiKey: $CrawlerSite.Services.Cross.GetApiKey(), Event: clickEvent } })
+    document.addEventListener("InsightsQueue", function (event) {
+        if (event.detail.context._services.EventHub._mouseClickEvents.length > 0) {
+            event.detail.context._services.EventHub._mouseClickEvents.forEach(function (clickEvent) {
+                event.detail.context._services.SocketHub.PushInsight({ Command: 'Click', Values: { ApiKey: $CrawlerSite.Services.Cross.GetApiKey(), Event: clickEvent } })
             });
-            this._mouseClickEvents.length = 0
+            event.detail.context._services.EventHub._mouseClickEvents.length = 0
         }
 
-        if (_mouseMovementEvents.length > 0) {
-            this._mouseMovementEvents.forEach(function (movementEvent) {
-                $CrawlerSite.Services.SocketHub.PushInsight({ Command: 'Movement', Values: { Api: $CrawlerSite.Services.Cross.GetApiKey(), Event: movementEvent } })
+        if (event.detail.context._services.EventHub._mouseMovementEvents.length > 0) {
+            event.detail.context._services.EventHub._mouseMovementEvents.forEach(function (movementEvent) {
+                event.detail.context._services.SocketHub.PushInsight({ Command: 'Movement', Values: { Api: $CrawlerSite.Services.Cross.GetApiKey(), Event: movementEvent } })
             });
-            this._mouseMovementEvents.length = 0
+            event.detail.context._services.EventHub._mouseMovementEvents.length = 0
         }
 
-        if (_mouseScrollEvents.length > 0) {
-            this._mouseScrollEvents.forEach(function (scrollEvent) {
-                $CrawlerSite.Services.SocketHub.PushInsight({ Command: 'Scroll', Values: { Api: $CrawlerSite.Services.Cross.GetApiKey(), Event: scrollEvent } })
+        if (event.detail.context._services.EventHub._mouseScrollEvents.length > 0) {
+            event.detail.context._services.EventHub._mouseScrollEvents.forEach(function (scrollEvent) {
+                event.detail.context._services.SocketHub.PushInsight({ Command: 'Scroll', Values: { Api: $CrawlerSite.Services.Cross.GetApiKey(), Event: scrollEvent } })
             });
-            this._mouseScrollEvents.length = 0
+            event.detail.context._services.EventHub._mouseScrollEvents.length = 0
         }
 
     }, false);
 
     document.addEventListener("CanUseHeatmaps", function (event) {
-        if (this._debug !== undefined) {
-            if (this._debug) {
-                console.log('CanUseHeatmaps:');
-                console.log(event)
-            }
-        }
-        if (event.detail.success == true) {
-            $CrawlerSite.Services.Cross.SetUseHeatmaps(event.detail.result);
+        if (event.detail.data.success == true) {
+            event.detail.context._services.Cross.SetUseHeatmaps(event.detail.context._cross, event.detail.data.result);
 
             if (event.detail.result == true) {
-                $CrawlerSite.Services.SocketHub.PushEvent({ Command: 'Coplest.Flinger.ICanUseHeatmaps', Values: {} });
+                event.detail.context._services.SocketHub.PushEvent({ Command: 'Coplest.Flinger.ICanUseHeatmaps', Values: {} });
             }
         }
     }, false)
@@ -820,6 +815,7 @@ EventHub.prototype = function () {
     var constructor = function (params) {
         if (params != undefined) {
             this._cross = params.Services.Cross;
+            this._services = params.Services;
             this._debug = params.Debug;
             if (this._debug === true) {
                 injectMouseDotStyle();
@@ -859,8 +855,7 @@ EventHub.prototype = function () {
 
     /// Catch all mouse scroll movement
     var getMouseScrollCoords = function (context, event) {
-        //console.log($crawlerSite.Services);
-
+        
         var scrollEvent = {
             Position: { X: this.scrollX, Y: this.scrollY },
             TimeStamp: context._cross.TimeStamp(),
@@ -868,10 +863,17 @@ EventHub.prototype = function () {
             Location: {}
         }
 
-        if ($CrawlerSite.Services.SocketHub.GetSocket() != undefined && $CrawlerSite.Services.SocketHub.GetSocket().connected === true) {
+        if (context._services.SocketHub.GetSocket() != undefined && context._services.SocketHub.GetSocket().connected === true) {
             if (context._cross.CanUseHeatmaps() != undefined && context._cross.CanUseHeatmaps() != null) {
                 if (context._cross.CanUseHeatmaps() == true) {
-                    $CrawlerSite.Services.SocketHub.PushInsight({ Command: 'Scroll', Values: { ApiKey: context._cross.GetApiKey(), Event: scrollEvent, Pathname: window.location.pathname } })
+                    context._services.SocketHub.PushInsight({ 
+                        Command: 'Scroll', 
+                        Values: { 
+                            ApiKey: context._cross.GetApiKey(), 
+                            Event: scrollEvent, 
+                            Pathname: context._cross.GetClientInformation().endpoint
+                        } 
+                    })
                 }
             }
         }
@@ -923,10 +925,17 @@ EventHub.prototype = function () {
             Location: {}
         }
 
-        if ($CrawlerSite.Services.SocketHub.GetSocket() != undefined && $CrawlerSite.Services.SocketHub.GetSocket().connected === true) {
+        if (context._services.SocketHub.GetSocket() != undefined && context._services.SocketHub.GetSocket().connected === true) {
             if (context._cross.CanUseHeatmaps() != undefined && context._cross.CanUseHeatmaps() != null) {
                 if (context._cross.CanUseHeatmaps() == true) {
-                    $CrawlerSite.Services.SocketHub.PushInsight({ Command: 'Movement', Values: { ApiKey: context._cross.GetApiKey(), Event: movementEvent, Pathname: window.location.pathname } })
+                    context._services.SocketHub.PushInsight({
+                        Command: 'Movement',
+                        Values: {
+                            ApiKey: context._cross.GetApiKey(),
+                            Event: movementEvent,
+                            Pathname: context._cross.GetClientInformation().endpoint
+                        }
+                    })
                 }
             }
         }
@@ -950,10 +959,17 @@ EventHub.prototype = function () {
                 console.log('Mouse coords: (' + event.clientX + ', ' + event.clientY + ')');
             }
         }
-        if ($CrawlerSite.Services.SocketHub.GetSocket() != undefined && $CrawlerSite.Services.SocketHub.GetSocket().connected === true) {
+        if (context._services.SocketHub.GetSocket() != undefined && context._services.SocketHub.GetSocket().connected === true) {
             if (context._cross.CanUseHeatmaps() != undefined && context._cross.CanUseHeatmaps() != null) {
                 if (context._cross.CanUseHeatmaps() == true) {
-                    $CrawlerSite.Services.SocketHub.PushInsight({ Command: 'Click', Values: { ApiKey: context._cross.GetApiKey(), Event: clickEvent, Pathname: window.location.pathname } })
+                    context._services.SocketHub.PushInsight({ 
+                        Command: 'Click', 
+                        Values: { 
+                            ApiKey: context._cross.GetApiKey(), 
+                            Event: clickEvent, 
+                            Pathname: context._cross.GetClientInformation().endpoint
+                        } 
+                    })
                 }
             }
         }

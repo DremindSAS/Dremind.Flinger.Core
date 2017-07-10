@@ -315,7 +315,7 @@ Cross.prototype = function () {
         return this._apiKey;
     }
 
-    var setUseHeatmaps = function (context, canUse) {
+    var setUseHeatmaps = function (context, canUse) {debugger;
         context._canUseHeatmaps = canUse;
     }
 
