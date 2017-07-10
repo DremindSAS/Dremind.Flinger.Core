@@ -1319,7 +1319,11 @@ ScreenshotHub = function () {
 
 ScreenshotHub.prototype = function () {
 
-    /// Initialize component
+    /**
+     * Function: Constructor
+     * This function initialize this component and setting up principal members
+     * @param {object} params - Injected dependencies
+     */
     var constructor = function (params) {
         if (params != undefined) {
             this._debug = params.Debug;
@@ -1327,6 +1331,11 @@ ScreenshotHub.prototype = function () {
         }
     }
 
+    /**
+     * Event: GetIfLastScreenshotIsObsoleteByApiKey#Response
+     * This event scrape webpage again if is obsolete or hasn't snapshot
+     * @param {object} result - Get response from backend where the result member is true or false
+     */
     document.addEventListener("GetIfLastScreenshotIsObsoleteByApiKey#Response", function (result) {
         if (result.detail.data != undefined && result.detail.data != null) {
             if(result.detail.data.success === true){
@@ -1337,10 +1346,21 @@ ScreenshotHub.prototype = function () {
         }
     });
 
+    /**
+     * Event: SocketConnected
+     * This event is emited to all services and is the flag to send data to server or Initialize components from server
+     * @param {object} data - contains current context
+     */
     document.addEventListener('SocketConnected', function(data){
-        $CrawlerSite.Services.ScreenshotHub.CheckIfScreenshotIsObsolete(data.detail.context);
+        data.detail.context._services.ScreenshotHub.CheckIfScreenshotIsObsolete(data.detail.context);
     })
 
+    /**
+     * Function: Take
+     * This function take a snapshot with all components that user see
+     * @param {object} context - Current context
+     * @param {function} next - Callback to anounce that task is completed
+     */
     var take = function (context, next) {
         snapshot(context._services.ScreenshotHub.screenshotType.seen, function (blob) {
             saveScreenshot(context, {
@@ -1350,6 +1370,12 @@ ScreenshotHub.prototype = function () {
         });
     }
 
+    /**
+     * Function: TakeAll
+     * This function take a snapshot with all components in the page
+     * @param {object} context - Current context
+     * @param {function} next - Callback to anounce that task is completed
+     */
     var takeAll = function (context, next) {
         snapshot(context._services.ScreenshotHub.screenshotType.allPage, context, function (blob) {
             saveScreenshot(context,{
@@ -1359,6 +1385,13 @@ ScreenshotHub.prototype = function () {
         });
     }
 
+    /**
+     * Function: Snapshot
+     * Take a snapshot with settings as parameters, documentation is inside function
+     * @param {number} screenshotType - Check if is all page or seen
+     * @param {object} context - Current context
+     * @param {function} next - Callback to anounce that task is completed
+     */
     var snapshot = function (screenshotType, context, next) {
         /// TODO: current limitation is css background images are not included.
         // 1. Rewrite current doc's imgs, css, and script URLs to be absolute before
@@ -1408,6 +1441,11 @@ ScreenshotHub.prototype = function () {
         next(blob);
     }
 
+    /**
+     * Function: urlsToAbsolute
+     * Convert all URI's to absolute URI, e.g.: '/profile.jpg' to 'http://somepath.com/profile.jpg'
+     * @param {[mixed]} nodeList - Is an array that contains all nodes to convert to absolute URI's
+     */
     function urlsToAbsolute(nodeList) {
         if (!nodeList.length) {
             return [];
@@ -1459,6 +1497,12 @@ ScreenshotHub.prototype = function () {
         });
     }
 
+    /**
+     * Function SaveScreenshot
+     * This function send to SocketHub all data and consequently it sends to the backend
+     * @param {object} context - current context
+     * @param {object} data - screenshot as blob and type of screenshot
+     */
     var saveScreenshot = function (context, data) {
         $CrawlerSite.Services.SocketHub.Screenshot({
             Command: 'PushScreenshot#Request',
@@ -1472,12 +1516,16 @@ ScreenshotHub.prototype = function () {
         });
     }
 
-
-    var checkIfIsObsolete = function () {
+    /**
+     * Function CheckIfIsObsolete
+     * This function send a request to backend if has current snapshot or is obsolete
+     * @param {object} context - current context
+     */
+    var checkIfIsObsolete = function (context) {
         $CrawlerSite.Services.SocketHub.Screenshot({
             Command: 'GetIfLastScreenshotIsObsoleteByApiKey#Request',
             Values: {
-                ApiKey: this._cross.GetApiKey()
+                ApiKey: context._cross.GetApiKey()
             }
         });
     }
