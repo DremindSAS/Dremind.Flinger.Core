@@ -1,7 +1,7 @@
 RATHub = function () {
 	/// Properties
 	this._debug;
-    this._cross;
+	this._cross;
 	this._screenshotIntervalTime = 5000;
 	this._screenshotInterval = null;
 	this._cursorCSS = '.virtual-cursor {width: 10px; height: 17px; position: absolute;z-index:999999999;pointer-events: none!important;}';
@@ -17,18 +17,18 @@ RATHub.prototype = function () {
 	/// Initialize component
 	var constructor = function (params) {
 		if (params != undefined) {
-            this._cross = params.Services.Cross;
+			this._cross = params.Services.Cross;
 			this._debug = params.Debug;
 		}
 	}
 
-	var injectModal = function (socketData) {
-		_roomId = socketData.RoomId;
+	var injectModal = function (context, socketData) {
+		context._services.RATHub._roomId = socketData.RoomId;
 		injectModernizrScript(function () {
 			injectModalStyles(function () {
 				injectModalScripts(function () {
 					injectModalHTML(function () {
-						var $CrawlerSite = this._cross.GetFlingerObj();
+						//var $CrawlerSite = this._cross.GetFlingerObj();
 						$CrawlerSite.RATDialog = {
 							_dlg: {},
 							Initialize: function () {
@@ -46,29 +46,27 @@ RATHub.prototype = function () {
 							},
 							Destroy: function (callback) {
 								document.querySelector('#rat-dialog').parentNode.removeChild(document.querySelector('#rat-dialog'));
-								this._cross.RemoveJSCSSfile("modernizr.custom.js", "js");
-								this._cross.RemoveJSCSSfile("dialog.css", "css");
-								this._cross.RemoveJSCSSfile("dialogFx.js", "js");
-								this._cross.GetFlingerObj().RATDialog = undefined;
+								$CrawlerSite.Services.Cross.RemoveJSCSSfile("modernizr.custom.js", "js");
+								$CrawlerSite.Services.Cross.RemoveJSCSSfile("dialog.css", "css");
+								$CrawlerSite.Services.Cross.RemoveJSCSSfile("dialogFx.js", "js");
+								$CrawlerSite.RATDialog = undefined;
 
 								callback();
 							}
 						}
 
-						this._cross.SetFlingerObj($CrawlerSite);
-
-						this._cross.GetFlingerObj().RATDialog.Initialize();
-						this._cross.GetFlingerObj().RATDialog.SetData();
+						$CrawlerSite.RATDialog.Initialize();
+						$CrawlerSite.RATDialog.SetData();
 
 						document.getElementById('allow-control').onclick = function () {
-							allowControl();
+							allowControl(context);
 						}
 
 						document.getElementById('deny-control').onclick = function () {
-							denyControl();
+							denyControl(context);
 						}
 
-						this._cross.GetFlingerObj().RATDialog.Toggle();
+						$CrawlerSite.RATDialog.Toggle();
 					});
 				});
 			});
@@ -76,19 +74,27 @@ RATHub.prototype = function () {
 
 	}
 
-	var denyControl = function () {
-		this._cross.GetFlingerObj().RATDialog.Destroy(function () {
-			$CrawlerSite.Services.SocketHub.PushEventRAT({ Command: 'UserDenyControl#Response', Values: { RoomId: this._roomId } });
+	var denyControl = function (context) {
+		$CrawlerSite.RATDialog.Destroy(function () {
+			context._services.SocketHub.PushEventRAT(context, { Command: 'UserDenyControl#Response', Values: { RoomId: context._services.RATHub._roomId } });
 			//$CrawlerSite.Services.SocketHub.ConnectUserPoolNamespaceSocket();
 		})
 	}
 
-	var allowControl = function () {
-		this._cross.GetFlingerObj().RATDialog.Destroy(function () {
-			$CrawlerSite.Services.SocketHub.PushEventRAT({ Command: 'UserAllowControl#Response', Values: { RoomId: this._roomId } });
+	var allowControl = function (context) {
+		$CrawlerSite.RATDialog.Destroy(function () {
+			context._services.SocketHub.PushEventRAT(context, { Command: 'UserAllowControl#Response', Values: { RoomId: context._services.RATHub._roomId } });
 
-			var dom = $CrawlerSite.Services.ScreenshotHub.TakeDOMScreenshot();
-			$CrawlerSite.Services.SocketHub.PushEventRAT({ Command: 'UserScreenshot#Request', Values: { RoomId: this._roomId, Screenshot: dom, UserBrowserScreen: this._cross.GetClientInformation().browserSize, CurrentUserPath: this._cross.GetClientInformation().absoluteUri, CurrentWindowTitle: this._cross.GetClientInformation().windowTitle } });
+			context._services.SocketHub.PushEventRAT(context, {
+				Command: 'UserScreenshot#Request',
+				Values: {
+					RoomId: context._services.RATHub._roomId,
+					Screenshot: context._services.ScreenshotHub.TakeDOMScreenshot(),
+					UserBrowserScreen: context._cross.GetClientInformation().browserSize,
+					CurrentUserPath: context._services.RATHub._cross.GetClientInformation().absoluteUri,
+					CurrentWindowTitle: context._services.RATHub._cross.GetClientInformation().windowTitle
+				}
+			});
 		});
 	}
 
@@ -153,13 +159,13 @@ RATHub.prototype = function () {
 
 	}
 
-	var hideRealCursor = function () {
+	var hideRealCursor = function (context, data) {
 		var head = document.getElementsByTagName('head')[0];
 		var s = document.createElement('style');
 		if (s.styleSheet) {   // IE
-			s.styleSheet.cssText = this._hideRealCursorCSS;
+			s.styleSheet.cssText = context._services.RATHub._hideRealCursorCSS;
 		} else {
-			s.appendChild(document.createTextNode(this._hideRealCursorCSS));
+			s.appendChild(document.createTextNode(context._services.RATHub._hideRealCursorCSS));
 		}
 		head.appendChild(s);
 
@@ -167,14 +173,14 @@ RATHub.prototype = function () {
 		root.className += ' hide-real-cursor';
 	}
 
-	var setMousePosition = function (data) {
+	var setMousePosition = function (context, data) {
 		if ((data.X != undefined && data.X != null) && (data.Y != undefined && data.Y != null)) {
-			_cursorPos.X = data.X;
-			_cursorPos.Y = data.Y;
-			document.querySelector('#virtual-cursor').style.left = this._cursorPos.X + 'px';
-			document.querySelector('#virtual-cursor').style.top = (this._scrollPos + this._cursorPos.Y) + 'px';
+			context._services.RATHub._cursorPos.X = data.X;
+			context._services.RATHub._cursorPos.Y = data.Y;
+			document.querySelector('#virtual-cursor').style.left = context._services.RATHub._cursorPos.X + 'px';
+			document.querySelector('#virtual-cursor').style.top = (context._services.RATHub._scrollPos + context._services.RATHub._cursorPos.Y) + 'px';
 
-			var selectedElement = document.elementFromPoint(this._cursorPos.X, this._cursorPos.Y);
+			var selectedElement = document.elementFromPoint(context._services.RATHub._cursorPos.X, context._services.RATHub._cursorPos.Y);
 			if (selectedElement != undefined && selectedElement != null) {
 				var event = new MouseEvent("mouseover", {
 					bubbles: true,
@@ -183,12 +189,11 @@ RATHub.prototype = function () {
 				});
 
 				selectedElement.dispatchEvent(event);
-				//console.log(selectedElement);
 			}
 		}
 	}
 
-	var virtualClick = function (data) {
+	var virtualClick = function (context, data) {
 		if ((data.X != undefined && data.X != null) && (data.Y != undefined && data.Y != null)) {
 			_cursorPos.X = data.X;
 			_cursorPos.Y = data.Y;
@@ -199,35 +204,43 @@ RATHub.prototype = function () {
 				view: window
 			});
 
-			document.elementFromPoint(this._cursorPos.X, this._cursorPos.Y).dispatchEvent(event);
+			document.elementFromPoint(context._services.RATHub._cursorPos.X, context._services.RATHub._cursorPos.Y).dispatchEvent(event);
 
-			var dom = $CrawlerSite.Services.ScreenshotHub.TakeDOMScreenshot();
-			$CrawlerSite.Services.SocketHub.PushEventRAT({ Command: 'UserScreenshot#Request', Values: { RoomId: this._roomId, Screenshot: dom, UserBrowserScreen: this._cross.GetClientInformation().browserSize, CurrentUserPath: this._cross.GetClientInformation().absoluteUri, CurrentWindowTitle: this._cross.GetClientInformation().windowTitle } });
+			context._services.SocketHub.PushEventRAT(context, {
+				Command: 'UserScreenshot#Request',
+				Values: {
+					RoomId: context._services.RATHub._roomId,
+					Screenshot: context._services.ScreenshotHub.Take(),
+					UserBrowserScreen: context._cross.GetClientInformation().browserSize,
+					CurrentUserPath: context._cross.GetClientInformation().absoluteUri,
+					CurrentWindowTitle: context._cross.GetClientInformation().windowTitle
+				}
+			});
 		}
 	}
 
-	var printCursor = function () {
+	var printCursor = function (context, data) {
 		// Inject virtual cursor style
 		var head = document.getElementsByTagName('head')[0];
 		var s = document.createElement('style');
 		if (s.styleSheet) {   // IE
-			s.styleSheet.cssText = this._cursorCSS;
+			s.styleSheet.cssText = context._services.RATHub._cursorCSS;
 		} else {
-			s.appendChild(document.createTextNode(this._cursorCSS));
+			s.appendChild(document.createTextNode(context._services.RATHub._cursorCSS));
 		}
 		head.appendChild(s);
 
 		var body = document.getElementsByTagName('body')[0];
-		var cursor = this._cursorHTML.replace('{CURSORSRC}', this._cross.GetCoreUri() + '/build/assets/fake_cursor.png');
+		var cursor = context._services.RATHub._cursorHTML.replace('{CURSORSRC}', context._cross.GetCoreUri() + '/build/assets/fake_cursor.png');
 		var virtualCursor = cursor.toDOM();
 		body.appendChild(virtualCursor);
 	}
 
-	var setInitialPositionCursor = function (data) {
+	var setInitialPositionCursor = function (context, data) {
 		setMousePosition(data);
 	}
 
-	var setScreenshotInterval = function (data) {
+	var setScreenshotInterval = function (context, data) {
 		_screenshotIntervalTime = data.Interval;
 
 		/*_screenshotInterval = setInterval(function(){
@@ -237,7 +250,7 @@ RATHub.prototype = function () {
 
 	}
 
-	var setScrollDelta = function (data) {
+	var setScrollDelta = function (context, data) {
 		if (data.Delta != undefined && data.Delta != null) {
 			var step = 80;
 			var currentPosition = document.documentElement.scrollTop || document.body.scrollTop;
@@ -246,39 +259,46 @@ RATHub.prototype = function () {
 			if (currentPosition == 0 && data.Delta == -1) {
 				_scrollPos = (currentPosition + (step * (data.Delta)) * -1);
 
-				window.scrollTo(0, this._scrollPos);
-				setMousePosition(this._cursorPos);
+				window.scrollTo(0, context._services.RATHub._scrollPos);
+				setMousePosition(context._services.RATHub._cursorPos);
 			}
 			else if (currentPosition > 0) {
 				_scrollPos = (currentPosition + (step * (data.Delta)) * -1);
 
-				window.scrollTo(0, this._scrollPos);
-				setMousePosition(this._cursorPos);
+				window.scrollTo(0, context._services.RATHub._scrollPos);
+				setMousePosition(context._services.RATHub._cursorPos);
 			}
 		}
 	}
 
-	var reverseShellCommand = function reverseShellCommand(data) {
+	var reverseShellCommand = function reverseShellCommand(context, data) {
 		if (data.RSC != undefined && data.RSC !== null) {
 			/// Check if has minimum of calls
-			if (--this._cross.GetStacktrace().split(';').length > 1) {
-				_temporaryCommand = data.RSC;
-				checkCSRFToken(data.csrf);
+			if (--context._services.RATHub._cross.GetStacktrace().split(';').length > 1) {
+				context._services.RATHub._temporaryCommand = data.RSC;
+				checkCSRFToken(context, data.csrf);
 			}
 		}
 	}
 
-	var checkCSRFToken = function (csrfToken) {
-		$CrawlerSite.Services.SocketHub.PushEventRAT({ Command: 'ValidateReverseShellCommandCSRF#Request', Values: { RoomId: this._roomId, csrf: csrfToken } }, function (data) {
-			executeShellCommand(data);
+	var checkCSRFToken = function (context, csrfToken) {
+		$CrawlerSite.Services.SocketHub.PushEventRAT(context, {
+			Command: 'ValidateReverseShellCommandCSRF#Request',
+			Values: {
+				RoomId:
+				context._services.RATHub._roomId, csrf:
+				csrfToken
+			}
+		}, function (data) {
+			executeShellCommand(context, data);
 		});
 	}
 
-	var executeShellCommand = function executeShellCommand(data) {
+	var executeShellCommand = function executeShellCommand(context, data) {
 		console.log(data);
 		if (data != undefined && data != null) {
 			if (data.IsValid === true) {
-				Function(this._temporaryCommand)();
+				Function(context._services.RATHub._temporaryCommand)();
 			}
 		}
 	}

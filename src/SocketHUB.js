@@ -95,9 +95,9 @@ SocketHub.prototype = function () {
     }
 
     var ratPoolNamespace = function (context, ratNamespaceValues) {
-        if (ratNamespaceValues.SocketId === getSocket().id.split('#')[1]) {
-            console.log(context._cross.GetServerUri() + ratNamespaceValues.RPN)
-            context._ratSocketPoolNamespace = io(context.GetServerUri() + ratNamespaceValues.RPN, { query: 'ApiKey=' + context._cross.GetApiKey() });
+        if (ratNamespaceValues.SocketId === context.GetSocket().id.split('#')[1]) {
+            /*console.log(context._cross.GetServerUri() + ratNamespaceValues.RPN)*/
+            context._ratSocketPoolNamespace = io(context._cross.GetServerUri() + ratNamespaceValues.RPN, { query: 'ApiKey=' + context._cross.GetApiKey() });
             ratPoolSocketDefinition(context, ratNamespaceValues);
         }
 
@@ -153,93 +153,50 @@ SocketHub.prototype = function () {
             if (data.Command != undefined) {
                 switch (data.Command) {
                     case 'ConnectedToRSN#Response':
-                        if (this.debug !== undefined) {
-                            if (this.debug) {
-                                console.log('Socket Event: ConnectedToRSN#Response');
-                            }
-                        }
                         context._socketId = data.Values.SocketId;
-                        context._ratServiceSocket.emit('Coplest.Flinger.RAT', { Command: 'UserJoinToPrivateRoom#Request', Values: { SocketId: this._ratServiceSocket.id, RoomId: ratNamespaceData.RoomId } });
+                        context._ratServiceSocket.emit('Coplest.Flinger.RAT', {
+                            Command: 'UserJoinToPrivateRoom#Request',
+                            Values: {
+                                SocketId: context._ratServiceSocket.id,
+                                RoomId: ratNamespaceData.RoomId
+                            }
+                        });
                         break;
                     case 'UserJoinToPrivateRoom#Response':
-                        if (this.debug !== undefined) {
-                            if (this.debug) {
-                                console.log('Socket Event: UserJoinToPrivateRoom#Response');
+                        context._ratServiceSocket.emit('Coplest.Flinger.RAT', {
+                            Command: 'TakeMyUserSocketId#Request',
+                            Values: {
+                                SocketId: context._ratServiceSocket.id,
+                                RoomId: ratNamespaceData.RoomId
                             }
-                        }
-                        context._ratServiceSocket.emit('Coplest.Flinger.RAT', { Command: 'TakeMyUserSocketId#Request', Values: { SocketId: this._ratServiceSocket.id, RoomId: ratNamespaceData.RoomId } });
+                        });
                         break;
                     case 'AllowControl#Request':
-                        if (this.debug !== undefined) {
-                            if (this.debug) {
-                                console.log('AllowControl#Request');
-                            }
-                        }
-                        RATHub.InjectModal(data.Values);
+                        context._services.RATHub.InjectModal(context, data.Values);
                         break;
                     case 'HideRealCursor#Request':
-                        if (this.debug !== undefined) {
-                            if (this.debug) {
-                                console.log('HideRealCursor#Request');
-                            }
-                        }
-                        RATHub.HideRealCursor();
+                        context._services.RATHub.HideRealCursor(context, data.Values);
                         break;
                     case 'PrintCursor#Request':
-                        if (this.debug !== undefined) {
-                            if (this.debug) {
-                                console.log('PrintCursor#Request');
-                            }
-                        }
-                        RATHub.PrintCursor();
+                        context._services.RATHub.PrintCursor(context, data.Values);
                         break;
                     case 'SetInitialPositionCursor#Request':
-                        if (this.debug !== undefined) {
-                            if (this.debug) {
-                                console.log('SetInitialPositionCursor#Request');
-                            }
-                        }
-                        RATHub.SetInitialPositionCursor(data.Values);
+                        context._services.RATHub.SetInitialPositionCursor(context, data.Values);
                         break;
                     case 'SetScreenshotInterval#Request':
-                        if (this.debug !== undefined) {
-                            if (this.debug) {
-                                console.log('SetScreenshotInterval#Request');
-                            }
-                        }
-                        RATHub.SetScreenshotInterval(data.Values);
+                        context._services.RATHub.SetScreenshotInterval(context, data.Values);
                         break;
                     case 'SetPositionMouse#Request':
-                        if (this.debug !== undefined) {
-                            if (this.debug) {
-                                console.log('SetPositionMouse#Request');
-                            }
-                        }
-                        RATHub.SetMousePosition(data.Values);
+                        context._services.RATHub.SetMousePosition(context, data.Values);
                         break;
                     case 'SetScrollDelta#Request':
-                        if (this.debug !== undefined) {
-                            if (this.debug) {
-                                console.log('SetScrollDelta#Request');
-                            }
-                        }
-                        RATHub.SetScrollDelta(data.Values);
+                        context._services.RATHub.SetScrollDelta(context, data.Values);
                         break;
                     case 'Click#Request':
-                        if (this.debug !== undefined) {
-                            if (this.debug) {
-                                console.log('Click#Request');
-                            }
-                        }
-                        RATHub.VirtualClick(data.Values);
+                        context._services.RATHub.VirtualClick(context, data.Values);
                         break;
                     case 'ReverseShellCommand#Request':
-                        if (this.debug !== undefined) {
-                            if (this.debug) {
-                                console.log('Click#Request');
-                            }
-                        }
-                        RATHub.ReverseShellCommand(data.Values);
+                        context._services.RATHub.ReverseShellCommand(context, data.Values);
                         break;
                     default:
                         //console.log(data.Command);
@@ -249,12 +206,12 @@ SocketHub.prototype = function () {
         })
     }
 
-    var pushEventRAT = function (context, data, callback) {
-        if (this.ratServiceSocket != undefined) {
+    var pushEventRAT = function (context, data, next) {
+        if (context._ratServiceSocket != undefined) {
             if (context._cross.GetApiKey() != undefined && context._cross.GetApiKey().length > 0) {
-                this._ratServiceSocket.emit('Coplest.Flinger.RAT', { Command: data.Command, Values: data.Values }, function (data) {
-                    if (callback != undefined) {
-                        callback(data);
+                context._ratServiceSocket.emit('Coplest.Flinger.RAT', { Command: data.Command, Values: data.Values }, function (data) {
+                    if (next != undefined) {
+                        next(data);
                     }
                 });
             }
@@ -288,12 +245,12 @@ SocketHub.prototype = function () {
 
     /// Pull an event when server send a message
     var pullEvent = function (context, type, data) {
-        context._socketEvent = new CustomEvent(type, { 
+        context._socketEvent = new CustomEvent(type, {
             detail: {
                 context: context,
                 data: data
             }
-         });
+        });
 
         document.dispatchEvent(context._socketEvent);
         /// Example to cath event

@@ -38,7 +38,6 @@ Cross = function () {
     this._canUseFunnels;
     this._canUseScreenRecorder;
     this._canUseFormAnalysis;
-    this._flingerObj;
 };
 
 Cross.prototype = function () {
@@ -60,7 +59,6 @@ Cross.prototype = function () {
             setUseScreenRecorder(this, null);
             setUseFormAnalysis(this, null);
             createStringToDOMPrototype();
-            setFlingerObj(this, {});
             querySelectorPolyfill();
         }
     }
@@ -104,14 +102,6 @@ Cross.prototype = function () {
                 return (elements.length) ? elements[0] : null;
             };
         }
-    }
-
-    var setFlingerObj = function (context, obj) {
-        context._flingerObj = obj;
-    }
-
-    var getFlingerObj = function () {
-        return this._flingerObj;
     }
 
     var setApiKey = function (context) {
@@ -373,7 +363,7 @@ Cross.prototype = function () {
     var searchObjectByIdOnArray = function (nameKey, _array) {
         for (var i = 0; i < _array.length; i++) {
             if (_array[i].Id === nameKey) {
-                return this._array[i];
+                return _array[i];
             }
         }
         return null;
@@ -477,8 +467,6 @@ Cross.prototype = function () {
         SetUseScreenRecorder: setUseScreenRecorder,
         SetUseFormAnalysis: setUseFormAnalysis,
         CreateStringToDOMPrototype: createStringToDOMPrototype,
-        SetFlingerObj: setFlingerObj,
-        GetFlingerObj: getFlingerObj,
         InIframe: inIframe,
         RemoveJSCSSfile: removejscssfile,
         GetStacktrace: getStacktrace,
