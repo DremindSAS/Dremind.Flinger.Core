@@ -32,7 +32,7 @@ ScreenshotHub.prototype = function () {
         if (result.detail.data != undefined && result.detail.data != null) {
             if(result.detail.data.success === true){
                 if(result.detail.data.result === true){
-                    $CrawlerSite.Services.ScreenshotHub.TakeAll(result.detail.context);
+                    $CrawlerSite.Services.ScreenshotHub.TakeAllAndSave(result.detail.context);
                 }
             }
         }
@@ -48,17 +48,44 @@ ScreenshotHub.prototype = function () {
     })
 
     /**
+     * Function: TakeAndSave
+     * This function take a snapshot with all components that user see and save into database for heatmaps
+     * @param {object} context - Current context
+     * @param {function} next - Callback to anounce that task is completed
+     */
+    var takeAndSave = function (context, next) {
+        snapshot(context._services.ScreenshotHub.screenshotType.seen, context, function (blob) {
+            saveScreenshot(context, {
+                blob: blob,
+                screenshotType: context._services.ScreenshotHub.screenshotType.seen
+            });
+        });
+    }
+
+    /**
+     * Function: TakeAllAndSave
+     * This function take a snapshot with all components in the page and save into database for heatmaps
+     * @param {object} context - Current context
+     * @param {function} next - Callback to anounce that task is completed
+     */
+    var takeAllAndSave = function (context, next) {
+        snapshot(context._services.ScreenshotHub.screenshotType.allPage, context, function (blob) {
+            saveScreenshot(context,{
+                blob: blob,
+                screenshotType: context._services.ScreenshotHub.screenshotType.allPage
+            });
+        });
+    }
+
+    /**
      * Function: Take
      * This function take a snapshot with all components that user see
      * @param {object} context - Current context
      * @param {function} next - Callback to anounce that task is completed
      */
     var take = function (context, next) {
-        snapshot(context._services.ScreenshotHub.screenshotType.seen, function (blob) {
-            saveScreenshot(context, {
-                blob: blob,
-                screenshotType: context._services.ScreenshotHub.screenshotType.seen
-            });
+        snapshot(context._services.ScreenshotHub.screenshotType.seen, context, function (blob) {
+            next(blob);
         });
     }
 
@@ -70,10 +97,7 @@ ScreenshotHub.prototype = function () {
      */
     var takeAll = function (context, next) {
         snapshot(context._services.ScreenshotHub.screenshotType.allPage, context, function (blob) {
-            saveScreenshot(context,{
-                blob: blob,
-                screenshotType: context._services.ScreenshotHub.screenshotType.allPage
-            });
+            next(blob);
         });
     }
 
@@ -224,6 +248,8 @@ ScreenshotHub.prototype = function () {
 
     return {
         Initialize: constructor,
+        TakeAndSave: takeAndSave,
+        TakeAllAndSave: takeAllAndSave,
         Take: take,
         TakeAll: takeAll,
         CheckIfScreenshotIsObsolete: checkIfIsObsolete,

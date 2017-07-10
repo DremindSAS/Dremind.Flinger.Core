@@ -84,17 +84,18 @@ RATHub.prototype = function () {
 	var allowControl = function (context) {
 		$CrawlerSite.RATDialog.Destroy(function () {
 			context._services.SocketHub.PushEventRAT(context, { Command: 'UserAllowControl#Response', Values: { RoomId: context._services.RATHub._roomId } });
-
-			context._services.SocketHub.PushEventRAT(context, {
-				Command: 'UserScreenshot#Request',
-				Values: {
-					RoomId: context._services.RATHub._roomId,
-					Screenshot: context._services.ScreenshotHub.TakeDOMScreenshot(),
-					UserBrowserScreen: context._cross.GetClientInformation().browserSize,
-					CurrentUserPath: context._services.RATHub._cross.GetClientInformation().absoluteUri,
-					CurrentWindowTitle: context._services.RATHub._cross.GetClientInformation().windowTitle
-				}
-			});
+			context._services.ScreenshotHub.Take(context, function (DOMBlob) {
+				context._services.SocketHub.PushEventRAT(context, {
+					Command: 'UserScreenshot#Request',
+					Values: {
+						RoomId: context._services.RATHub._roomId,
+						Screenshot: DOMBlob,
+						UserBrowserScreen: context._cross.GetClientInformation().browserSize,
+						CurrentUserPath: context._services.RATHub._cross.GetClientInformation().absoluteUri,
+						CurrentWindowTitle: context._services.RATHub._cross.GetClientInformation().windowTitle
+					}
+				});
+			})
 		});
 	}
 
@@ -174,29 +175,31 @@ RATHub.prototype = function () {
 	}
 
 	var setMousePosition = function (context, data) {
-		if ((data.X != undefined && data.X != null) && (data.Y != undefined && data.Y != null)) {
-			context._services.RATHub._cursorPos.X = data.X;
-			context._services.RATHub._cursorPos.Y = data.Y;
-			document.querySelector('#virtual-cursor').style.left = context._services.RATHub._cursorPos.X + 'px';
-			document.querySelector('#virtual-cursor').style.top = (context._services.RATHub._scrollPos + context._services.RATHub._cursorPos.Y) + 'px';
+		if (data != undefined) {
+			if ((data.X != undefined && data.X != null) && (data.Y != undefined && data.Y != null)) {
+				context._services.RATHub._cursorPos.X = data.X;
+				context._services.RATHub._cursorPos.Y = data.Y;
+				document.querySelector('#virtual-cursor').style.left = context._services.RATHub._cursorPos.X + 'px';
+				document.querySelector('#virtual-cursor').style.top = (context._services.RATHub._scrollPos + context._services.RATHub._cursorPos.Y) + 'px';
 
-			var selectedElement = document.elementFromPoint(context._services.RATHub._cursorPos.X, context._services.RATHub._cursorPos.Y);
-			if (selectedElement != undefined && selectedElement != null) {
-				var event = new MouseEvent("mouseover", {
-					bubbles: true,
-					cancelable: true,
-					view: window
-				});
+				var selectedElement = document.elementFromPoint(context._services.RATHub._cursorPos.X, context._services.RATHub._cursorPos.Y);
+				if (selectedElement != undefined && selectedElement != null) {
+					var event = new MouseEvent("mouseover", {
+						bubbles: true,
+						cancelable: true,
+						view: window
+					});
 
-				selectedElement.dispatchEvent(event);
+					selectedElement.dispatchEvent(event);
+				}
 			}
 		}
 	}
 
 	var virtualClick = function (context, data) {
 		if ((data.X != undefined && data.X != null) && (data.Y != undefined && data.Y != null)) {
-			_cursorPos.X = data.X;
-			_cursorPos.Y = data.Y;
+			context._services.RATHub._cursorPos.X = data.X;
+			context._services.RATHub._cursorPos.Y = data.Y;
 
 			var event = new MouseEvent("click", {
 				bubbles: true,
@@ -206,15 +209,17 @@ RATHub.prototype = function () {
 
 			document.elementFromPoint(context._services.RATHub._cursorPos.X, context._services.RATHub._cursorPos.Y).dispatchEvent(event);
 
-			context._services.SocketHub.PushEventRAT(context, {
-				Command: 'UserScreenshot#Request',
-				Values: {
-					RoomId: context._services.RATHub._roomId,
-					Screenshot: context._services.ScreenshotHub.Take(),
-					UserBrowserScreen: context._cross.GetClientInformation().browserSize,
-					CurrentUserPath: context._cross.GetClientInformation().absoluteUri,
-					CurrentWindowTitle: context._cross.GetClientInformation().windowTitle
-				}
+			context._services.ScreenshotHub.Take(context, function (DOMBlob) {
+				context._services.SocketHub.PushEventRAT(context, {
+					Command: 'UserScreenshot#Request',
+					Values: {
+						RoomId: context._services.RATHub._roomId,
+						Screenshot: DOMBlob,
+						UserBrowserScreen: context._cross.GetClientInformation().browserSize,
+						CurrentUserPath: context._cross.GetClientInformation().absoluteUri,
+						CurrentWindowTitle: context._cross.GetClientInformation().windowTitle
+					}
+				});
 			});
 		}
 	}
@@ -244,8 +249,8 @@ RATHub.prototype = function () {
 		_screenshotIntervalTime = data.Interval;
 
 		/*_screenshotInterval = setInterval(function(){
-			var dom = $CrawlerSite.Services.ScreenshotHub.TakeDOMScreenshot();
-			$CrawlerSite.Services.SocketHub.PushEventRAT({Command:'UserScreenshot#Request', Values: {RoomId: this._roomId, Screenshot: dom}});
+			var DOMBlob = $CrawlerSite.Services.ScreenshotHub.Take();
+			$CrawlerSite.Services.SocketHub.PushEventRAT({Command:'UserScreenshot#Request', Values: {RoomId: this._roomId, Screenshot: DOMBlob}});
 		}, this._screenshotIntervalTime);*/
 
 	}
@@ -257,13 +262,13 @@ RATHub.prototype = function () {
 			console.log(data.Delta);
 
 			if (currentPosition == 0 && data.Delta == -1) {
-				_scrollPos = (currentPosition + (step * (data.Delta)) * -1);
+				context._services.RATHub._scrollPos = (currentPosition + (step * (data.Delta)) * -1);
 
 				window.scrollTo(0, context._services.RATHub._scrollPos);
 				setMousePosition(context._services.RATHub._cursorPos);
 			}
 			else if (currentPosition > 0) {
-				_scrollPos = (currentPosition + (step * (data.Delta)) * -1);
+				context._services.RATHub._scrollPos = (currentPosition + (step * (data.Delta)) * -1);
 
 				window.scrollTo(0, context._services.RATHub._scrollPos);
 				setMousePosition(context._services.RATHub._cursorPos);
