@@ -92,12 +92,12 @@ module.exports = function (grunt) {
         uglify: {
             FlingerProductionMinJS: {
                 files: {
-                    './build/flinger.min.js': './build/flinger.js'
+                    './build/flinger.min.js': './build/flinger.ob.js'
                 }
             },
             FlingerDevMinJS: {
                 files: {
-                    './dev-build/flinger.min.js': './dev-build/flinger.js'
+                    './dev-build/flinger.min.js': './dev-build/flinger.ob.js'
                 }
             }
         },
@@ -116,6 +116,35 @@ module.exports = function (grunt) {
         watch: {
             files: ['./src/*.js'],
             tasks: ['default']
+        },
+        obfuscator: {
+            options: {
+                banner: '// You can\'t debug this library.\n',
+                debugProtection: true,
+                compact: true,
+                deadCodeInjection: true,
+                deadCodeInjectionThreshold: 0.2,
+                mangle: true,
+                unicodeEscapeSequence: false,
+                selfDefending: false,
+                stringArrayEncoding: true,
+            },
+            FlingerProductionObfuscateJS: {
+                options: {
+                    domainLock: ['www.crawlersite.com'],
+                },
+                files: {
+                    './build/flinger.ob.js': ['./build/flinger.js']
+                }
+            },
+            FlingerDevObfuscateJS: {
+                options: {
+                    domainLock: ['localhost'],
+                },
+                files: {
+                    './dev-build/flinger.ob.js': ['./dev-build/flinger.js']
+                }
+            }
         }
     });
 
@@ -124,6 +153,7 @@ module.exports = function (grunt) {
     grunt.loadNpmTasks('grunt-contrib-uglify');
     grunt.loadNpmTasks('grunt-contrib-watch');
     grunt.loadNpmTasks('grunt-replace');
+    grunt.loadNpmTasks('grunt-contrib-obfuscator');
 
-    grunt.registerTask('default', ['concat', 'replace', 'uglify', 'copy']);
+    grunt.registerTask('default', ['concat', 'replace', 'obfuscator', 'uglify', 'copy']);
 };

@@ -874,7 +874,7 @@ EventHub.prototype = function () {
         }
     }
 
-    /// Catch all mouse movement
+    /// Catch all mouse movement 
     var getMouseMovementCoords = function (context, event) {
         var dot, eventDoc, doc, body, pageX, pageY;
 
