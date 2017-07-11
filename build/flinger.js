@@ -65,7 +65,7 @@ Cross.prototype = function () {
         }
     }
 
-    var defineatob = function(){
+    var defineatob = function () {
         if (typeof window.atob == 'undefined') {
             function atob(a) {
                 var b = "", e, c, h = "", f, g = "", d = 0;
@@ -268,8 +268,16 @@ Cross.prototype = function () {
         var endpoint = document.location.pathname;
         var windowTitle = document.title;
         var referrer = document.referrer;
-        var fingerprint= context.GetFingerPrint();
-
+        var fingerprint = context.GetFingerPrint();
+        var jquery = !window.jQuery ? undefined : {
+            exist: (typeof $ == 'function' || typeof jQuery == 'function'),
+            version: jQuery.fn.jquery
+        }
+        var bootstrap = (typeof $().emulateTransitionEnd == 'function') == false ? undefined :{
+            exist: (typeof $().emulateTransitionEnd == 'function'),
+            version : $.fn.tooltip.Constructor.VERSION
+        }
+        
         context._clientInformation = {
             screen: screenSize,
             browserSize: browserSize,
@@ -287,6 +295,8 @@ Cross.prototype = function () {
             windowTitle: windowTitle,
             referrer: referrer,
             fingerprint: fingerprint,
+            jquery: jquery,
+            bootstrap: bootstrap,
         }
     }
 
