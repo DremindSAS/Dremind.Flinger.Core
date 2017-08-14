@@ -1,9 +1,9 @@
-var Cross = (function () {
-    var _timeStamp;
-    var _serverUri;
-    var _coreUri;
-    var _clientInformation;
-    var _clientStrings = [
+Cross = function () {
+    this._timeStamp;
+    this._serverUri;
+    this._coreUri;
+    this._clientInformation;
+    this._clientStrings = [
         { s: 'Windows 10', r: /(Windows 10.0|Windows NT 10.0)/ },
         { s: 'Windows 8.1', r: /(Windows 8.1|Windows NT 6.3)/ },
         { s: 'Windows 8', r: /(Windows 8|Windows NT 6.2)/ },
@@ -31,34 +31,47 @@ var Cross = (function () {
         { s: 'OS/2', r: /OS\/2/ },
         { s: 'Search Bot', r: /(nuhk|Googlebot|Yammybot|Openbot|Slurp|MSNBot|Ask Jeeves\/Teoma|ia_archiver)/ }
     ];
-    var _clientLocation;
-    var _apiKey;
-    var _canUseHeatmaps;
-    var _canUseRAT;
-    var _canUseFunnels;
-    var _canUseScreenRecorder;
-    var _canUseFormAnalysis;
-    var _flingerObj;
+    this._clientLocation;
+    this._apiKey;
+    this._canUseHeatmaps;
+    this._canUseRAT;
+    this._canUseFunnels;
+    this._canUseScreenRecorder;
+    this._canUseFormAnalysis;
+};
 
+Cross.prototype = function () {
     var constructor = function (params) {
         if (params != undefined) {
-            _debug = params.Debug;
+            this._debug = params.Debug;
         }
 
-        _timeStamp = new Date();
-        _serverUri = "{BACKEND-URI}";
-        _coreUri = "{KERNEL-URI}";
+        this._timeStamp = new Date();
+        this._serverUri = "{BACKEND-URI}";
+        this._coreUri = "{KERNEL-URI}";
         if (inIframe() == false) {
-            setApiKey();
-            analyzeClient();
-            setUseHeatmaps(null);
-            setUseRAT(null);
-            setUseFunnels(null);
-            setUseScreenRecorder(null);
-            setUseFormAnalysis(null);
+            setApiKey(this);
+            defineatob();
+            analyzeClient(this);
+            setUseHeatmaps(this, null);
+            setUseRAT(this, null);
+            setUseFunnels(this, null);
+            setUseScreenRecorder(this, null);
+            setUseFormAnalysis(this, null);
             createStringToDOMPrototype();
-            setFlingerObj({});
             querySelectorPolyfill();
+        }
+    }
+
+    var defineatob = function () {
+        if (typeof window.atob == 'undefined') {
+            function atob(a) {
+                var b = "", e, c, h = "", f, g = "", d = 0;
+                k = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=";
+                do e = k.indexOf(a.charAt(d++)), c = k.indexOf(a.charAt(d++)), f = k.indexOf(a.charAt(d++)), g = k.indexOf(a.charAt(d++)), e = e << 2 | c >> 4, c = (c & 15) << 4 | f >> 2, h = (f & 3) << 6 | g, b += String.fromCharCode(e), 64 != f && (b += String.fromCharCode(c)), 64 != g && (b += String.fromCharCode(h));
+                while (d < a.length);
+                return unescape(b)
+            };
         }
     }
 
@@ -91,24 +104,16 @@ var Cross = (function () {
         }
     }
 
-    var setFlingerObj = function (obj) {
-        _flingerObj = obj;
-    }
-
-    var getFlingerObj = function () {
-        return _flingerObj;
-    }
-
-    var setApiKey = function () {
-        _flingerElement = document.querySelector('[data-flinger]');
-        _apiKey = _flingerElement.dataset.flinger == undefined ? false : _flingerElement.dataset.flinger;
+    var setApiKey = function (context) {
+        context._flingerElement = document.querySelector('[data-flinger]');
+        context._apiKey = context._flingerElement.dataset.flinger == undefined ? false : context._flingerElement.dataset.flinger;
     }
 
     var timeStamp = function () {
-        return _timeStamp.getTime();
+        return this._timeStamp.getTime();
     }
 
-    var analyzeClient = function () {
+    var analyzeClient = function (context) {
         var unknown = '-';
 
         // screen
@@ -130,6 +135,15 @@ var Cross = (function () {
             y = w.innerHeight || e.clientHeight || g.clientHeight;
         browserSize.width = x;
         browserSize.height = y;
+
+
+        var documentSize = {};
+
+        var body = document.body,
+            html = document.documentElement;
+
+        documentSize.height = Math.max(body.scrollHeight, body.offsetHeight, html.clientHeight, html.scrollHeight, html.offsetHeight);
+        documentSize.width = Math.max(body.scrollWidth, body.offsetWidth, html.clientWidth, html.scrollWidth, html.offsetWidth);
 
         // browser
         var nVer = navigator.appVersion;
@@ -218,8 +232,8 @@ var Cross = (function () {
         // system
         var os = unknown;
 
-        for (var id in _clientStrings) {
-            var cs = _clientStrings[id];
+        for (var id in context._clientStrings) {
+            var cs = context._clientStrings[id];
             if (cs.r.test(nAgt)) {
                 os = cs.s;
                 break;
@@ -258,11 +272,19 @@ var Cross = (function () {
         }
 
         var absoluteUri = window.location.href;
+        var endpoint = document.location.pathname;
         var windowTitle = document.title;
+        var referrer = document.referrer;
+        var fingerprint = context.GetFingerPrint();
+        var jquery = !window.jQuery ? undefined : {
+            exist: (typeof $ == 'function' || typeof jQuery == 'function'),
+            version: jQuery.fn.jquery
+        }
 
-        _clientInformation = {
+        context._clientInformation = {
             screen: screenSize,
             browserSize: browserSize,
+            documentSize: documentSize,
             browser: browser,
             browserVersion: version,
             browserMajorVersion: majorVersion,
@@ -273,7 +295,12 @@ var Cross = (function () {
             flash: hasFlash,
             fullUserAgent: navigator.userAgent,
             absoluteUri: absoluteUri,
-            windowTitle: windowTitle
+            endpoint: endpoint,
+            windowTitle: windowTitle,
+            referrer: referrer,
+            fingerprint: fingerprint,
+            jquery: jquery,
+            //bootstrap: bootstrap,
         }
     }
 
@@ -282,11 +309,11 @@ var Cross = (function () {
     }
 
     var locationSuccesfuly = function (clientLocation) {
-        _clientLocation = clientLocation;
+        this._clientLocation = clientLocation;
     }
 
     var locationFails = function () {
-        _clientLocation = null;
+        this._clientLocation = null;
     }
 
     var getScrollPosition = function () {
@@ -294,59 +321,59 @@ var Cross = (function () {
     }
 
     var getServerUri = function () {
-        return _serverUri;
+        return this._serverUri;
     }
 
     var getCoreUri = function () {
-        return _coreUri;
+        return this._coreUri;
     }
 
     var getClientInformation = function () {
-        return _clientInformation;
+        return this._clientInformation;
     }
 
     var getApiKey = function () {
-        return _apiKey;
+        return this._apiKey;
     }
 
-    var setUseHeatmaps = function (canUse) {
-        _canUseHeatmaps = canUse;
+    var setUseHeatmaps = function (context, canUse) {
+        context._canUseHeatmaps = canUse;
     }
 
-    var setUseRAT = function (canUse) {
-        _canUseRAT = canUse;
+    var setUseRAT = function (context, canUse) {
+        context._canUseRAT = canUse;
     }
 
-    var setUseFunnels = function (canUse) {
-        _canUseFunnels = canUse;
+    var setUseFunnels = function (context, canUse) {
+        context._canUseFunnels = canUse;
     }
 
-    var setUseScreenRecorder = function canUse() {
-        _canUseScreenRecorder = canUse;
+    var setUseScreenRecorder = function (context, canUse) {
+        context._canUseScreenRecorder = canUse;
     }
 
-    var setUseFormAnalysis = function (canUse) {
-        _canUseFormAnalysis = canUse;
+    var setUseFormAnalysis = function (context, canUse) {
+        context._canUseFormAnalysis = canUse;
     }
 
     var canUseHeatmaps = function () {
-        return _canUseHeatmaps;
+        return this._canUseHeatmaps;
     }
 
     var canUseRAT = function () {
-        return _canUseRAT;
+        return this._canUseRAT;
     }
 
     var canUseFunnels = function () {
-        return _canUseFunnels;
+        return this._canUseFunnels;
     }
 
     var canUseScreenRecorder = function () {
-        return _canUseScreenRecorder;
+        return this._canUseScreenRecorder;
     }
 
     var canUseFormAnalysis = function () {
-        return _canUseFormAnalysis;
+        return this._canUseFormAnalysis;
     }
 
     var searchObjectByIdOnArray = function (nameKey, _array) {
@@ -395,7 +422,7 @@ var Cross = (function () {
                 for (var i = 0; i < f.arguments.length; i++) {
                     args.push(f.arguments[i]);
                 }
-                
+
                 var function_name = f.toString().split('(')[0].substring(9);
                 return st2(f.caller) + (function_name.length > 0 ? function_name + '();' : '();');
             } else {
@@ -403,6 +430,37 @@ var Cross = (function () {
             }
         }
         return st2(arguments.callee.caller);
+    }
+
+    var getFingerPrint = function () {
+        function bin2hex(a) {
+            var b, c, d = "", e;
+            a += "";
+            b = 0;
+            for (c = a.length; b < c; b++)e = a.charCodeAt(b).toString(16), d += 2 > e.length ? "0" + e : e;
+            return d
+        }
+
+        function generate() {
+            var a = document.createElement("canvas");
+            a.setAttribute("width", 220);
+            a.setAttribute("height", 30);
+            var b = a.getContext("2d");
+            b.textBaseline = "top";
+            b.font = "14px 'Arial'";
+            b.textBaseline = "alphabetic";
+            b.fillStyle = "#f60";
+            b.fillRect(125, 1, 62, 20);
+            b.fillStyle = "#069";
+            b.fillText("CrawlerSite <canvas> 1.0", 2, 15);
+            b.fillStyle = "rgba(102, 204, 0, 0.7)";
+            b.fillText("CrawlerSite <canvas> 1.0", 4, 17);
+            a = a.toDataURL("image/png");
+            b = atob(a.replace("data:image/png;base64,", ""));
+            return bin2hex(b.slice(-16, -12))
+        }
+
+        return generate();
     }
 
     return {
@@ -425,12 +483,14 @@ var Cross = (function () {
         SetUseScreenRecorder: setUseScreenRecorder,
         SetUseFormAnalysis: setUseFormAnalysis,
         CreateStringToDOMPrototype: createStringToDOMPrototype,
-        SetFlingerObj: setFlingerObj,
-        GetFlingerObj: getFlingerObj,
         InIframe: inIframe,
         RemoveJSCSSfile: removejscssfile,
         GetStacktrace: getStacktrace,
-    };
-})();
+        GetFingerPrint: getFingerPrint,
+    }
 
-Cross.Initialize()
+}();
+
+Services.Cross = new Cross();
+
+delete Cross;

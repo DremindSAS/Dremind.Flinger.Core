@@ -1,47 +1,45 @@
-var EventHub = (function () {
+EventHub = function () {
     /// Properties
-    var _debug;
-    var _mouseClickEvents = [];
-    var _mouseMovementEvents = [];
-    var _mouseScrollEvents = [];
+    this._debug;
+    this._mouseClickEvents = [];
+    this._mouseMovementEvents = [];
+    this._mouseScrollEvents = [];
+    this._cross;
+    this._services;
+};
 
+EventHub.prototype = function () {
     /// Global Events
-    document.addEventListener("InsightsQueue", function () {
-        if (_mouseClickEvents.length > 0) {
-            _mouseClickEvents.forEach(function (clickEvent) {
-                SocketHub.PushInsight({ Command: 'Click', Values: { ApiKey: Cross.GetApiKey(), Event: clickEvent } })
+    document.addEventListener("InsightsQueue", function (event) {
+        if (event.detail.context._services.EventHub._mouseClickEvents.length > 0) {
+            event.detail.context._services.EventHub._mouseClickEvents.forEach(function (clickEvent) {
+                event.detail.context._services.SocketHub.PushInsight({ Command: 'Click', Values: { ApiKey: $CrawlerSite.Services.Cross.GetApiKey(), Event: clickEvent } })
             });
-            _mouseClickEvents.length = 0
+            event.detail.context._services.EventHub._mouseClickEvents.length = 0
         }
 
-        if (_mouseMovementEvents.length > 0) {
-            _mouseMovementEvents.forEach(function (movementEvent) {
-                SocketHub.PushInsight({ Command: 'Movement', Values: { Api: Cross.GetApiKey(), Event: movementEvent } })
+        if (event.detail.context._services.EventHub._mouseMovementEvents.length > 0) {
+            event.detail.context._services.EventHub._mouseMovementEvents.forEach(function (movementEvent) {
+                event.detail.context._services.SocketHub.PushInsight({ Command: 'Movement', Values: { Api: $CrawlerSite.Services.Cross.GetApiKey(), Event: movementEvent } })
             });
-            _mouseMovementEvents.length = 0
+            event.detail.context._services.EventHub._mouseMovementEvents.length = 0
         }
 
-        if (_mouseScrollEvents.length > 0) {
-            _mouseScrollEvents.forEach(function (scrollEvent) {
-                SocketHub.PushInsight({ Command: 'Scroll', Values: { Api: Cross.GetApiKey(), Event: scrollEvent } })
+        if (event.detail.context._services.EventHub._mouseScrollEvents.length > 0) {
+            event.detail.context._services.EventHub._mouseScrollEvents.forEach(function (scrollEvent) {
+                event.detail.context._services.SocketHub.PushInsight({ Command: 'Scroll', Values: { Api: $CrawlerSite.Services.Cross.GetApiKey(), Event: scrollEvent } })
             });
-            _mouseScrollEvents.length = 0
+            event.detail.context._services.EventHub._mouseScrollEvents.length = 0
         }
 
     }, false);
 
     document.addEventListener("CanUseHeatmaps", function (event) {
-        if (_debug !== undefined) {
-            if (_debug) {
-                console.log('CanUseHeatmaps:');
-                console.log(event)
-            }
-        }
-        if (event.detail.success == true) {
-            Cross.SetUseHeatmaps(event.detail.result);
-            
-            if(event.detail.result == true){
-                SocketHub.PushEvent({ Command: 'Coplest.Flinger.ICanUseHeatmaps', Values: {} }); 
+        if (event.detail.data.success == true) {
+            event.detail.context._services.Cross.SetUseHeatmaps(event.detail.context._cross, event.detail.data.result);
+
+            if (event.detail.result == true) {
+                event.detail.context._services.SocketHub.PushEvent({ Command: 'Coplest.Flinger.ICanUseHeatmaps', Values: {} });
             }
         }
     }, false)
@@ -49,22 +47,31 @@ var EventHub = (function () {
     /// Initialize component
     var constructor = function (params) {
         if (params != undefined) {
-            _debug = params.Debug;
-            injectMouseDotStyle();
+            this._cross = params.Services.Cross;
+            this._services = params.Services;
+            this._debug = params.Debug;
+            if (this._debug === true) {
+                injectMouseDotStyle();
+            }
+
+
+            injectMouseClickEventListener(this);
+            injectMouseMovementEventListener(this);
+            injectMouseScrollEventListener(this);
         }
     }
 
     /// Make a click listener to all document 
-    var injectMouseClickEventListener = function () {
-        document.addEventListener('click', getMouseClickCoords);
+    var injectMouseClickEventListener = function (context) {
+        document.addEventListener('click', function (event) { getMouseClickCoords(context, event); });
     }
 
-    var injectMouseMovementEventListener = function () {
-        document.onmousemove = getMouseMovementCoords;
+    var injectMouseMovementEventListener = function (context) {
+        document.onmousemove = function (event) { getMouseMovementCoords(context, event); };
     }
 
-    var injectMouseScrollEventListener = function () {
-        window.addEventListener("scroll", getMouseScrollCoords, false);
+    var injectMouseScrollEventListener = function (context) {
+        window.addEventListener("scroll", function (event) { getMouseScrollCoords(context, event) }, false);
     }
 
     var injectMouseDotStyle = function () {
@@ -80,28 +87,36 @@ var EventHub = (function () {
     }
 
     /// Catch all mouse scroll movement
-    var getMouseScrollCoords = function (event) {
+    var getMouseScrollCoords = function (context, event) {
+        
         var scrollEvent = {
             Position: { X: this.scrollX, Y: this.scrollY },
-            TimeStamp: Cross.TimeStamp(),
-            Client: Cross.GetClientInformation(),
+            TimeStamp: context._cross.TimeStamp(),
+            Client: context._cross.GetClientInformation(),
             Location: {}
         }
 
-        if (SocketHub.GetSocket() != undefined && SocketHub.GetSocket().connected === true) {
-            if (Cross.CanUseHeatmaps() != undefined && Cross.CanUseHeatmaps() != null) {
-                if(Cross.CanUseHeatmaps() == true){
-                    SocketHub.PushInsight({ Command: 'Scroll', Values: { ApiKey: Cross.GetApiKey(), Event: scrollEvent, Pathname: window.location.pathname } })
+        if (context._services.SocketHub.GetSocket() != undefined && context._services.SocketHub.GetSocket().connected === true) {
+            if (context._cross.CanUseHeatmaps() != undefined && context._cross.CanUseHeatmaps() != null) {
+                if (context._cross.CanUseHeatmaps() == true) {
+                    context._services.SocketHub.PushInsight({ 
+                        Command: 'Scroll', 
+                        Values: { 
+                            ApiKey: context._cross.GetApiKey(), 
+                            Event: scrollEvent, 
+                            Pathname: context._cross.GetClientInformation().endpoint
+                        } 
+                    })
                 }
             }
         }
         else {
-            _mouseScrollEvents.push(scrollEvent);
+            context._mouseScrollEvents.push(scrollEvent);
         }
     }
 
-    /// Catch all mouse movement
-    var getMouseMovementCoords = function (event) {
+    /// Catch all mouse movement 
+    var getMouseMovementCoords = function (context, event) {
         var dot, eventDoc, doc, body, pageX, pageY;
 
         event = event || window.event; // IE-ism
@@ -124,8 +139,8 @@ var EventHub = (function () {
                 (doc && doc.clientTop || body && body.clientTop || 0);
         }
 
-        if (_debug !== undefined) {
-            if (_debug) {
+        if (this._debug !== undefined) {
+            if (this._debug) {
                 // Add a dot to follow the cursor
                 dot = document.createElement('div');
                 dot.className = "dot";
@@ -137,61 +152,75 @@ var EventHub = (function () {
 
         var movementEvent = {
             Position: { X: event.pageX, Y: event.pageY },
-            Scroll: Cross.GetScrollPosition(),
-            TimeStamp: Cross.TimeStamp(),
-            Client: Cross.GetClientInformation(),
+            Scroll: context._cross.GetScrollPosition(),
+            TimeStamp: context._cross.TimeStamp(),
+            Client: context._cross.GetClientInformation(),
             Location: {}
         }
 
-        if (SocketHub.GetSocket() != undefined && SocketHub.GetSocket().connected === true) {
-            if (Cross.CanUseHeatmaps() != undefined && Cross.CanUseHeatmaps() != null) {
-                if(Cross.CanUseHeatmaps() == true){
-                    SocketHub.PushInsight({ Command: 'Movement', Values: { ApiKey: Cross.GetApiKey(), Event: movementEvent, Pathname: window.location.pathname } })
+        if (context._services.SocketHub.GetSocket() != undefined && context._services.SocketHub.GetSocket().connected === true) {
+            if (context._cross.CanUseHeatmaps() != undefined && context._cross.CanUseHeatmaps() != null) {
+                if (context._cross.CanUseHeatmaps() == true) {
+                    context._services.SocketHub.PushInsight({
+                        Command: 'Movement',
+                        Values: {
+                            ApiKey: context._cross.GetApiKey(),
+                            Event: movementEvent,
+                            Pathname: context._cross.GetClientInformation().endpoint
+                        }
+                    })
                 }
             }
         }
         else {
-            _mouseMovementEvents.push(movementEvent);
+            context._mouseMovementEvents.push(movementEvent);
         }
     }
 
     /// Catch all mouse click
-    var getMouseClickCoords = function (event) {
+    var getMouseClickCoords = function (context, event) {
         var clickEvent = {
             Position: { X: event.clientX, Y: event.clientY },
-            Scroll: Cross.GetScrollPosition(),
-            TimeStamp: Cross.TimeStamp(),
-            Client: Cross.GetClientInformation(),
+            Scroll: context._cross.GetScrollPosition(),
+            TimeStamp: context._cross.TimeStamp(),
+            Client: context._cross.GetClientInformation(),
             Location: {}
         };
 
-        if (_debug !== undefined) {
-            if (_debug) {
+        if (this._debug !== undefined) {
+            if (this._debug) {
                 console.log('Mouse coords: (' + event.clientX + ', ' + event.clientY + ')');
             }
         }
-        if (SocketHub.GetSocket() != undefined && SocketHub.GetSocket().connected === true) {
-            if (Cross.CanUseHeatmaps() != undefined && Cross.CanUseHeatmaps() != null) {
-                if(Cross.CanUseHeatmaps() == true){
-                    SocketHub.PushInsight({ Command: 'Click', Values: { ApiKey: Cross.GetApiKey(), Event: clickEvent, Pathname: window.location.pathname } })
+        if (context._services.SocketHub.GetSocket() != undefined && context._services.SocketHub.GetSocket().connected === true) {
+            if (context._cross.CanUseHeatmaps() != undefined && context._cross.CanUseHeatmaps() != null) {
+                if (context._cross.CanUseHeatmaps() == true) {
+                    context._services.SocketHub.PushInsight({ 
+                        Command: 'Click', 
+                        Values: { 
+                            ApiKey: context._cross.GetApiKey(), 
+                            Event: clickEvent, 
+                            Pathname: context._cross.GetClientInformation().endpoint
+                        } 
+                    })
                 }
             }
         }
         else {
-            _mouseClickEvents.push(clickEvent);
+            context._mouseClickEvents.push(clickEvent);
         }
     }
 
     var getNotSentMouseClickEvents = function () {
-        return _mouseClickEvents;
+        return this._mouseClickEvents;
     }
 
     var getNotSentMouseMovementEvents = function () {
-        return _mouseMovementEvents;
+        return this._mouseMovementEvents;
     }
 
     var getNotSentMouseScrollEvents = function () {
-        return _mouseScrollEvents;
+        return this._mouseScrollEvents;
     }
 
     return {
@@ -201,6 +230,10 @@ var EventHub = (function () {
         ListenMouseScroll: injectMouseScrollEventListener,
         GetNotSentMouseClickEvents: getNotSentMouseClickEvents,
         GetNotSentMouseMovementEvents: getNotSentMouseMovementEvents,
-        GetNotSentMouseScrollEvents: getNotSentMouseScrollEvents
-    };
-})()
+        GetNotSentMouseScrollEvents: getNotSentMouseScrollEvents,
+    }
+}();
+
+Services.EventHub = new EventHub();
+
+delete EventHub;

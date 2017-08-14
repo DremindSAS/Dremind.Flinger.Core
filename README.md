@@ -17,3 +17,5 @@ If you want only build the library just run:
 If you want to develop the library or run server to simulate CDN run:
 
 > npm start
+
+Consider that all modules was developed in Revealing Module Pattern, more information: https://scotch.io/bar-talk/4-javascript-design-patterns-you-should-know

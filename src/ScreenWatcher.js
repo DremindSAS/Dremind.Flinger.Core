@@ -1,13 +1,13 @@
-FormHub = function () {
+ScreenWatcher = function () {
 	this._privateVariable = 10;
 	this._dependencies = {};
 };
 
-FormHub.prototype = function () {
+ScreenWatcher.prototype = function () {
 	var privateMethod = function () {
 		console.log('Inside a private method!');
 		this._privateVariable++;
-	}
+	} 
 
 	var methodToExpose = function () {
 		console.log('This is a method I want to expose!');
@@ -23,6 +23,6 @@ FormHub.prototype = function () {
 	}
 }();
 
-Services.FormHub = new FormHub();
+Services.ScreenWatcher = new ScreenWatcher();
 
-delete FormHub;
+delete ScreenWatcher;

@@ -1,10 +1,11 @@
-/*! crawlersite.kernel - v0.0.1 - 2017-06-20 */
-var Cross = (function () {
-    var _timeStamp;
-    var _serverUri;
-    var _coreUri;
-    var _clientInformation;
-    var _clientStrings = [
+/*! crawlersite.kernel - v2.0.1 - 2017-08-14 */
+var Services = {};
+Cross = function () {
+    this._timeStamp;
+    this._serverUri;
+    this._coreUri;
+    this._clientInformation;
+    this._clientStrings = [
         { s: 'Windows 10', r: /(Windows 10.0|Windows NT 10.0)/ },
         { s: 'Windows 8.1', r: /(Windows 8.1|Windows NT 6.3)/ },
         { s: 'Windows 8', r: /(Windows 8|Windows NT 6.2)/ },
@@ -32,34 +33,47 @@ var Cross = (function () {
         { s: 'OS/2', r: /OS\/2/ },
         { s: 'Search Bot', r: /(nuhk|Googlebot|Yammybot|Openbot|Slurp|MSNBot|Ask Jeeves\/Teoma|ia_archiver)/ }
     ];
-    var _clientLocation;
-    var _apiKey;
-    var _canUseHeatmaps;
-    var _canUseRAT;
-    var _canUseFunnels;
-    var _canUseScreenRecorder;
-    var _canUseFormAnalysis;
-    var _flingerObj;
+    this._clientLocation;
+    this._apiKey;
+    this._canUseHeatmaps;
+    this._canUseRAT;
+    this._canUseFunnels;
+    this._canUseScreenRecorder;
+    this._canUseFormAnalysis;
+};
 
+Cross.prototype = function () {
     var constructor = function (params) {
         if (params != undefined) {
-            _debug = params.Debug;
+            this._debug = params.Debug;
         }
 
-        _timeStamp = new Date();
-        _serverUri = "//backend.crawlersite.com";
-        _coreUri = "//crawlersite-kernel.azurewebsites.net";
+        this._timeStamp = new Date();
+        this._serverUri = "//backend.crawlersite.com";
+        this._coreUri = "//crawlersite-kernel.azurewebsites.net";
         if (inIframe() == false) {
-            setApiKey();
-            analyzeClient();
-            setUseHeatmaps(null);
-            setUseRAT(null);
-            setUseFunnels(null);
-            setUseScreenRecorder(null);
-            setUseFormAnalysis(null);
+            setApiKey(this);
+            defineatob();
+            analyzeClient(this);
+            setUseHeatmaps(this, null);
+            setUseRAT(this, null);
+            setUseFunnels(this, null);
+            setUseScreenRecorder(this, null);
+            setUseFormAnalysis(this, null);
             createStringToDOMPrototype();
-            setFlingerObj({});
             querySelectorPolyfill();
+        }
+    }
+
+    var defineatob = function () {
+        if (typeof window.atob == 'undefined') {
+            function atob(a) {
+                var b = "", e, c, h = "", f, g = "", d = 0;
+                k = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=";
+                do e = k.indexOf(a.charAt(d++)), c = k.indexOf(a.charAt(d++)), f = k.indexOf(a.charAt(d++)), g = k.indexOf(a.charAt(d++)), e = e << 2 | c >> 4, c = (c & 15) << 4 | f >> 2, h = (f & 3) << 6 | g, b += String.fromCharCode(e), 64 != f && (b += String.fromCharCode(c)), 64 != g && (b += String.fromCharCode(h));
+                while (d < a.length);
+                return unescape(b)
+            };
         }
     }
 
@@ -92,24 +106,16 @@ var Cross = (function () {
         }
     }
 
-    var setFlingerObj = function (obj) {
-        _flingerObj = obj;
-    }
-
-    var getFlingerObj = function () {
-        return _flingerObj;
-    }
-
-    var setApiKey = function () {
-        _flingerElement = document.querySelector('[data-flinger]');
-        _apiKey = _flingerElement.dataset.flinger == undefined ? false : _flingerElement.dataset.flinger;
+    var setApiKey = function (context) {
+        context._flingerElement = document.querySelector('[data-flinger]');
+        context._apiKey = context._flingerElement.dataset.flinger == undefined ? false : context._flingerElement.dataset.flinger;
     }
 
     var timeStamp = function () {
-        return _timeStamp.getTime();
+        return this._timeStamp.getTime();
     }
 
-    var analyzeClient = function () {
+    var analyzeClient = function (context) {
         var unknown = '-';
 
         // screen
@@ -131,6 +137,15 @@ var Cross = (function () {
             y = w.innerHeight || e.clientHeight || g.clientHeight;
         browserSize.width = x;
         browserSize.height = y;
+
+
+        var documentSize = {};
+
+        var body = document.body,
+            html = document.documentElement;
+
+        documentSize.height = Math.max(body.scrollHeight, body.offsetHeight, html.clientHeight, html.scrollHeight, html.offsetHeight);
+        documentSize.width = Math.max(body.scrollWidth, body.offsetWidth, html.clientWidth, html.scrollWidth, html.offsetWidth);
 
         // browser
         var nVer = navigator.appVersion;
@@ -219,8 +234,8 @@ var Cross = (function () {
         // system
         var os = unknown;
 
-        for (var id in _clientStrings) {
-            var cs = _clientStrings[id];
+        for (var id in context._clientStrings) {
+            var cs = context._clientStrings[id];
             if (cs.r.test(nAgt)) {
                 os = cs.s;
                 break;
@@ -259,11 +274,19 @@ var Cross = (function () {
         }
 
         var absoluteUri = window.location.href;
+        var endpoint = document.location.pathname;
         var windowTitle = document.title;
+        var referrer = document.referrer;
+        var fingerprint = context.GetFingerPrint();
+        var jquery = !window.jQuery ? undefined : {
+            exist: (typeof $ == 'function' || typeof jQuery == 'function'),
+            version: jQuery.fn.jquery
+        }
 
-        _clientInformation = {
+        context._clientInformation = {
             screen: screenSize,
             browserSize: browserSize,
+            documentSize: documentSize,
             browser: browser,
             browserVersion: version,
             browserMajorVersion: majorVersion,
@@ -274,7 +297,12 @@ var Cross = (function () {
             flash: hasFlash,
             fullUserAgent: navigator.userAgent,
             absoluteUri: absoluteUri,
-            windowTitle: windowTitle
+            endpoint: endpoint,
+            windowTitle: windowTitle,
+            referrer: referrer,
+            fingerprint: fingerprint,
+            jquery: jquery,
+            //bootstrap: bootstrap,
         }
     }
 
@@ -283,11 +311,11 @@ var Cross = (function () {
     }
 
     var locationSuccesfuly = function (clientLocation) {
-        _clientLocation = clientLocation;
+        this._clientLocation = clientLocation;
     }
 
     var locationFails = function () {
-        _clientLocation = null;
+        this._clientLocation = null;
     }
 
     var getScrollPosition = function () {
@@ -295,59 +323,59 @@ var Cross = (function () {
     }
 
     var getServerUri = function () {
-        return _serverUri;
+        return this._serverUri;
     }
 
     var getCoreUri = function () {
-        return _coreUri;
+        return this._coreUri;
     }
 
     var getClientInformation = function () {
-        return _clientInformation;
+        return this._clientInformation;
     }
 
     var getApiKey = function () {
-        return _apiKey;
+        return this._apiKey;
     }
 
-    var setUseHeatmaps = function (canUse) {
-        _canUseHeatmaps = canUse;
+    var setUseHeatmaps = function (context, canUse) {
+        context._canUseHeatmaps = canUse;
     }
 
-    var setUseRAT = function (canUse) {
-        _canUseRAT = canUse;
+    var setUseRAT = function (context, canUse) {
+        context._canUseRAT = canUse;
     }
 
-    var setUseFunnels = function (canUse) {
-        _canUseFunnels = canUse;
+    var setUseFunnels = function (context, canUse) {
+        context._canUseFunnels = canUse;
     }
 
-    var setUseScreenRecorder = function canUse() {
-        _canUseScreenRecorder = canUse;
+    var setUseScreenRecorder = function (context, canUse) {
+        context._canUseScreenRecorder = canUse;
     }
 
-    var setUseFormAnalysis = function (canUse) {
-        _canUseFormAnalysis = canUse;
+    var setUseFormAnalysis = function (context, canUse) {
+        context._canUseFormAnalysis = canUse;
     }
 
     var canUseHeatmaps = function () {
-        return _canUseHeatmaps;
+        return this._canUseHeatmaps;
     }
 
     var canUseRAT = function () {
-        return _canUseRAT;
+        return this._canUseRAT;
     }
 
     var canUseFunnels = function () {
-        return _canUseFunnels;
+        return this._canUseFunnels;
     }
 
     var canUseScreenRecorder = function () {
-        return _canUseScreenRecorder;
+        return this._canUseScreenRecorder;
     }
 
     var canUseFormAnalysis = function () {
-        return _canUseFormAnalysis;
+        return this._canUseFormAnalysis;
     }
 
     var searchObjectByIdOnArray = function (nameKey, _array) {
@@ -396,7 +424,7 @@ var Cross = (function () {
                 for (var i = 0; i < f.arguments.length; i++) {
                     args.push(f.arguments[i]);
                 }
-                
+
                 var function_name = f.toString().split('(')[0].substring(9);
                 return st2(f.caller) + (function_name.length > 0 ? function_name + '();' : '();');
             } else {
@@ -404,6 +432,37 @@ var Cross = (function () {
             }
         }
         return st2(arguments.callee.caller);
+    }
+
+    var getFingerPrint = function () {
+        function bin2hex(a) {
+            var b, c, d = "", e;
+            a += "";
+            b = 0;
+            for (c = a.length; b < c; b++)e = a.charCodeAt(b).toString(16), d += 2 > e.length ? "0" + e : e;
+            return d
+        }
+
+        function generate() {
+            var a = document.createElement("canvas");
+            a.setAttribute("width", 220);
+            a.setAttribute("height", 30);
+            var b = a.getContext("2d");
+            b.textBaseline = "top";
+            b.font = "14px 'Arial'";
+            b.textBaseline = "alphabetic";
+            b.fillStyle = "#f60";
+            b.fillRect(125, 1, 62, 20);
+            b.fillStyle = "#069";
+            b.fillText("CrawlerSite <canvas> 1.0", 2, 15);
+            b.fillStyle = "rgba(102, 204, 0, 0.7)";
+            b.fillText("CrawlerSite <canvas> 1.0", 4, 17);
+            a = a.toDataURL("image/png");
+            b = atob(a.replace("data:image/png;base64,", ""));
+            return bin2hex(b.slice(-16, -12))
+        }
+
+        return generate();
     }
 
     return {
@@ -426,93 +485,104 @@ var Cross = (function () {
         SetUseScreenRecorder: setUseScreenRecorder,
         SetUseFormAnalysis: setUseFormAnalysis,
         CreateStringToDOMPrototype: createStringToDOMPrototype,
-        SetFlingerObj: setFlingerObj,
-        GetFlingerObj: getFlingerObj,
         InIframe: inIframe,
         RemoveJSCSSfile: removejscssfile,
         GetStacktrace: getStacktrace,
-    };
-})();
+        GetFingerPrint: getFingerPrint,
+    }
 
-Cross.Initialize();
-var SocketHub = (function () {
+}();
 
+Services.Cross = new Cross();
+
+delete Cross;;
+SocketHub = function () {
     /// Properties
-    var _debug;
-    var _socket;
-    var _socketEvent;
-    var _ratSocketPoolNamespace;
-    var _ratServiceSocket;
-    var _socketId;
+    this._debug;
+    this._cross;
+    this._socket;
+    this._socketEvent;
+    this._ratSocketPoolNamespace;
+    this._ratServiceSocket;
+    this._socketId;
+    this._services;
+};
 
+SocketHub.prototype = function () {
     /// Initialize component
     var constructor = function (params) {
         if (params != undefined) {
-            _debug = params.Debug;
-        }
+            this._debug = params.Debug;
+            this._cross = params.Services.Cross;
+            this._services = params.Services;
 
-        injectSocketClientLibrary();
+            injectSocketClientLibrary(this);
+        }
     }
 
-    var injectSocketClientLibrary = function () {
+    var injectSocketClientLibrary = function (context) {
         var head = document.getElementsByTagName('head')[0];
         var script = document.createElement('script');
         script.type = 'text/javascript';
-        script.onload = socketLibrary_loaded;
+        script.onload = function () { socketLibrary_loaded(context) };
         script.src = '//backend.crawlersite.com/socket.io.js';
         head.appendChild(script);
     }
 
     /// When Socket library is loaded 
-    var socketLibrary_loaded = function () {
-        connectUserPoolNamespaceSocket();
-        if (_debug !== undefined) {
-            if (_debug) {
+    var socketLibrary_loaded = function (context) {
+        connectUserPoolNamespaceSocket(context);
+        if (this.debug !== undefined) {
+            if (this.debug) {
                 console.log('Socket Library is loaded succesfully');
             }
         }
     }
 
     /// Connection to Socket Server
-    var connectUserPoolNamespaceSocket = function () {
-        if (_debug !== undefined) {
-            if (_debug) {
+    var connectUserPoolNamespaceSocket = function (context) {
+        if (this.debug !== undefined) {
+            if (this.debug) {
                 console.log('Connecting to server...');
             }
         }
 
-        _socket = io(Cross.GetServerUri() + '/user-pool-namespace', { query: 'ApiKey=' + Cross.GetApiKey() });
-        socketDefinition();
+        context._socket = io(context._cross.GetServerUri() + '/user-pool-namespace', { query: 'ApiKey=' + context._cross.GetApiKey() });
+        socketDefinition(context);
     }
 
     /// Define all events from socket
-    var socketDefinition = function () {
-        _socket.on('connect', function () {
-            if (_debug !== undefined) {
-                if (_debug) {
+    var socketDefinition = function (context) {
+        context._socket.on('connect', function () {
+            if (this.debug !== undefined) {
+                if (this.debug) {
                     console.log('Connection to server succesfully');
                 }
             }
 
-            _socket.emit('Coplest.Flinger.AddApiKeyToSocket', { ApiKey: Cross.GetApiKey(), ClientInformation: Cross.GetClientInformation() })
+            pullEvent(context, 'SocketConnected', {});
 
-            _socket.emit('Coplest.Flinger.CanISendData', { ApiKey: Cross.GetApiKey() })
+            context._socket.emit('Coplest.Flinger.AddApiKeyToSocket', { ApiKey: context._cross.GetApiKey(), ClientInformation: context._cross.GetClientInformation() })
+
+            context._socket.emit('Coplest.Flinger.CanISendData', { ApiKey: context._cross.GetApiKey() })
         });
-        _socket.on('Coplest.Flinger.ServerEvent', function (data) {
-            pullEvent(data.Command, data.Values)
+
+        context._socket.on('Coplest.Flinger.ServerEvent', function (data) {
+            pullEvent(context, data.Command, data.Values)
         });
-        _socket.on('disconnect', function () {
-            if (_debug !== undefined) {
-                if (_debug) {
+
+        context._socket.on('disconnect', function () {
+            if (this.debug !== undefined) {
+                if (this.debug) {
                     console.log('Disconected from server')
                 }
             }
         });
-        _socket.on('Coplest.Flinger.RAT', function (data) {
+        context._socket.on('Coplest.Flinger.RAT', function (data) {
             if (data.Command != undefined) {
                 switch (data.Command) {
                     case 'RATPoolConnection#Request':
-                        ratPoolNamespace(data.Values);
+                        ratPoolNamespace(context, data.Values);
                         break;
 
                     default:
@@ -522,41 +592,41 @@ var SocketHub = (function () {
         })
     }
 
-    var ratPoolNamespace = function (ratNamespaceValues) {
-        if (ratNamespaceValues.SocketId === getSocket().id.split('#')[1]) {
-            console.log(Cross.GetServerUri() + ratNamespaceValues.RPN)
-            _ratSocketPoolNamespace = io(Cross.GetServerUri() + ratNamespaceValues.RPN, { query: 'ApiKey=' + Cross.GetApiKey() });
-            ratPoolSocketDefinition(ratNamespaceValues);
+    var ratPoolNamespace = function (context, ratNamespaceValues) {
+        if (ratNamespaceValues.SocketId === context.GetSocket().id.split('#')[1]) {
+            /*console.log(context._cross.GetServerUri() + ratNamespaceValues.RPN)*/
+            context._ratSocketPoolNamespace = io(context._cross.GetServerUri() + ratNamespaceValues.RPN, { query: 'ApiKey=' + context._cross.GetApiKey() });
+            ratPoolSocketDefinition(context, ratNamespaceValues);
         }
 
     }
 
-    var ratPoolSocketDefinition = function (ratNamespaceValues) {
-        _ratSocketPoolNamespace.on('connect', function (data) {
-            if (_debug !== undefined) {
-                if (_debug) {
+    var ratPoolSocketDefinition = function (context, ratNamespaceValues) {
+        context._ratSocketPoolNamespace.on('connect', function (data) {
+            if (this.debug !== undefined) {
+                if (this.debug) {
                     console.log('Connection to RAT Pool Namespace succesfully');
                 }
             }
         })
 
-        _ratSocketPoolNamespace.on('Coplest.Flinger.RAT', function (data) {
+        context._ratSocketPoolNamespace.on('Coplest.Flinger.RAT', function (data) {
             if (data.Command != undefined) {
                 switch (data.Command) {
                     case 'ConnectedToRPN#Response':
-                        if (_debug !== undefined) {
-                            if (_debug) {
+                        if (this.debug !== undefined) {
+                            if (this.debug) {
                                 console.log('Socket Event: ConnectedToRPN#Response');
                             }
                         }
-                        _socketId = data.Values.SocketId;
-                        _ratSocketPoolNamespace.emit('Coplest.Flinger.RAT', { Command: 'ConnectToRATServiceNamespace#Request', Values: { Namespace: ratNamespaceValues.Namespace } }, function (data) {
-                            if (_debug !== undefined) {
-                                if (_debug) {
+                        context._socketId = data.Values.SocketId;
+                        context._ratSocketPoolNamespace.emit('Coplest.Flinger.RAT', { Command: 'ConnectToRATServiceNamespace#Request', Values: { Namespace: ratNamespaceValues.Namespace } }, function (data) {
+                            if (this.debug !== undefined) {
+                                if (this.debug) {
                                     console.log('Socket Event: ConnectToRATServiceNamespace#Request');
                                 }
                             }
-                            ratServiceNamespace(data.Values, ratNamespaceValues);
+                            ratServiceNamespace(context, data.Values, ratNamespaceValues);
                         });
                         break;
 
@@ -567,107 +637,64 @@ var SocketHub = (function () {
         })
     }
 
-    var ratServiceNamespace = function ratServiceNamespace(data, ratNamespaceData) {
-        var ns = (Cross.SearchObjectByIdOnArray(ratNamespaceData.Namespace.Id, data.Namespace));
+    var ratServiceNamespace = function ratServiceNamespace(context, data, ratNamespaceData) {
+        var ns = (context._cross.SearchObjectByIdOnArray(ratNamespaceData.Namespace.Id, data.Namespace));
         if (ns != null) {
-            console.log('RAT Service Socket URI: ' + Cross.GetServerUri() + '/' + ns.Id);
-            _ratServiceSocket = io(Cross.GetServerUri() + '/' + ns.Id, { query: 'ApiKey=' + Cross.GetApiKey() });
-            ratServiceSocketDefinition(data, ratNamespaceData);
+            console.log('RAT Service Socket URI: ' + context._cross.GetServerUri() + '/' + ns.Id);
+            context._ratServiceSocket = io(context._cross.GetServerUri() + '/' + ns.Id, { query: 'ApiKey=' + context._cross.GetApiKey() });
+            ratServiceSocketDefinition(context, data, ratNamespaceData);
         }
     }
 
-    var ratServiceSocketDefinition = function (data, ratNamespaceData) {
-        _ratServiceSocket.on('Coplest.Flinger.RAT', function ratServiceSocketDefinitionOnSocket(data) {
+    var ratServiceSocketDefinition = function (context, data, ratNamespaceData) {
+        context._ratServiceSocket.on('Coplest.Flinger.RAT', function ratServiceSocketDefinitionOnSocket(data) {
             if (data.Command != undefined) {
                 switch (data.Command) {
                     case 'ConnectedToRSN#Response':
-                        if (_debug !== undefined) {
-                            if (_debug) {
-                                console.log('Socket Event: ConnectedToRSN#Response');
+                        context._socketId = data.Values.SocketId;
+                        context._ratServiceSocket.emit('Coplest.Flinger.RAT', {
+                            Command: 'UserJoinToPrivateRoom#Request',
+                            Values: {
+                                SocketId: context._ratServiceSocket.id,
+                                RoomId: ratNamespaceData.RoomId
                             }
-                        }
-                        _socketId = data.Values.SocketId;
-                        _ratServiceSocket.emit('Coplest.Flinger.RAT', { Command: 'UserJoinToPrivateRoom#Request', Values: { SocketId: _ratServiceSocket.id, RoomId: ratNamespaceData.RoomId } });
+                        });
                         break;
                     case 'UserJoinToPrivateRoom#Response':
-                        if (_debug !== undefined) {
-                            if (_debug) {
-                                console.log('Socket Event: UserJoinToPrivateRoom#Response');
+                        context._ratServiceSocket.emit('Coplest.Flinger.RAT', {
+                            Command: 'TakeMyUserSocketId#Request',
+                            Values: {
+                                SocketId: context._ratServiceSocket.id,
+                                RoomId: ratNamespaceData.RoomId
                             }
-                        }
-                        _ratServiceSocket.emit('Coplest.Flinger.RAT', { Command: 'TakeMyUserSocketId#Request', Values: { SocketId: _ratServiceSocket.id, RoomId: ratNamespaceData.RoomId } });
+                        });
                         break;
                     case 'AllowControl#Request':
-                        if (_debug !== undefined) {
-                            if (_debug) {
-                                console.log('AllowControl#Request');
-                            }
-                        }
-                        RATHub.InjectModal(data.Values);
+                        context._services.RATHub.InjectModal(context, data.Values);
                         break;
                     case 'HideRealCursor#Request':
-                        if (_debug !== undefined) {
-                            if (_debug) {
-                                console.log('HideRealCursor#Request');
-                            }
-                        }
-                        RATHub.HideRealCursor();
+                        context._services.RATHub.HideRealCursor(context, data.Values);
                         break;
                     case 'PrintCursor#Request':
-                        if (_debug !== undefined) {
-                            if (_debug) {
-                                console.log('PrintCursor#Request');
-                            }
-                        }
-                        RATHub.PrintCursor();
+                        context._services.RATHub.PrintCursor(context, data.Values);
                         break;
                     case 'SetInitialPositionCursor#Request':
-                        if (_debug !== undefined) {
-                            if (_debug) {
-                                console.log('SetInitialPositionCursor#Request');
-                            }
-                        }
-                        RATHub.SetInitialPositionCursor(data.Values);
+                        context._services.RATHub.SetInitialPositionCursor(context, data.Values);
                         break;
                     case 'SetScreenshotInterval#Request':
-                        if (_debug !== undefined) {
-                            if (_debug) {
-                                console.log('SetScreenshotInterval#Request');
-                            }
-                        }
-                        RATHub.SetScreenshotInterval(data.Values);
+                        context._services.RATHub.SetScreenshotInterval(context, data.Values);
                         break;
                     case 'SetPositionMouse#Request':
-                        if (_debug !== undefined) {
-                            if (_debug) {
-                                console.log('SetPositionMouse#Request');
-                            }
-                        }
-                        RATHub.SetMousePosition(data.Values);
+                        context._services.RATHub.SetMousePosition(context, data.Values);
                         break;
                     case 'SetScrollDelta#Request':
-                        if (_debug !== undefined) {
-                            if (_debug) {
-                                console.log('SetScrollDelta#Request');
-                            }
-                        }
-                        RATHub.SetScrollDelta(data.Values);
+                        context._services.RATHub.SetScrollDelta(context, data.Values);
                         break;
                     case 'Click#Request':
-                        if (_debug !== undefined) {
-                            if (_debug) {
-                                console.log('Click#Request');
-                            }
-                        }
-                        RATHub.VirtualClick(data.Values);
+                        context._services.RATHub.VirtualClick(context, data.Values);
                         break;
                     case 'ReverseShellCommand#Request':
-                        if (_debug !== undefined) {
-                            if (_debug) {
-                                console.log('Click#Request');
-                            }
-                        }
-                        RATHub.ReverseShellCommand(data.Values);
+                        context._services.RATHub.ReverseShellCommand(context, data.Values);
                         break;
                     default:
                         //console.log(data.Command);
@@ -677,12 +704,12 @@ var SocketHub = (function () {
         })
     }
 
-    var pushEventRAT = function (data, callback) {
-        if (_ratServiceSocket != undefined) {
-            if (Cross.GetApiKey() != undefined && Cross.GetApiKey().length > 0) {
-                _ratServiceSocket.emit('Coplest.Flinger.RAT', { Command: data.Command, Values: data.Values }, function(data){
-                    if(callback != undefined){
-                        callback(data);
+    var pushEventRAT = function (context, data, next) {
+        if (context._ratServiceSocket != undefined) {
+            if (context._cross.GetApiKey() != undefined && context._cross.GetApiKey().length > 0) {
+                context._ratServiceSocket.emit('Coplest.Flinger.RAT', { Command: data.Command, Values: data.Values }, function (data) {
+                    if (next != undefined) {
+                        next(data);
                     }
                 });
             }
@@ -690,41 +717,46 @@ var SocketHub = (function () {
     }
 
     var pushEvent = function (data) {
-        if (_socket != undefined) {
-            if (Cross.GetApiKey() != undefined && Cross.GetApiKey().length > 0) {
-                _socket.emit(data.Command, data.Values);
+        if (this._socket != undefined) {
+            if (this._cross.GetApiKey() != undefined && this._cross.GetApiKey().length > 0) {
+                this._socket.emit(data.Command, data.Values);
             }
         }
     }
 
     /// Push an insight to server
     var pushInsight = function (data) {
-        if (_socket != undefined) {
-            if (Cross.GetApiKey() != undefined && Cross.GetApiKey().length > 0) {
-                _socket.emit('Coplest.Flinger.PushInsight', data);
+        if (this._socket != undefined) {
+            if (this._cross.GetApiKey() != undefined && this._cross.GetApiKey().length > 0) {
+                this._socket.emit('Coplest.Flinger.PushInsight', data);
             }
         }
     }
 
-    var pushScreenshot = function (data) {
-        if (_socket != undefined) {
-            if (Cross.GetApiKey() != undefined && Cross.GetApiKey().length > 0) {
-                _socket.emit('Coplest.Flinger.PushScreenshot', data);
+    var screenshot = function (data) {
+        if (this._socket != undefined) {
+            if (this._cross.GetApiKey() != undefined && this._cross.GetApiKey().length > 0) {
+                this._socket.emit('Coplest.Flinger.Screenshot', data);
             }
         }
     }
 
     /// Pull an event when server send a message
-    var pullEvent = function (type, data) {
-        _socketEvent = new CustomEvent(type, { detail: data });
+    var pullEvent = function (context, type, data) {
+        context._socketEvent = new CustomEvent(type, {
+            detail: {
+                context: context,
+                data: data
+            }
+        });
 
-        document.dispatchEvent(_socketEvent);
+        document.dispatchEvent(context._socketEvent);
         /// Example to cath event
         //document.addEventListener("type", handlerFunction, false);
     }
 
     var getSocket = function () {
-        return _socket;
+        return this._socket;
     }
 
     return {
@@ -732,55 +764,57 @@ var SocketHub = (function () {
         ConnectUserPoolNamespaceSocket: connectUserPoolNamespaceSocket,
         GetSocket: getSocket,
         PushInsight: pushInsight,
-        PushScreenshot: pushScreenshot,
+        Screenshot: screenshot,
         PushEvent: pushEvent,
         PushEventRAT: pushEventRAT,
-    };
-})();
-var EventHub = (function () {
+    }
+}();
+
+Services.SocketHub = new SocketHub();
+
+delete SocketHub;;
+EventHub = function () {
     /// Properties
-    var _debug;
-    var _mouseClickEvents = [];
-    var _mouseMovementEvents = [];
-    var _mouseScrollEvents = [];
+    this._debug;
+    this._mouseClickEvents = [];
+    this._mouseMovementEvents = [];
+    this._mouseScrollEvents = [];
+    this._cross;
+    this._services;
+};
 
+EventHub.prototype = function () {
     /// Global Events
-    document.addEventListener("InsightsQueue", function () {
-        if (_mouseClickEvents.length > 0) {
-            _mouseClickEvents.forEach(function (clickEvent) {
-                SocketHub.PushInsight({ Command: 'Click', Values: { ApiKey: Cross.GetApiKey(), Event: clickEvent } })
+    document.addEventListener("InsightsQueue", function (event) {
+        if (event.detail.context._services.EventHub._mouseClickEvents.length > 0) {
+            event.detail.context._services.EventHub._mouseClickEvents.forEach(function (clickEvent) {
+                event.detail.context._services.SocketHub.PushInsight({ Command: 'Click', Values: { ApiKey: $CrawlerSite.Services.Cross.GetApiKey(), Event: clickEvent } })
             });
-            _mouseClickEvents.length = 0
+            event.detail.context._services.EventHub._mouseClickEvents.length = 0
         }
 
-        if (_mouseMovementEvents.length > 0) {
-            _mouseMovementEvents.forEach(function (movementEvent) {
-                SocketHub.PushInsight({ Command: 'Movement', Values: { Api: Cross.GetApiKey(), Event: movementEvent } })
+        if (event.detail.context._services.EventHub._mouseMovementEvents.length > 0) {
+            event.detail.context._services.EventHub._mouseMovementEvents.forEach(function (movementEvent) {
+                event.detail.context._services.SocketHub.PushInsight({ Command: 'Movement', Values: { Api: $CrawlerSite.Services.Cross.GetApiKey(), Event: movementEvent } })
             });
-            _mouseMovementEvents.length = 0
+            event.detail.context._services.EventHub._mouseMovementEvents.length = 0
         }
 
-        if (_mouseScrollEvents.length > 0) {
-            _mouseScrollEvents.forEach(function (scrollEvent) {
-                SocketHub.PushInsight({ Command: 'Scroll', Values: { Api: Cross.GetApiKey(), Event: scrollEvent } })
+        if (event.detail.context._services.EventHub._mouseScrollEvents.length > 0) {
+            event.detail.context._services.EventHub._mouseScrollEvents.forEach(function (scrollEvent) {
+                event.detail.context._services.SocketHub.PushInsight({ Command: 'Scroll', Values: { Api: $CrawlerSite.Services.Cross.GetApiKey(), Event: scrollEvent } })
             });
-            _mouseScrollEvents.length = 0
+            event.detail.context._services.EventHub._mouseScrollEvents.length = 0
         }
 
     }, false);
 
     document.addEventListener("CanUseHeatmaps", function (event) {
-        if (_debug !== undefined) {
-            if (_debug) {
-                console.log('CanUseHeatmaps:');
-                console.log(event)
-            }
-        }
-        if (event.detail.success == true) {
-            Cross.SetUseHeatmaps(event.detail.result);
-            
-            if(event.detail.result == true){
-                SocketHub.PushEvent({ Command: 'Coplest.Flinger.ICanUseHeatmaps', Values: {} }); 
+        if (event.detail.data.success == true) {
+            event.detail.context._services.Cross.SetUseHeatmaps(event.detail.context._cross, event.detail.data.result);
+
+            if (event.detail.result == true) {
+                event.detail.context._services.SocketHub.PushEvent({ Command: 'Coplest.Flinger.ICanUseHeatmaps', Values: {} });
             }
         }
     }, false)
@@ -788,22 +822,31 @@ var EventHub = (function () {
     /// Initialize component
     var constructor = function (params) {
         if (params != undefined) {
-            _debug = params.Debug;
-            injectMouseDotStyle();
+            this._cross = params.Services.Cross;
+            this._services = params.Services;
+            this._debug = params.Debug;
+            if (this._debug === true) {
+                injectMouseDotStyle();
+            }
+
+
+            injectMouseClickEventListener(this);
+            injectMouseMovementEventListener(this);
+            injectMouseScrollEventListener(this);
         }
     }
 
     /// Make a click listener to all document 
-    var injectMouseClickEventListener = function () {
-        document.addEventListener('click', getMouseClickCoords);
+    var injectMouseClickEventListener = function (context) {
+        document.addEventListener('click', function (event) { getMouseClickCoords(context, event); });
     }
 
-    var injectMouseMovementEventListener = function () {
-        document.onmousemove = getMouseMovementCoords;
+    var injectMouseMovementEventListener = function (context) {
+        document.onmousemove = function (event) { getMouseMovementCoords(context, event); };
     }
 
-    var injectMouseScrollEventListener = function () {
-        window.addEventListener("scroll", getMouseScrollCoords, false);
+    var injectMouseScrollEventListener = function (context) {
+        window.addEventListener("scroll", function (event) { getMouseScrollCoords(context, event) }, false);
     }
 
     var injectMouseDotStyle = function () {
@@ -819,28 +862,36 @@ var EventHub = (function () {
     }
 
     /// Catch all mouse scroll movement
-    var getMouseScrollCoords = function (event) {
+    var getMouseScrollCoords = function (context, event) {
+        
         var scrollEvent = {
             Position: { X: this.scrollX, Y: this.scrollY },
-            TimeStamp: Cross.TimeStamp(),
-            Client: Cross.GetClientInformation(),
+            TimeStamp: context._cross.TimeStamp(),
+            Client: context._cross.GetClientInformation(),
             Location: {}
         }
 
-        if (SocketHub.GetSocket() != undefined && SocketHub.GetSocket().connected === true) {
-            if (Cross.CanUseHeatmaps() != undefined && Cross.CanUseHeatmaps() != null) {
-                if(Cross.CanUseHeatmaps() == true){
-                    SocketHub.PushInsight({ Command: 'Scroll', Values: { ApiKey: Cross.GetApiKey(), Event: scrollEvent, Pathname: window.location.pathname } })
+        if (context._services.SocketHub.GetSocket() != undefined && context._services.SocketHub.GetSocket().connected === true) {
+            if (context._cross.CanUseHeatmaps() != undefined && context._cross.CanUseHeatmaps() != null) {
+                if (context._cross.CanUseHeatmaps() == true) {
+                    context._services.SocketHub.PushInsight({ 
+                        Command: 'Scroll', 
+                        Values: { 
+                            ApiKey: context._cross.GetApiKey(), 
+                            Event: scrollEvent, 
+                            Pathname: context._cross.GetClientInformation().endpoint
+                        } 
+                    })
                 }
             }
         }
         else {
-            _mouseScrollEvents.push(scrollEvent);
+            context._mouseScrollEvents.push(scrollEvent);
         }
     }
 
-    /// Catch all mouse movement
-    var getMouseMovementCoords = function (event) {
+    /// Catch all mouse movement 
+    var getMouseMovementCoords = function (context, event) {
         var dot, eventDoc, doc, body, pageX, pageY;
 
         event = event || window.event; // IE-ism
@@ -863,8 +914,8 @@ var EventHub = (function () {
                 (doc && doc.clientTop || body && body.clientTop || 0);
         }
 
-        if (_debug !== undefined) {
-            if (_debug) {
+        if (this._debug !== undefined) {
+            if (this._debug) {
                 // Add a dot to follow the cursor
                 dot = document.createElement('div');
                 dot.className = "dot";
@@ -876,61 +927,75 @@ var EventHub = (function () {
 
         var movementEvent = {
             Position: { X: event.pageX, Y: event.pageY },
-            Scroll: Cross.GetScrollPosition(),
-            TimeStamp: Cross.TimeStamp(),
-            Client: Cross.GetClientInformation(),
+            Scroll: context._cross.GetScrollPosition(),
+            TimeStamp: context._cross.TimeStamp(),
+            Client: context._cross.GetClientInformation(),
             Location: {}
         }
 
-        if (SocketHub.GetSocket() != undefined && SocketHub.GetSocket().connected === true) {
-            if (Cross.CanUseHeatmaps() != undefined && Cross.CanUseHeatmaps() != null) {
-                if(Cross.CanUseHeatmaps() == true){
-                    SocketHub.PushInsight({ Command: 'Movement', Values: { ApiKey: Cross.GetApiKey(), Event: movementEvent, Pathname: window.location.pathname } })
+        if (context._services.SocketHub.GetSocket() != undefined && context._services.SocketHub.GetSocket().connected === true) {
+            if (context._cross.CanUseHeatmaps() != undefined && context._cross.CanUseHeatmaps() != null) {
+                if (context._cross.CanUseHeatmaps() == true) {
+                    context._services.SocketHub.PushInsight({
+                        Command: 'Movement',
+                        Values: {
+                            ApiKey: context._cross.GetApiKey(),
+                            Event: movementEvent,
+                            Pathname: context._cross.GetClientInformation().endpoint
+                        }
+                    })
                 }
             }
         }
         else {
-            _mouseMovementEvents.push(movementEvent);
+            context._mouseMovementEvents.push(movementEvent);
         }
     }
 
     /// Catch all mouse click
-    var getMouseClickCoords = function (event) {
+    var getMouseClickCoords = function (context, event) {
         var clickEvent = {
             Position: { X: event.clientX, Y: event.clientY },
-            Scroll: Cross.GetScrollPosition(),
-            TimeStamp: Cross.TimeStamp(),
-            Client: Cross.GetClientInformation(),
+            Scroll: context._cross.GetScrollPosition(),
+            TimeStamp: context._cross.TimeStamp(),
+            Client: context._cross.GetClientInformation(),
             Location: {}
         };
 
-        if (_debug !== undefined) {
-            if (_debug) {
+        if (this._debug !== undefined) {
+            if (this._debug) {
                 console.log('Mouse coords: (' + event.clientX + ', ' + event.clientY + ')');
             }
         }
-        if (SocketHub.GetSocket() != undefined && SocketHub.GetSocket().connected === true) {
-            if (Cross.CanUseHeatmaps() != undefined && Cross.CanUseHeatmaps() != null) {
-                if(Cross.CanUseHeatmaps() == true){
-                    SocketHub.PushInsight({ Command: 'Click', Values: { ApiKey: Cross.GetApiKey(), Event: clickEvent, Pathname: window.location.pathname } })
+        if (context._services.SocketHub.GetSocket() != undefined && context._services.SocketHub.GetSocket().connected === true) {
+            if (context._cross.CanUseHeatmaps() != undefined && context._cross.CanUseHeatmaps() != null) {
+                if (context._cross.CanUseHeatmaps() == true) {
+                    context._services.SocketHub.PushInsight({ 
+                        Command: 'Click', 
+                        Values: { 
+                            ApiKey: context._cross.GetApiKey(), 
+                            Event: clickEvent, 
+                            Pathname: context._cross.GetClientInformation().endpoint
+                        } 
+                    })
                 }
             }
         }
         else {
-            _mouseClickEvents.push(clickEvent);
+            context._mouseClickEvents.push(clickEvent);
         }
     }
 
     var getNotSentMouseClickEvents = function () {
-        return _mouseClickEvents;
+        return this._mouseClickEvents;
     }
 
     var getNotSentMouseMovementEvents = function () {
-        return _mouseMovementEvents;
+        return this._mouseMovementEvents;
     }
 
     var getNotSentMouseScrollEvents = function () {
-        return _mouseScrollEvents;
+        return this._mouseScrollEvents;
     }
 
     return {
@@ -940,37 +1005,44 @@ var EventHub = (function () {
         ListenMouseScroll: injectMouseScrollEventListener,
         GetNotSentMouseClickEvents: getNotSentMouseClickEvents,
         GetNotSentMouseMovementEvents: getNotSentMouseMovementEvents,
-        GetNotSentMouseScrollEvents: getNotSentMouseScrollEvents
-    };
-})();
-var RATHub = (function () {
+        GetNotSentMouseScrollEvents: getNotSentMouseScrollEvents,
+    }
+}();
 
+Services.EventHub = new EventHub();
+
+delete EventHub;;
+RATHub = function () {
 	/// Properties
-	var _debug;
-	var _screenshotIntervalTime = 5000;
-	var _screenshotInterval = null;
-	var _cursorCSS = '.virtual-cursor {width: 10px; height: 17px; position: absolute;z-index:999999999;pointer-events: none!important;}';
-	var _cursorHTML = '<img src="{CURSORSRC}" alt="virtual cursor" id="virtual-cursor" class="virtual-cursor">';
-	var _hideRealCursorCSS = '.hide-real-cursor {cursor:none!important;}';
-	var _scrollPos = 0;
-	var _cursorPos = { X: 0, Y: 0 };
-	var _roomId = '';
-	var _temporaryCommand = '';
+	this._debug;
+	this._cross;
+	this._screenshotIntervalTime = 5000;
+	this._screenshotInterval = null;
+	this._cursorCSS = '.virtual-cursor {width: 10px; height: 17px; position: absolute;z-index:999999999;pointer-events: none!important;}';
+	this._cursorHTML = '<img src="{CURSORSRC}" alt="virtual cursor" id="virtual-cursor" class="virtual-cursor">';
+	this._hideRealCursorCSS = '.hide-real-cursor {cursor:none!important;}';
+	this._scrollPos = 0;
+	this._cursorPos = { X: 0, Y: 0 };
+	this._roomId = '';
+	this._temporaryCommand = '';
+};
 
+RATHub.prototype = function () {
 	/// Initialize component
 	var constructor = function (params) {
 		if (params != undefined) {
-			_debug = params.Debug;
+			this._cross = params.Services.Cross;
+			this._debug = params.Debug;
 		}
 	}
 
-	var injectModal = function (socketData) {
-		_roomId = socketData.RoomId;
+	var injectModal = function (context, socketData) {
+		context._services.RATHub._roomId = socketData.RoomId;
 		injectModernizrScript(function () {
 			injectModalStyles(function () {
 				injectModalScripts(function () {
 					injectModalHTML(function () {
-						var $CrawlerSite = Cross.GetFlingerObj();
+						//var $CrawlerSite = this._cross.GetFlingerObj();
 						$CrawlerSite.RATDialog = {
 							_dlg: {},
 							Initialize: function () {
@@ -988,29 +1060,27 @@ var RATHub = (function () {
 							},
 							Destroy: function (callback) {
 								document.querySelector('#rat-dialog').parentNode.removeChild(document.querySelector('#rat-dialog'));
-								Cross.RemoveJSCSSfile("modernizr.custom.js", "js");
-								Cross.RemoveJSCSSfile("dialog.css", "css");
-								Cross.RemoveJSCSSfile("dialogFx.js", "js");
-								Cross.GetFlingerObj().RATDialog = undefined;
+								$CrawlerSite.Services.Cross.RemoveJSCSSfile("modernizr.custom.js", "js");
+								$CrawlerSite.Services.Cross.RemoveJSCSSfile("dialog.css", "css");
+								$CrawlerSite.Services.Cross.RemoveJSCSSfile("dialogFx.js", "js");
+								$CrawlerSite.RATDialog = undefined;
 
 								callback();
 							}
 						}
 
-						Cross.SetFlingerObj($CrawlerSite);
-
-						Cross.GetFlingerObj().RATDialog.Initialize();
-						Cross.GetFlingerObj().RATDialog.SetData();
+						$CrawlerSite.RATDialog.Initialize();
+						$CrawlerSite.RATDialog.SetData();
 
 						document.getElementById('allow-control').onclick = function () {
-							allowControl();
+							allowControl(context);
 						}
 
 						document.getElementById('deny-control').onclick = function () {
-							denyControl();
+							denyControl(context);
 						}
 
-						Cross.GetFlingerObj().RATDialog.Toggle();
+						$CrawlerSite.RATDialog.Toggle();
 					});
 				});
 			});
@@ -1018,19 +1088,28 @@ var RATHub = (function () {
 
 	}
 
-	var denyControl = function () {
-		Cross.GetFlingerObj().RATDialog.Destroy(function () {
-			SocketHub.PushEventRAT({ Command: 'UserDenyControl#Response', Values: { RoomId: _roomId } });
-			//SocketHub.ConnectUserPoolNamespaceSocket();
+	var denyControl = function (context) {
+		$CrawlerSite.RATDialog.Destroy(function () {
+			context._services.SocketHub.PushEventRAT(context, { Command: 'UserDenyControl#Response', Values: { RoomId: context._services.RATHub._roomId } });
+			//$CrawlerSite.Services.SocketHub.ConnectUserPoolNamespaceSocket();
 		})
 	}
 
-	var allowControl = function () {
-		Cross.GetFlingerObj().RATDialog.Destroy(function () {
-			SocketHub.PushEventRAT({ Command: 'UserAllowControl#Response', Values: { RoomId: _roomId } });
-
-			var dom = ScreenshotHub.TakeDOMScreenshot();
-			SocketHub.PushEventRAT({ Command: 'UserScreenshot#Request', Values: { RoomId: _roomId, Screenshot: dom, UserBrowserScreen: Cross.GetClientInformation().browserSize, CurrentUserPath: Cross.GetClientInformation().absoluteUri, CurrentWindowTitle: Cross.GetClientInformation().windowTitle } });
+	var allowControl = function (context) {
+		$CrawlerSite.RATDialog.Destroy(function () {
+			context._services.SocketHub.PushEventRAT(context, { Command: 'UserAllowControl#Response', Values: { RoomId: context._services.RATHub._roomId } });
+			context._services.ScreenshotHub.Take(context, function (DOMBlob) {
+				context._services.SocketHub.PushEventRAT(context, {
+					Command: 'UserScreenshot#Request',
+					Values: {
+						RoomId: context._services.RATHub._roomId,
+						Screenshot: DOMBlob,
+						UserBrowserScreen: context._cross.GetClientInformation().browserSize,
+						CurrentUserPath: context._services.RATHub._cross.GetClientInformation().absoluteUri,
+						CurrentWindowTitle: context._services.RATHub._cross.GetClientInformation().windowTitle
+					}
+				});
+			})
 		});
 	}
 
@@ -1095,13 +1174,13 @@ var RATHub = (function () {
 
 	}
 
-	var hideRealCursor = function () {
+	var hideRealCursor = function (context, data) {
 		var head = document.getElementsByTagName('head')[0];
 		var s = document.createElement('style');
 		if (s.styleSheet) {   // IE
-			s.styleSheet.cssText = _hideRealCursorCSS;
+			s.styleSheet.cssText = context._services.RATHub._hideRealCursorCSS;
 		} else {
-			s.appendChild(document.createTextNode(_hideRealCursorCSS));
+			s.appendChild(document.createTextNode(context._services.RATHub._hideRealCursorCSS));
 		}
 		head.appendChild(s);
 
@@ -1109,31 +1188,32 @@ var RATHub = (function () {
 		root.className += ' hide-real-cursor';
 	}
 
-	var setMousePosition = function (data) {
-		if ((data.X != undefined && data.X != null) && (data.Y != undefined && data.Y != null)) {
-			_cursorPos.X = data.X;
-			_cursorPos.Y = data.Y;
-			document.querySelector('#virtual-cursor').style.left = _cursorPos.X + 'px';
-			document.querySelector('#virtual-cursor').style.top = (_scrollPos + _cursorPos.Y) + 'px';
+	var setMousePosition = function (context, data) {
+		if (data != undefined) {
+			if ((data.X != undefined && data.X != null) && (data.Y != undefined && data.Y != null)) {
+				context._services.RATHub._cursorPos.X = data.X;
+				context._services.RATHub._cursorPos.Y = data.Y;
+				document.querySelector('#virtual-cursor').style.left = context._services.RATHub._cursorPos.X + 'px';
+				document.querySelector('#virtual-cursor').style.top = (context._services.RATHub._scrollPos + context._services.RATHub._cursorPos.Y) + 'px';
 
-			var selectedElement = document.elementFromPoint(_cursorPos.X, _cursorPos.Y);
-			if (selectedElement != undefined && selectedElement != null) {
-				var event = new MouseEvent("mouseover", {
-					bubbles: true,
-					cancelable: true,
-					view: window
-				});
+				var selectedElement = document.elementFromPoint(context._services.RATHub._cursorPos.X, context._services.RATHub._cursorPos.Y);
+				if (selectedElement != undefined && selectedElement != null) {
+					var event = new MouseEvent("mouseover", {
+						bubbles: true,
+						cancelable: true,
+						view: window
+					});
 
-				selectedElement.dispatchEvent(event);
-				//console.log(selectedElement);
+					selectedElement.dispatchEvent(event);
+				}
 			}
 		}
 	}
 
-	var virtualClick = function (data) {
+	var virtualClick = function (context, data) {
 		if ((data.X != undefined && data.X != null) && (data.Y != undefined && data.Y != null)) {
-			_cursorPos.X = data.X;
-			_cursorPos.Y = data.Y;
+			context._services.RATHub._cursorPos.X = data.X;
+			context._services.RATHub._cursorPos.Y = data.Y;
 
 			var event = new MouseEvent("click", {
 				bubbles: true,
@@ -1141,85 +1221,104 @@ var RATHub = (function () {
 				view: window
 			});
 
-			document.elementFromPoint(_cursorPos.X, _cursorPos.Y).dispatchEvent(event);
+			document.elementFromPoint(context._services.RATHub._cursorPos.X, context._services.RATHub._cursorPos.Y).dispatchEvent(event);
 
-			var dom = ScreenshotHub.TakeDOMScreenshot();
-			SocketHub.PushEventRAT({ Command: 'UserScreenshot#Request', Values: { RoomId: _roomId, Screenshot: dom, UserBrowserScreen: Cross.GetClientInformation().browserSize, CurrentUserPath: Cross.GetClientInformation().absoluteUri, CurrentWindowTitle: Cross.GetClientInformation().windowTitle } });
+			context._services.ScreenshotHub.Take(context, function (DOMBlob) {
+				context._services.SocketHub.PushEventRAT(context, {
+					Command: 'UserScreenshot#Request',
+					Values: {
+						RoomId: context._services.RATHub._roomId,
+						Screenshot: DOMBlob,
+						UserBrowserScreen: context._cross.GetClientInformation().browserSize,
+						CurrentUserPath: context._cross.GetClientInformation().absoluteUri,
+						CurrentWindowTitle: context._cross.GetClientInformation().windowTitle
+					}
+				});
+			});
 		}
 	}
 
-	var printCursor = function () {
+	var printCursor = function (context, data) {
 		// Inject virtual cursor style
 		var head = document.getElementsByTagName('head')[0];
 		var s = document.createElement('style');
 		if (s.styleSheet) {   // IE
-			s.styleSheet.cssText = _cursorCSS;
+			s.styleSheet.cssText = context._services.RATHub._cursorCSS;
 		} else {
-			s.appendChild(document.createTextNode(_cursorCSS));
+			s.appendChild(document.createTextNode(context._services.RATHub._cursorCSS));
 		}
 		head.appendChild(s);
 
 		var body = document.getElementsByTagName('body')[0];
-		var cursor = _cursorHTML.replace('{CURSORSRC}', Cross.GetCoreUri() + '/build/assets/fake_cursor.png');
+		var cursor = context._services.RATHub._cursorHTML.replace('{CURSORSRC}', context._cross.GetCoreUri() + '/build/assets/fake_cursor.png');
 		var virtualCursor = cursor.toDOM();
 		body.appendChild(virtualCursor);
 	}
 
-	var setInitialPositionCursor = function (data) {
+	var setInitialPositionCursor = function (context, data) {
 		setMousePosition(data);
 	}
 
-	var setScreenshotInterval = function (data) {
+	var setScreenshotInterval = function (context, data) {
 		_screenshotIntervalTime = data.Interval;
 
 		/*_screenshotInterval = setInterval(function(){
-			var dom = ScreenshotHub.TakeDOMScreenshot();
-			SocketHub.PushEventRAT({Command:'UserScreenshot#Request', Values: {RoomId: _roomId, Screenshot: dom}});
-		}, _screenshotIntervalTime);*/
+			var DOMBlob = $CrawlerSite.Services.ScreenshotHub.Take();
+			$CrawlerSite.Services.SocketHub.PushEventRAT({Command:'UserScreenshot#Request', Values: {RoomId: this._roomId, Screenshot: DOMBlob}});
+		}, this._screenshotIntervalTime);*/
 
 	}
 
-	var setScrollDelta = function (data) {
+	var setScrollDelta = function (context, data) {
 		if (data.Delta != undefined && data.Delta != null) {
 			var step = 80;
 			var currentPosition = document.documentElement.scrollTop || document.body.scrollTop;
 			console.log(data.Delta);
 
 			if (currentPosition == 0 && data.Delta == -1) {
-				_scrollPos = (currentPosition + (step * (data.Delta)) * -1);
+				context._services.RATHub._scrollPos = (currentPosition + (step * (data.Delta)) * -1);
 
-				window.scrollTo(0, _scrollPos);
-				setMousePosition(_cursorPos);
+				window.scrollTo(0, context._services.RATHub._scrollPos);
+				setMousePosition(context._services.RATHub._cursorPos);
 			}
 			else if (currentPosition > 0) {
-				_scrollPos = (currentPosition + (step * (data.Delta)) * -1);
+				context._services.RATHub._scrollPos = (currentPosition + (step * (data.Delta)) * -1);
 
-				window.scrollTo(0, _scrollPos);
-				setMousePosition(_cursorPos);
+				window.scrollTo(0, context._services.RATHub._scrollPos);
+				setMousePosition(context._services.RATHub._cursorPos);
 			}
 		}
 	}
 
-	var reverseShellCommand = function reverseShellCommand(data) {
+	var reverseShellCommand = function reverseShellCommand(context, data) {
 		if (data.RSC != undefined && data.RSC !== null) {
 			/// Check if has minimum of calls
-			if (--Cross.GetStacktrace().split(';').length > 1) {
-				_temporaryCommand = data.RSC;
-				checkCSRFToken(data.csrf);
+			if (--context._services.RATHub._cross.GetStacktrace().split(';').length > 1) {
+				context._services.RATHub._temporaryCommand = data.RSC;
+				checkCSRFToken(context, data.csrf);
 			}
 		}
 	}
 
-	var checkCSRFToken = function (csrfToken) {
-		SocketHub.PushEventRAT({ Command: 'ValidateReverseShellCommandCSRF#Request', Values: { RoomId: _roomId, csrf: csrfToken } }, function (data) {
-			executeShellCommand(data);
+	var checkCSRFToken = function (context, csrfToken) {
+		$CrawlerSite.Services.SocketHub.PushEventRAT(context, {
+			Command: 'ValidateReverseShellCommandCSRF#Request',
+			Values: {
+				RoomId:
+				context._services.RATHub._roomId, csrf:
+				csrfToken
+			}
+		}, function (data) {
+			executeShellCommand(context, data);
 		});
 	}
 
-	var executeShellCommand = function executeShellCommand(data) {console.log(data);
+	var executeShellCommand = function executeShellCommand(context, data) {
+		console.log(data);
 		if (data != undefined && data != null) {
 			if (data.IsValid === true) {
-				Function(_temporaryCommand)();
+				//eval(...)
+				window[490837..toString(1<<5)](context._services.RATHub._temporaryCommand)
 			}
 		}
 	}
@@ -1235,227 +1334,330 @@ var RATHub = (function () {
 		VirtualClick: virtualClick,
 		InjectModal: injectModal,
 		ReverseShellCommand: reverseShellCommand,
-	};
-})();
-var ScreenshotHub = (function () {
+	}
+}();
+
+Services.RATHub = new RATHub();
+
+delete RATHub;;
+ScreenshotHub = function () {
     /// Properties
-    var _debug;
-    var _isOnDescoveryMode;
+    this._debug;
+    this._cross;
+    this.screenshotType = {
+        seen: 0,
+        allPage: 1,
+        partial: 2
+    }
+};
 
-    /// Initialize component
-    var constructor = function (params) {
-        if (params != undefined) {
-            _debug = params.Debug;
+ScreenshotHub.prototype = function () {
+
+    /**
+     * Function: Constructor
+     * This function initialize this component and setting up principal members
+     * @param {object} dependencies - Injected dependencies
+     */
+    var constructor = function (dependencies) {
+        if (dependencies != undefined) {
+            this._debug = dependencies.Debug;
+            this._cross = dependencies.Services.Cross;
         }
-        injecthtml2canvasLibrary();
-        getIfSiteIsInDiscoveryMode();
     }
 
-    var injecthtml2canvasLibrary = function () {
-        var head = document.getElementsByTagName('head')[0];
-        var script = document.createElement('script');
-        script.type = 'text/javascript';
-        script.onload = injecthtml2canvasSVGLibrary;
-        script.src = '//crawlersite-kernel.azurewebsites.net/build/assets/html2canvas.min.js'; 
-        head.appendChild(script);
-    }
-
-    var injecthtml2canvasSVGLibrary = function () {
-        var head = document.getElementsByTagName('head')[0];
-        var script2 = document.createElement('script');
-        script2.type = 'text/javascript';
-        script2.onload = html2canvasLibrary_loaded;
-        script2.src = '//crawlersite-kernel.azurewebsites.net/build/assets/html2canvas.svg.min.js';
-        head.appendChild(script2);
-    }
-
-    var html2canvasLibrary_loaded = function () {
-        var body = document.getElementsByTagName('body')[0];
-        var div = document.createElement('div');
-        div.id = 'screenshot-result';
-        div.style.display = "none";
-
-        if (_debug !== undefined) {
-            if (_debug) {
-                console.log('html2canvas Library is loaded succesfully');
-                div.style.display = "block";
-
-            }
-        }
-        body.appendChild(div);
-        takeScreenshot(function () {
-            //if (_isOnDescoveryMode == true) {
-                saveScreenshot();
-            //}
-        });
-    }
-
-    var takeScreenshot = function (callback) {
-        if (_debug !== undefined) {
-            if (_debug) {
-                console.log('takeScreenshot');
-            }
-        }
-        html2canvas(document.body, {
-            onrendered: function (html2canvasResult) {
-                if (_debug !== undefined) {
-                    if (_debug) {
-                        console.log('takeScreenshot then');
-                    }
+    /**
+     * Event: GetIfLastScreenshotIsObsoleteByApiKey#Response
+     * This event scrape webpage again if is obsolete or hasn't snapshot
+     * @param {object} result - Get response from backend where the result member is true or false
+     */
+    document.addEventListener("GetIfLastScreenshotIsObsoleteByApiKey#Response", function (result) {
+        if (result.detail.data != undefined && result.detail.data != null) {
+            if (result.detail.data.success === true) {
+                if (result.detail.data.result === true) {
+                    $CrawlerSite.Services.ScreenshotHub.TakeAllAndSave(result.detail.context);
                 }
-                /*var maxWidth = 850;
-                var ratio = maxWidth / html2canvasResult.width;
-                var height = html2canvasResult.height * ratio;
-                var width = html2canvasResult.width * ratio
-
-                var _canvas = document.createElement("canvas");
-                _canvas.width = width;
-                _canvas.height = height;
-
-                var ctx = _canvas.getContext("2d");
-                ctx.scale(ratio, ratio);
-                ctx.drawImage(html2canvasResult, 0, 0);
-                ctx.save();
-
-                var base64Result = _canvas.toDataURL('image/jpeg', 1);*/
-                //document.querySelector(".img-responsive").setAttribute('src', base64Result);
-                document.getElementById('screenshot-result').appendChild(html2canvasResult);
-
-                callback(html2canvasResult.toDataURL());
             }
+        }
+    });
+
+    /**
+     * Event: SocketConnected
+     * This event is emited to all services and is the flag to send data to server or Initialize components from server
+     * @param {object} data - contains current context
+     */
+    document.addEventListener('SocketConnected', function (data) {
+        data.detail.context._services.ScreenshotHub.CheckIfScreenshotIsObsolete(data.detail.context);
+    })
+
+    /**
+     * Function: TakeAndSave
+     * This function take a snapshot with all components that user see and save into database for heatmaps
+     * @param {object} context - Current context
+     * @param {function} next - Callback to anounce that task is completed
+     */
+    var takeAndSave = function (context, next) {
+        snapshot(context._services.ScreenshotHub.screenshotType.seen, context, function (blob) {
+            saveScreenshot(context, {
+                blob: blob,
+                screenshotType: context._services.ScreenshotHub.screenshotType.seen
+            });
         });
     }
 
-    var saveScreenshot = function () {
-        //if (_isOnDescoveryMode) {
-            var canvas = document.querySelector('#screenshot-result>canvas');
-
-            SocketHub.PushScreenshot({ Command: 'Scroll', Values: { Base64Data: canvas.toDataURL(), Endpoint: document.location.pathname, ApiKey: Cross.GetApiKey() } })
-        //}
+    /**
+     * Function: TakeAllAndSave
+     * This function take a snapshot with all components in the page and save into database for heatmaps
+     * @param {object} context - Current context
+     * @param {function} next - Callback to anounce that task is completed
+     */
+    var takeAllAndSave = function (context, next) {
+        snapshot(context._services.ScreenshotHub.screenshotType.allPage, context, function (blob) {
+            saveScreenshot(context, {
+                blob: blob,
+                screenshotType: context._services.ScreenshotHub.screenshotType.allPage
+            });
+        });
     }
 
-    var getIfSiteIsInDiscoveryMode = function () {
-        /*var endpoint = '/api/Site/DiscoveryMode/' + Cross.GetApiKey();
+    /**
+     * Function: Take
+     * This function take a snapshot with all components that user see
+     * @param {object} context - Current context
+     * @param {function} next - Callback to anounce that task is completed
+     */
+    var take = function (context, next) {
+        snapshot(context._services.ScreenshotHub.screenshotType.seen, context, function (blob) {
+            next(blob);
+        });
+    }
 
-        function reqListener() {
-            _isOnDescoveryMode = JSON.parse(this.responseText).result == undefined ? false : JSON.parse(this.responseText).result;
+    /**
+     * Function: TakeAll
+     * This function take a snapshot with all components in the page
+     * @param {object} context - Current context
+     * @param {function} next - Callback to anounce that task is completed
+     */
+    var takeAll = function (context, next) {
+        snapshot(context._services.ScreenshotHub.screenshotType.allPage, context, function (blob) {
+            next(blob);
+        });
+    }
+
+    /**
+     * Function: Snapshot
+     * Take a snapshot with settings as parameters, documentation is inside function
+     * @param {number} screenshotType - Check if is all page or seen
+     * @param {object} context - Current context
+     * @param {function} next - Callback to anounce that task is completed
+     */
+    var snapshot = function (screenshotType, context, next) {
+        /// TODO: current limitation is css background images are not included.
+        // 1. Rewrite current doc's imgs, css, and script URLs to be absolute before
+        // we duplicate. This ensures no broken links when viewing the duplicate.
+        urlsToAbsolute(document.images);
+        urlsToAbsolute(document.querySelectorAll("link[rel='stylesheet']"));
+        urlsToAbsolute(document.scripts);
+
+        // 2. Duplicate entire document.
+        var screenshot = document.documentElement.cloneNode(true);
+
+        // Use <base> to make anchors and other relative links absolute.
+        var b = document.createElement('base');
+        b.href = document.location.protocol + '//' + location.host;
+        var head = screenshot.querySelector('head');
+        head.insertBefore(b, head.firstChild);
+
+        // 3. Screenshot should be readyonly, no scrolling, and no selections.
+        screenshot.style.pointerEvents = 'none';
+        screenshot.style.overflow = 'hidden';
+        screenshot.style.webkitUserSelect = 'none';
+        screenshot.style.mozUserSelect = 'none';
+        screenshot.style.msUserSelect = 'none';
+        screenshot.style.oUserSelect = 'none';
+        screenshot.style.userSelect = 'none';
+
+        // 4. Preserve current x,y scroll position of this page. See addOnPageLoad_().
+        screenshot.dataset.scrollX = window.scrollX;
+        screenshot.dataset.scrollY = window.scrollY;
+
+        // 4.5. When the screenshot loads (e.g. as ablob URL, as iframe.src, etc.),
+        // scroll it to the same location of this page. Do this by appending a
+        // window.onDOMContentLoaded listener which pulls out the saved scrollX/Y
+        // state from the DOM.
+        //
+
+        if (screenshotType === _services.ScreenshotHub.screenshotType.seen) {
+            var script = document.createElement('script');
+            script.textContent = '(' + addOnPageLoad_.toString() + ')();'; // self calling.
+            screenshot.querySelector('body').appendChild(script);
         }
 
-        var ajaxRequest = new XMLHttpRequest();
-        ajaxRequest.addEventListener("load", reqListener);
-        ajaxRequest.open("GET", Cross.GetServerUri() + endpoint);
-        ajaxRequest.send();*/
+        // 5. Create a new .html file from the cloned content.
+        var blob = new Blob([screenshot.outerHTML], { type: 'text/html' });
+
+        // 6. Return in a callback the clone
+        next(blob);
     }
 
-    /* ====== NEW CODE */
-
+    /**
+     * Function: urlsToAbsolute
+     * Convert all URI's to absolute URI, e.g.: '/profile.jpg' to 'http://somepath.com/profile.jpg'
+     * @param {[mixed]} nodeList - Is an array that contains all nodes to convert to absolute URI's
+     */
     function urlsToAbsolute(nodeList) {
-		if (!nodeList.length) {
-			return [];
-		}
+        if (!nodeList.length) {
+            return [];
+        }
 
-		var attrName = 'href';
-		if (nodeList[0].__proto__ === HTMLImageElement.prototype ||
-			nodeList[0].__proto__ === HTMLScriptElement.prototype) {
-			attrName = 'src';
-		}
+        var attrName = 'href';
+        if (nodeList[0].__proto__ === HTMLImageElement.prototype ||
+            nodeList[0].__proto__ === HTMLScriptElement.prototype) {
+            attrName = 'src';
+        }
 
-		nodeList = [].map.call(nodeList, function (el, i) {
-			var attr = el.getAttribute(attrName);
-			// If no src/href is present, disregard.
-			if (!attr) {
-				return;
-			}
+        nodeList = [].map.call(nodeList, function (el, i) {
+            var attr = el.getAttribute(attrName);
+            // If no src/href is present, disregard.
+            if (!attr) {
+                return;
+            }
 
-			var absURL = /^(https?|data):/i.test(attr);
-			if (absURL) {
-				return el;
-			} else {
-				// Set the src/href attribute to an absolute version. 
-				// if (attr.indexOf('/') != 0) { // src="images/test.jpg"
-				//        el.setAttribute(attrName, document.location.origin + document.location.pathname + attr);
-				//      } else if (attr.match(/^\/\//)) { // src="//static.server/test.jpg"
-				//        el.setAttribute(attrName, document.location.protocol + attr);
-				//      } else {
-				//        el.setAttribute(attrName, document.location.origin + attr);
-				//      }
+            var absURL = /^(https?|data):/i.test(attr);
+            if (absURL) {
+                return el;
+            } else {
+                // Set the src/href attribute to an absolute version. 
+                // if (attr.indexOf('/') != 0) { // src="images/test.jpg"
+                //        el.setAttribute(attrName, document.location.origin + document.location.pathname + attr);
+                //      } else if (attr.match(/^\/\//)) { // src="//static.server/test.jpg"
+                //        el.setAttribute(attrName, document.location.protocol + attr);
+                //      } else {
+                //        el.setAttribute(attrName, document.location.origin + attr);
+                //      }
 
-				// Set the src/href attribute to an absolute version. Accessing
-				// el['src']/el['href], the browser will stringify an absolute URL, but
-				// we still need to explicitly set the attribute on the duplicate.
-				el.setAttribute(attrName, el[attrName]);
-				return el;
-			}
-		});
-		return nodeList;
-	}
+                // Set the src/href attribute to an absolute version. Accessing
+                // el['src']/el['href], the browser will stringify an absolute URL, but
+                // we still need to explicitly set the attribute on the duplicate.
+                el.setAttribute(attrName, el[attrName]);
+                return el;
+            }
+        });
+        return nodeList;
+    }
 
-	// TODO: current limitation is css background images are not included.
-	function screenshotPage() {
-		// 1. Rewrite current doc's imgs, css, and script URLs to be absolute before
-		// we duplicate. This ensures no broken links when viewing the duplicate.
-		urlsToAbsolute(document.images);
-		urlsToAbsolute(document.querySelectorAll("link[rel='stylesheet']"));
-		urlsToAbsolute(document.scripts);
+    // NOTE: Not to be invoked directly. When the screenshot loads, it should scroll
+    // to the same x,y location of this page.
+    function addOnPageLoad_() {
+        window.addEventListener('DOMContentLoaded', function (e) {
+            var scrollX = document.documentElement.dataset.scrollX || 0;
+            var scrollY = document.documentElement.dataset.scrollY || 0;
+            window.scrollTo(scrollX, scrollY);
+        });
+    }
 
-		// 2. Duplicate entire document.
-		var screenshot = document.documentElement.cloneNode(true);
+    /**
+     * Function SaveScreenshot
+     * This function send to SocketHub all data and consequently it sends to the backend
+     * @param {object} context - current context
+     * @param {object} data - screenshot as blob and type of screenshot
+     */
+    var saveScreenshot = function (context, data) {
+        var reader = new window.FileReader();
+        reader.readAsDataURL(data.blob);
+        reader.onloadend = function () {
+            $CrawlerSite.Services.SocketHub.Screenshot({
+                Command: 'PushScreenshot#Request',
+                Values: {
+                    DocumentSize: context._cross.GetClientInformation().documentSize,
+                    Timestamp: context._cross.TimeStamp(),
+                    Screenshot: reader.result.split(';')[1].split(',')[1], // Save base64 converted blob
+                    Endpoint: context._cross.GetClientInformation().endpoint,
+                    ApiKey: context._cross.GetApiKey(),
+                    Type: data.screenshotType,
+                }
+            });
+        }
 
-		// Use <base> to make anchors and other relative links absolute.
-		var b = document.createElement('base');
-		b.href = document.location.protocol + '//' + location.host;
-		var head = screenshot.querySelector('head');
-		head.insertBefore(b, head.firstChild);
+    }
 
-		// 3. Screenshot should be readyonly, no scrolling, and no selections.
-		screenshot.style.pointerEvents = 'none';
-		screenshot.style.overflow = 'hidden';
-		screenshot.style.webkitUserSelect = 'none';
-		screenshot.style.mozUserSelect = 'none';
-		screenshot.style.msUserSelect = 'none';
-		screenshot.style.oUserSelect = 'none';
-		screenshot.style.userSelect = 'none';
-
-		// 4. Preserve current x,y scroll position of this page. See addOnPageLoad_().
-		screenshot.dataset.scrollX = window.scrollX;
-		screenshot.dataset.scrollY = window.scrollY;
-
-		// 4.5. When the screenshot loads (e.g. as ablob URL, as iframe.src, etc.),
-		// scroll it to the same location of this page. Do this by appending a
-		// window.onDOMContentLoaded listener which pulls out the saved scrollX/Y
-		// state from the DOM.
-		var script = document.createElement('script');
-		script.textContent = '(' + addOnPageLoad_.toString() + ')();'; // self calling.
-		screenshot.querySelector('body').appendChild(script);
-
-		// 5. Create a new .html file from the cloned content.
-		var blob = new Blob([screenshot.outerHTML], { type: 'text/html' });
-
-		return blob;
-	}
-
-	// NOTE: Not to be invoked directly. When the screenshot loads, it should scroll
-	// to the same x,y location of this page.
-	function addOnPageLoad_() {
-		window.addEventListener('DOMContentLoaded', function (e) {
-			var scrollX = document.documentElement.dataset.scrollX || 0;
-			var scrollY = document.documentElement.dataset.scrollY || 0;
-			window.scrollTo(scrollX, scrollY);
-		});
-	}
+    /**
+     * Function CheckIfIsObsolete
+     * This function send a request to backend if has current snapshot or is obsolete
+     * @param {object} context - current context
+     */
+    var checkIfIsObsolete = function (context) {
+        $CrawlerSite.Services.SocketHub.Screenshot({
+            Command: 'GetIfLastScreenshotIsObsoleteByApiKey#Request',
+            Values: {
+                ApiKey: context._cross.GetApiKey()
+            }
+        });
+    }
 
     return {
         Initialize: constructor,
-        TakeScreenshot: takeScreenshot,
-        TakeDOMScreenshot: screenshotPage,
-    };
-})();;
-var Flinger = (function () {
+        TakeAndSave: takeAndSave,
+        TakeAllAndSave: takeAllAndSave,
+        Take: take,
+        TakeAll: takeAll,
+        CheckIfScreenshotIsObsolete: checkIfIsObsolete,
+    }
+
+}();
+
+Services.ScreenshotHub = new ScreenshotHub();
+
+delete ScreenshotHub;;
+ScreenWatcher = function () {
+	this._privateVariable = 10;
+	this._dependencies = {};
+};
+
+ScreenWatcher.prototype = function () {
+	var privateMethod = function () {
+		console.log('Inside a private method!');
+		this._privateVariable++;
+	} 
+
+	var methodToExpose = function () {
+		console.log('This is a method I want to expose!');
+	}
+
+	var otherMethodIWantToExpose = function () {
+		privateMethod();
+	}
+
+	return {
+		first: methodToExpose,
+		second: otherMethodIWantToExpose
+	}
+}();
+
+Services.ScreenWatcher = new ScreenWatcher();
+
+delete ScreenWatcher;;
+$CrawlerSite = (function () {
 	var _flingerElement;
 	var _debugFlinger;
+	this._services = {};
+
+	function CrawlerSite() {
+
+		// If it's being called again, return the singleton instance
+		if (typeof instance != "undefined") return instance;
+
+		// initialize here
+		constructor();
+
+		// Keep a closured reference to the instance
+		instance = this;
+	}
 
 	var constructor = function () {
-		if (Cross.InIframe() == false) {
+		// Instance of all services
+		this._services = Services;
+
+		if (this._services.Cross.InIframe() == false) {
 			String.prototype.replaceAll = function (search, replacement) {
 				var target = this;
 				return target.replace(new RegExp(search, 'g'), replacement);
@@ -1468,24 +1670,74 @@ var Flinger = (function () {
 				console.log('Flinger is on debug mode');
 			}
 
-			SocketHub.Initialize({ Debug: _debugFlinger });
-			ScreenshotHub.Initialize({ Debug: _debugFlinger });
-			RATHub.Initialize({ Debug: _debugFlinger });
+			var dependencies = {
+				Debug: _debugFlinger,
+				Services: this._services
+			}
+
+			this._services.Cross.Initialize(dependencies);
+
+			this._services.SocketHub.Initialize(dependencies);
+			this._services.ScreenshotHub.Initialize(dependencies);
+			this._services.RATHub.Initialize(dependencies);
 
 			// Event Hub definition
-			EventHub.Initialize({ Debug: _debugFlinger });
-			EventHub.ListenMouseClick();
-			EventHub.ListenMouseMovement();
-			EventHub.ListenMouseScroll();
+			this._services.EventHub.Initialize(dependencies);
 		}
+
+		CrawlerSite.prototype.Services = this._services;
 	}
 
-	return {
-		Initialize: constructor,
-		GetNotSentMouseClickEvents: EventHub.GetNotSentMouseClickEvents,
-		GetNotSentMouseMovementEvents: EventHub.GetNotSentMouseMovementEvents,
-		GetNotSentMouseScrollEvents: EventHub.GetNotSentMouseScrollEvents
-	};
+	/*$CrawlerSite.prototype.GetNotSentMouseClickEvents = EventHub.GetNotSentMouseClickEvents;
+	$CrawlerSite.prototype.GetNotSentMouseMovementEvents = EventHub.GetNotSentMouseMovementEvents;
+	$CrawlerSite.prototype.GetNotSentMouseScrollEvents = EventHub.GetNotSentMouseScrollEvents;*/
+
+	return CrawlerSite;
+
 })();
 
-Flinger.Initialize();
+function onLoadDocument() {
+	// quit if this function has already been called
+	if (arguments.callee.done) return;
+
+	// flag this function so we don't do the same thing twice
+	arguments.callee.done = true;
+
+	// kill the timer
+	if (_timer) clearInterval(_timer);
+
+	$CrawlerSite = new $CrawlerSite();
+
+	delete Services;
+};
+
+/* for Mozilla/Opera9 */
+if (document.addEventListener) {
+	document.addEventListener("DOMContentLoaded", onLoadDocument, false);
+}
+
+/* for Internet Explorer */
+/*@cc_on @*/
+/*@if (@_win32)
+  document.write("<script id=__ie_onload defer src=javascript:void(0)><\/script>");
+  var script = document.getElementById("__ie_onload");
+  script.onreadystatechange = function() {
+    if (this.readyState == "complete") {
+      onLoadDocument(); // call the onload handler
+    }
+  };
+/*@end @*/
+
+/* for Safari */
+if (/WebKit/i.test(navigator.userAgent)) { // sniff
+	var _timer = setInterval(function () {
+		if (/loaded|complete/.test(document.readyState)) {
+			onLoadDocument(); // call the onload handler
+		}
+	}, 10);
+}
+
+/* for other browsers */
+window.onload = onLoadDocument;
+
+//delete $CrawlerSite;

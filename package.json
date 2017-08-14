@@ -2,7 +2,7 @@
   "name": "crawlersite.kernel",
   "title": "Flinger",
   "description": "JavaScript library for Flinger insights",
-  "version": "0.0.1",
+  "version": "2.0.1",
   "homepage": "http://coplest.com",
   "author": {
     "name": "Coplest S.A.S. and other contributors",
@@ -36,22 +36,23 @@
     "grunt-replace": "^1.0.1"
   },
   "devDependencies": {
+    "body-parser": "latest",
     "core-js": "2.2.2",
+    "cors": "latest",
+    "ejs": "latest",
+    "express": "latest",
     "grunt": "1.0.1",
     "grunt-cli": "1.2.0",
     "grunt-contrib-concat": "^1.0.0",
+    "grunt-contrib-copy": "^1.0.0",
+    "grunt-contrib-obfuscator": "^3.0.0",
     "grunt-contrib-uglify": "^1.0.1",
     "grunt-contrib-watch": "^1.0.0",
-    "grunt-contrib-copy": "^1.0.0",
     "gzip-js": "0.3.2",
     "load-grunt-tasks": "3.5.0",
-    "requirejs": "2.2.0",
-    "express": "latest",
     "morgan": "latest",
-    "body-parser": "latest",
-    "ejs": "latest",
     "open": "latest",
-    "cors": "latest"
+    "requirejs": "2.2.0"
   },
   "scripts": {
     "build": "npm install && grunt",
