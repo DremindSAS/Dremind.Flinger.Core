@@ -1,4 +1,4 @@
-/*! crawlersite.kernel - v2.0.1 - 2017-07-10 */
+/*! crawlersite.kernel - v2.0.1 - 2017-08-14 */
 var Services = {};
 Cross = function () {
     this._timeStamp;
@@ -138,6 +138,15 @@ Cross.prototype = function () {
         browserSize.width = x;
         browserSize.height = y;
 
+
+        var documentSize = {};
+
+        var body = document.body,
+            html = document.documentElement;
+
+        documentSize.height = Math.max(body.scrollHeight, body.offsetHeight, html.clientHeight, html.scrollHeight, html.offsetHeight);
+        documentSize.width = Math.max(body.scrollWidth, body.offsetWidth, html.clientWidth, html.scrollWidth, html.offsetWidth);
+
         // browser
         var nVer = navigator.appVersion;
         var nAgt = navigator.userAgent;
@@ -273,14 +282,11 @@ Cross.prototype = function () {
             exist: (typeof $ == 'function' || typeof jQuery == 'function'),
             version: jQuery.fn.jquery
         }
-        var bootstrap = (typeof $().emulateTransitionEnd == 'function') == false ? undefined :{
-            exist: (typeof $().emulateTransitionEnd == 'function'),
-            version : $.fn.tooltip.Constructor.VERSION
-        }
-        
+
         context._clientInformation = {
             screen: screenSize,
             browserSize: browserSize,
+            documentSize: documentSize,
             browser: browser,
             browserVersion: version,
             browserMajorVersion: majorVersion,
@@ -296,7 +302,7 @@ Cross.prototype = function () {
             referrer: referrer,
             fingerprint: fingerprint,
             jquery: jquery,
-            bootstrap: bootstrap,
+            //bootstrap: bootstrap,
         }
     }
 
@@ -1366,8 +1372,8 @@ ScreenshotHub.prototype = function () {
      */
     document.addEventListener("GetIfLastScreenshotIsObsoleteByApiKey#Response", function (result) {
         if (result.detail.data != undefined && result.detail.data != null) {
-            if(result.detail.data.success === true){
-                if(result.detail.data.result === true){
+            if (result.detail.data.success === true) {
+                if (result.detail.data.result === true) {
                     $CrawlerSite.Services.ScreenshotHub.TakeAllAndSave(result.detail.context);
                 }
             }
@@ -1379,7 +1385,7 @@ ScreenshotHub.prototype = function () {
      * This event is emited to all services and is the flag to send data to server or Initialize components from server
      * @param {object} data - contains current context
      */
-    document.addEventListener('SocketConnected', function(data){
+    document.addEventListener('SocketConnected', function (data) {
         data.detail.context._services.ScreenshotHub.CheckIfScreenshotIsObsolete(data.detail.context);
     })
 
@@ -1406,7 +1412,7 @@ ScreenshotHub.prototype = function () {
      */
     var takeAllAndSave = function (context, next) {
         snapshot(context._services.ScreenshotHub.screenshotType.allPage, context, function (blob) {
-            saveScreenshot(context,{
+            saveScreenshot(context, {
                 blob: blob,
                 screenshotType: context._services.ScreenshotHub.screenshotType.allPage
             });
@@ -1479,7 +1485,7 @@ ScreenshotHub.prototype = function () {
         // window.onDOMContentLoaded listener which pulls out the saved scrollX/Y
         // state from the DOM.
         //
-        
+
         if (screenshotType === _services.ScreenshotHub.screenshotType.seen) {
             var script = document.createElement('script');
             script.textContent = '(' + addOnPageLoad_.toString() + ')();'; // self calling.
@@ -1556,16 +1562,22 @@ ScreenshotHub.prototype = function () {
      * @param {object} data - screenshot as blob and type of screenshot
      */
     var saveScreenshot = function (context, data) {
-        $CrawlerSite.Services.SocketHub.Screenshot({
-            Command: 'PushScreenshot#Request',
-            Values: {
-                Timestamp: context._cross.TimeStamp(),
-                Screenshot: data.blob,
-                Endpoint: context._cross.GetClientInformation().endpoint,
-                ApiKey: context._cross.GetApiKey(),
-                Type: data.screenshotType,
-            }
-        });
+        var reader = new window.FileReader();
+        reader.readAsDataURL(data.blob);
+        reader.onloadend = function () {
+            $CrawlerSite.Services.SocketHub.Screenshot({
+                Command: 'PushScreenshot#Request',
+                Values: {
+                    DocumentSize: context._cross.GetClientInformation().documentSize,
+                    Timestamp: context._cross.TimeStamp(),
+                    Screenshot: reader.result.split(';')[1].split(',')[1], // Save base64 converted blob
+                    Endpoint: context._cross.GetClientInformation().endpoint,
+                    ApiKey: context._cross.GetApiKey(),
+                    Type: data.screenshotType,
+                }
+            });
+        }
+
     }
 
     /**
@@ -1658,7 +1670,7 @@ $CrawlerSite = (function () {
 				console.log('Flinger is on debug mode');
 			}
 
-			var dependencies ={
+			var dependencies = {
 				Debug: _debugFlinger,
 				Services: this._services
 			}
@@ -1684,7 +1696,48 @@ $CrawlerSite = (function () {
 
 })();
 
-$CrawlerSite = new $CrawlerSite();
+function onLoadDocument() {
+	// quit if this function has already been called
+	if (arguments.callee.done) return;
 
-delete Services;
+	// flag this function so we don't do the same thing twice
+	arguments.callee.done = true;
+
+	// kill the timer
+	if (_timer) clearInterval(_timer);
+
+	$CrawlerSite = new $CrawlerSite();
+
+	delete Services;
+};
+
+/* for Mozilla/Opera9 */
+if (document.addEventListener) {
+	document.addEventListener("DOMContentLoaded", onLoadDocument, false);
+}
+
+/* for Internet Explorer */
+/*@cc_on @*/
+/*@if (@_win32)
+  document.write("<script id=__ie_onload defer src=javascript:void(0)><\/script>");
+  var script = document.getElementById("__ie_onload");
+  script.onreadystatechange = function() {
+    if (this.readyState == "complete") {
+      onLoadDocument(); // call the onload handler
+    }
+  };
+/*@end @*/
+
+/* for Safari */
+if (/WebKit/i.test(navigator.userAgent)) { // sniff
+	var _timer = setInterval(function () {
+		if (/loaded|complete/.test(document.readyState)) {
+			onLoadDocument(); // call the onload handler
+		}
+	}, 10);
+}
+
+/* for other browsers */
+window.onload = onLoadDocument;
+
 //delete $CrawlerSite;

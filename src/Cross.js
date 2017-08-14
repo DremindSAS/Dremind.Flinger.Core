@@ -136,6 +136,15 @@ Cross.prototype = function () {
         browserSize.width = x;
         browserSize.height = y;
 
+
+        var documentSize = {};
+
+        var body = document.body,
+            html = document.documentElement;
+
+        documentSize.height = Math.max(body.scrollHeight, body.offsetHeight, html.clientHeight, html.scrollHeight, html.offsetHeight);
+        documentSize.width = Math.max(body.scrollWidth, body.offsetWidth, html.clientWidth, html.scrollWidth, html.offsetWidth);
+
         // browser
         var nVer = navigator.appVersion;
         var nAgt = navigator.userAgent;
@@ -271,14 +280,11 @@ Cross.prototype = function () {
             exist: (typeof $ == 'function' || typeof jQuery == 'function'),
             version: jQuery.fn.jquery
         }
-        var bootstrap = (typeof $().emulateTransitionEnd == 'function') == false ? undefined :{
-            exist: (typeof $().emulateTransitionEnd == 'function'),
-            version : $.fn.tooltip.Constructor.VERSION
-        }
-        
+
         context._clientInformation = {
             screen: screenSize,
             browserSize: browserSize,
+            documentSize: documentSize,
             browser: browser,
             browserVersion: version,
             browserMajorVersion: majorVersion,
@@ -294,7 +300,7 @@ Cross.prototype = function () {
             referrer: referrer,
             fingerprint: fingerprint,
             jquery: jquery,
-            bootstrap: bootstrap,
+            //bootstrap: bootstrap,
         }
     }
 
