@@ -275,7 +275,7 @@ Cross.prototype = function () {
         var endpoint = document.location.pathname;
         var windowTitle = document.title;
         var referrer = document.referrer;
-        var fingerprint = context.GetFingerPrint();
+        var fingerprint = context.GenerateFingerPrint();
         var jquery = !window.jQuery ? undefined : {
             exist: (typeof $ == 'function' || typeof jQuery == 'function'),
             version: jQuery.fn.jquery
@@ -860,7 +860,7 @@ Cross.prototype = function () {
         GetAproximateGeoLocation: getAproximateGeoLocation,
         GetLocalIP: getLocalIP,
         setPersistanceData: setPersistanceData,
-        GetPersistanceData: GetPersistanceData,
+        GetPersistanceData: getPersistanceData,
         ShowBlockedUserMessage: showBlockedUserMessage,
     }
 }();
