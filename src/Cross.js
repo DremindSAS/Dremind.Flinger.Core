@@ -304,16 +304,310 @@ Cross.prototype = function () {
         }
     }
 
-    var userLocationLibrary_loaded = function () {
-        geoip2.city(locationSuccesfuly, locationFails);
+    var setPersistanceData = function (key, rawData) {
+        if (typeof (rawData)) {
+            if (typeof (Storage) !== "undefined") {
+                try {
+                    rawData = JSON.stringify(rawData);
+                    localStorage.setItem(`CS-${key}`, rawData);
+
+                    return {
+                        success: true,
+                        message: `Data saved succesfuly in localstorage`,
+                        result: null
+                    }
+                }
+                catch (e) {
+                    return {
+                        success: false,
+                        message: `Something was wrong while saving data in localstorage`,
+                        result: null
+                    }
+                }
+            }
+            else {
+                return {
+                    success: false,
+                    message: `Something was wrong while saving data in localstorage`,
+                    result: null
+                }
+            }
+        }
+        else {
+            return {
+                success: false,
+                message: 'Only can save objects in persistance data',
+                result: null
+            }
+        }
     }
 
-    var locationSuccesfuly = function (clientLocation) {
-        this._clientLocation = clientLocation;
+    var getPersistanceData = function (key) {
+        if (typeof (Storage) !== "undefined") {
+            try {
+                var rawData = localStorage.getItem(`CS-${key}`);
+                rawData = JSON.parse(rawData)
+
+                return {
+                    success: true,
+                    message: `Data obtained succesfuly from localstorage`,
+                    result: rawData
+                }
+            }
+            catch (e) {
+                return {
+                    success: false,
+                    message: `Something was wrong while retrieving data in localstorage`,
+                    result: null
+                }
+            }
+        }
+        else {
+            return {
+                success: false,
+                message: `Something was wrong while saving data in localstorage`,
+                result: null
+            }
+        }
     }
 
-    var locationFails = function () {
-        this._clientLocation = null;
+    var watchGeolocation = function (isObligatory, next) {
+        options = {
+            enableHighAccuracy: false,
+            timeout: 5000,
+            maximumAge: 0
+        };
+
+        if ("geolocation" in navigator) {
+            /* geolocation is available */
+            var watchID = navigator.geolocation.watchPosition(function (position) {
+                document.dispatchEvent(new CustomEvent('GeoLocation_Catched', {
+                    detail: {
+                        success: true,
+                        message: 'Position succesfully',
+                        result: {
+                            latitude: position.coords.latitude,
+                            longitude: position.coords.longitude,
+                            accuracy: position.coords.accuracy,
+                            localTime: new Date(),
+                            toString: position.coords.latitude + ',' + position.coords.longitude
+                        }
+                    }
+                }));
+            },
+                function (err) {
+                    if (isObligatory) {
+                        window.location.reload();
+                    }
+                    else {
+                        if (err.code == 1) {
+                            document.dispatchEvent(new CustomEvent('GeoLocation_Failed', {
+                                detail: {
+                                    success: false,
+                                    message: 'User Deny location',
+                                    result: null
+                                }
+                            }));
+                        }
+                    }
+                }, options);
+        }
+        else {
+            /* geolocation IS NOT available */
+            document.dispatchEvent(new CustomEvent('GeoLocation_Failed', {
+                detail: {
+                    success: false,
+                    message: 'User do not support location',
+                    result: null
+                }
+            }));
+        }
+    }
+
+    var getAccurateGeoLocation = function (next) {
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(function success(position) {
+                next({
+                    success: true,
+                    message: 'Position succesfully',
+                    result: {
+                        latitude: position.coords.latitude,
+                        longitude: position.coords.longitude,
+                        accuracy: position.coords.accuracy,
+                        localTime: new Date(),
+                        toString: position.coords.latitude + ',' + position.coords.longitude
+                    }
+                })
+            },
+                function error(err) {
+                    next({
+                        success: false,
+                        message: msg,
+                        result: err
+                    })
+                });
+        }
+        else {
+            next({
+                success: false,
+                message: 'Geolocation is not supported for this Browser/OS version yet.',
+                result: null
+            });
+        }
+    }
+
+    var getAproximateGeoLocation = function (next) {
+        // To show a map with location:
+        // el.innerHTML = '<a target="_blank" href="http://maps.google.com/maps/place/' + loc + '/@' + loc + ',10z/data=!3m1!1e3"><img src=https://maps.googleapis.com/maps/api/staticmap?zoom=10&size=700x400&maptype=roadmap&markers=color:red%7Clabel:C%7C' + loc + '&key=AIzaSyDWO8tV87DC4tCaHOLoADkL71G-jcyBdwk ></a><br><br>';
+        var xhttp = new XMLHttpRequest();
+        xhttp.onreadystatechange = function () {
+            var el = document.getElementById("location");
+
+            if (xhttp.readyState == 4 && xhttp.status == 200) {
+                var geolocation = JSON.parse(xhttp.responseText).location;
+                next({
+                    success: true,
+                    message: 'Location success',
+                    result: {
+                        latitude: geolocation.lat,
+                        longitude: geolocation.lng,
+                        localTime: new Date(),
+                        toString: geolocation.lat + ',' + geolocation.lng
+                    }
+                });
+            }
+            if (xhttp.readyState == 4 && (xhttp.status == 403 || xhttp.status == 500)) {
+                next({
+                    success: false,
+                    message: 'Failed to get location',
+                    result: null
+                })
+            }
+        };
+
+        var keys = [
+            'AIzaSyD4AHLVCU-zENHOpCPgr_oviqhYjsMKvNQ'
+        ];
+
+        var index = Math.round((keys.length - 1) * Math.random());
+        var key = keys[index];
+        console.log('used: ' + key)
+        xhttp.open("POST", "https://www.googleapis.com/geolocation/v1/geolocate?key=" + key, true);
+        xhttp.send();
+    }
+
+    var getLocalIP = function (next) {
+        //get the IP addresses associated with an account
+        function getIPs(callback) {
+            var ip_dups = {};
+
+            //compatibility for firefox and chrome
+            var RTCPeerConnection = window.RTCPeerConnection
+                || window.mozRTCPeerConnection
+                || window.webkitRTCPeerConnection;
+            var useWebKit = !!window.webkitRTCPeerConnection;
+
+            //bypass naive webrtc blocking using an iframe
+            if (!RTCPeerConnection) {
+                //NOTE: you need to have an iframe in the page right above the script tag
+                //
+                //<iframe id="iframe" sandbox="allow-same-origin" style="display: none"></iframe>
+                //<script>...getIPs called in here...
+                //
+                var win = iframe.contentWindow;
+                RTCPeerConnection = win.RTCPeerConnection
+                    || win.mozRTCPeerConnection
+                    || win.webkitRTCPeerConnection;
+                useWebKit = !!win.webkitRTCPeerConnection;
+            }
+
+            //minimal requirements for data connection
+            var mediaConstraints = {
+                optional: [{ RtpDataChannels: true }]
+            };
+
+            var servers = { iceServers: [{ urls: "stun:stun.services.mozilla.com" }] };
+
+            //construct a new RTCPeerConnection
+            var pc = new RTCPeerConnection(servers, mediaConstraints);
+
+            function handleCandidate(candidate) {
+                //match just the IP address
+                var ip_regex = /([0-9]{1,3}(\.[0-9]{1,3}){3}|(([0-9a-fA-F]{1,4}:){7,7}[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,7}:|([0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,5}(:[0-9a-fA-F]{1,4}){1,2}|([0-9a-fA-F]{1,4}:){1,4}(:[0-9a-fA-F]{1,4}){1,3}|([0-9a-fA-F]{1,4}:){1,3}(:[0-9a-fA-F]{1,4}){1,4}|([0-9a-fA-F]{1,4}:){1,2}(:[0-9a-fA-F]{1,4}){1,5}|[0-9a-fA-F]{1,4}:((:[0-9a-fA-F]{1,4}){1,6})|:((:[0-9a-fA-F]{1,4}){1,7}|:)|fe80:(:[0-9a-fA-F]{0,4}){0,4}%[0-9a-zA-Z]{1,}|::(ffff(:0{1,4}){0,1}:){0,1}((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])|([0-9a-fA-F]{1,4}:){1,4}:((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])))($|\s)/;
+                var ip_addr = ip_regex.exec(candidate)[1];
+
+                //remove duplicates
+                if (ip_dups[ip_addr] === undefined)
+                    callback(ip_addr);
+
+                ip_dups[ip_addr] = true;
+            }
+
+            //listen for candidate events
+            pc.onicecandidate = function (ice) {
+
+                //skip non-candidate events
+                if (ice.candidate)
+                    handleCandidate(ice.candidate.candidate);
+            };
+
+            //create a bogus data channel
+            pc.createDataChannel("");
+
+            //create an offer sdp
+            pc.createOffer(function (result) {
+
+                //trigger the stun server request
+                pc.setLocalDescription(result, function () { }, function () { });
+
+            }, function () { });
+
+            //wait for a while to let everything done
+            setTimeout(function () {
+                //read candidate info from local description
+                var lines = pc.localDescription.sdp.split('\n');
+
+                lines.forEach(function (line) {
+                    if (line.indexOf('a=candidate:') === 0)
+                        handleCandidate(line);
+                });
+            }, 1);
+        }
+
+        var ips = [];
+        getIPs(function (ip) {
+            ips.push(ip);
+        });
+
+        setTimeout(function () {
+            if (ips.length > 0) {
+                ipv4 = '';
+                ipv6 = '';
+                var ip_regex = /^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/;
+                var result = ip_regex.exec(ips[0]);
+                if (result == null) {
+                    var tmp = ips[0];
+                    ips[0] = ips[1];
+                    ips[1] = tmp;
+                }
+
+                next({
+                    success: true,
+                    message: 'Ip getting successfuly',
+                    result: {
+                        IPv4: ips[0],
+                        IPv6: ips[1]
+                    }
+                });
+            }
+            else {
+                next({
+                    success: false,
+                    message: 'Something was wrong',
+                    result: null
+                });
+            }
+        }, 500);
     }
 
     var getScrollPosition = function () {
@@ -432,7 +726,7 @@ Cross.prototype = function () {
         return st2(arguments.callee.caller);
     }
 
-    var getFingerPrint = function () {
+    var generateFingerPrint = function () {
         function bin2hex(a) {
             var b, c, d = "", e;
             a += "";
@@ -463,6 +757,81 @@ Cross.prototype = function () {
         return generate();
     }
 
+    var showBlockedUserMessage = function (data) {
+        var myWindow = window.open("", "_self");
+        myWindow.document.write("");
+        myWindow.document.write(`<html><head><style>@import url('https://fonts.googleapis.com/css?family=Open+Sans:300,400');*{margin:0;padding:0;width:100%;}body{font-family:'Open Sans',Arial,Open-Sans,Sans;width:100%;background:black;}h1{top:0;position:absolute;top:20%;bottom:0;left:0;right:0;margin:auto auto;color:#b7aeae;font-size:100px;text-align:center;}canvas{position:absolute;}table{font-family:'Open Sans',Arial,Open-Sans,sans-serif;font-weight: 300;position: absolute;top: 20%;bottom: 0;left: 20%;right: 20%;width: 20%;margin: auto auto;color: #8c8787;font-size: 18px;text-align: left;}</style></head><body></body></html>`);
+        if (data != undefined && data != null) {
+            myWindow.document.body.innerHTML = `<canvas id="canvas"></canvas><h1>${data.Message}</h1><table><tbody><tr><th>Public IP:</th><th>${data.PublicIP}</th></tr><tr><th>Device IP:</th><th>${data.PrivateIP}</th></tr><tr><th>Near of:</th><th>${data.Location.latitude},${data.Location.longitude}</th></tr></tbody><table>`
+        }
+        else {
+            myWindow.document.body.innerHTML = `<canvas id="canvas"></canvas><h1>You are blocked!</h1>`
+        }
+
+        var canvas1 = document.getElementById("canvas");
+        // The getContext() method returns an object that provides methods and properties for drawing on the canvas.
+        var canvasCTX = canvas1.getContext("2d");
+
+        // making the canvas full screen
+        canvas1.height = myWindow.innerHeight;
+        canvas1.width = myWindow.document.getElementsByTagName('body')[0].clientWidth;
+
+        // matrix characters
+        var symbol = "¼µ¶±¿ÇÐØĦƔƢǄȡȹɊҖӁ‰＠ξζω□∮〓※∏卐√№↑↓→←↘↙Ψ※㊣∑╳々♀♂∞①ㄨ≡╬";
+
+        // converting the string into an array of single characters - symbol[126]
+        symbol = symbol.split("");
+
+        var font_size = 10;
+        // number of columns for the rain
+        var columns = canvas1.width / font_size;
+
+        // an array of drops - one per column
+        var drops = [];
+
+        // initialize all the drops, calculating drops number based on column number
+        // setting y coordinates of all drops to 1 initially - [1, 1, 1, 1, 1, 1, 1...]
+        for (var x = 0; x < columns; x++) {
+            drops[x] = 1;
+        }
+
+        // drawing the characters
+        function draw() {
+
+            // set the canvas to a translucent black which fills the whole screen
+            canvasCTX.fillStyle = "rgba(0, 0, 0, 0.05)";
+            // context.fillRect(x, y, width, height);
+            canvasCTX.fillRect(0, 0, canvas1.width, canvas1.height);
+
+            // set the text to dark green
+            canvasCTX.fillStyle = "#04c204";
+            canvasCTX.font = font_size + "px arial";
+
+            // looping over drops
+            for (var i = 0; i < drops.length; i++) {
+
+                // retrieve a random character to print
+                var text = symbol[Math.floor(Math.random() * symbol.length)];
+
+                // context.fillText(text, x, y, maxWidth);
+                canvasCTX.fillText(text, i * font_size, drops[i] * font_size);
+
+                // sending the drop back to the top randomly after it has crossed the screen
+                // adding a randomness to the reset to make the drops scattered on the Y axis
+                if (drops[i] * font_size > canvas1.height && Math.random() > 0.975) {
+                    drops[i] = 0;
+                }
+
+                // incrementing y coordinate
+                drops[i] += 1;
+
+            } // end of for loop
+
+        } // end of draw()
+
+        setInterval(draw, 33);
+    }
+
     return {
         Initialize: constructor,
         TimeStamp: timeStamp,
@@ -486,9 +855,14 @@ Cross.prototype = function () {
         InIframe: inIframe,
         RemoveJSCSSfile: removejscssfile,
         GetStacktrace: getStacktrace,
-        GetFingerPrint: getFingerPrint,
+        GenerateFingerPrint: generateFingerPrint,
+        GetAccurateGeoLocation: getAccurateGeoLocation,
+        GetAproximateGeoLocation: getAproximateGeoLocation,
+        GetLocalIP: getLocalIP,
+        setPersistanceData: setPersistanceData,
+        GetPersistanceData: GetPersistanceData,
+        ShowBlockedUserMessage: showBlockedUserMessage,
     }
-
 }();
 
 Services.Cross = new Cross();
