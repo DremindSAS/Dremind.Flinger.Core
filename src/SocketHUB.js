@@ -78,11 +78,11 @@ SocketHub.prototype = function () {
             }
             setTimeout(function () {
                 pullEvent(context, 'SocketConnected', {});
-                
+
                 context._socket.emit('Coplest.Flinger.SubscribeSocketToApiKey', { ApiKey: context._cross.GetApiKey(), ClientInformation: context._cross.GetClientInformation() })
 
                 context._socket.emit('Coplest.Flinger.CanISendData', { ApiKey: context._cross.GetApiKey() })
-            }, 700);
+            }, 20);
         });
 
         context._socket.on('Coplest.Flinger.ServerEvent', function (data) {

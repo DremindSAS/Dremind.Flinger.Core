@@ -494,117 +494,83 @@ Cross.prototype = function () {
     }
 
     var getLocalIP = function (next) {
-        //get the IP addresses associated with an account
-        function getIPs(callback) {
-            var ip_dups = {};
+        var RTCPeerConnection = /*window.RTCPeerConnection ||*/ window.webkitRTCPeerConnection || window.mozRTCPeerConnection;
 
-            //compatibility for firefox and chrome
-            var RTCPeerConnection = window.RTCPeerConnection
-                || window.mozRTCPeerConnection
-                || window.webkitRTCPeerConnection;
-            var useWebKit = !!window.webkitRTCPeerConnection;
-
-            //bypass naive webrtc blocking using an iframe
-            if (!RTCPeerConnection) {
-                //NOTE: you need to have an iframe in the page right above the script tag
-                //
-                //<iframe id="iframe" sandbox="allow-same-origin" style="display: none"></iframe>
-                //<script>...getIPs called in here...
-                //
-                var win = iframe.contentWindow;
-                RTCPeerConnection = win.RTCPeerConnection
-                    || win.mozRTCPeerConnection
-                    || win.webkitRTCPeerConnection;
-                useWebKit = !!win.webkitRTCPeerConnection;
-            }
-
-            //minimal requirements for data connection
-            var mediaConstraints = {
-                optional: [{ RtpDataChannels: true }]
+        if (RTCPeerConnection) (function () {
+            var rtc = new RTCPeerConnection({ iceServers: [] });
+            if (1 || window.mozRTCPeerConnection) {      // FF [and now Chrome!] needs a channel/stream to proceed
+                rtc.createDataChannel('', { reliable: false });
             };
 
-            var servers = { iceServers: [{ urls: "stun:stun.services.mozilla.com" }] };
-
-            //construct a new RTCPeerConnection
-            var pc = new RTCPeerConnection(servers, mediaConstraints);
-
-            function handleCandidate(candidate) {
-                //match just the IP address
-                var ip_regex = /([0-9]{1,3}(\.[0-9]{1,3}){3}|(([0-9a-fA-F]{1,4}:){7,7}[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,7}:|([0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,5}(:[0-9a-fA-F]{1,4}){1,2}|([0-9a-fA-F]{1,4}:){1,4}(:[0-9a-fA-F]{1,4}){1,3}|([0-9a-fA-F]{1,4}:){1,3}(:[0-9a-fA-F]{1,4}){1,4}|([0-9a-fA-F]{1,4}:){1,2}(:[0-9a-fA-F]{1,4}){1,5}|[0-9a-fA-F]{1,4}:((:[0-9a-fA-F]{1,4}){1,6})|:((:[0-9a-fA-F]{1,4}){1,7}|:)|fe80:(:[0-9a-fA-F]{0,4}){0,4}%[0-9a-zA-Z]{1,}|::(ffff(:0{1,4}){0,1}:){0,1}((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])|([0-9a-fA-F]{1,4}:){1,4}:((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])))($|\s)/;
-                var ip_addr = ip_regex.exec(candidate)[1];
-
-                //remove duplicates
-                if (ip_dups[ip_addr] === undefined)
-                    callback(ip_addr);
-
-                ip_dups[ip_addr] = true;
-            }
-
-            //listen for candidate events
-            pc.onicecandidate = function (ice) {
-
-                //skip non-candidate events
-                if (ice.candidate)
-                    handleCandidate(ice.candidate.candidate);
+            rtc.onicecandidate = function (evt) {
+                // convert the candidate to SDP so we can run it through our general parser
+                // see https://twitter.com/lancestout/status/525796175425720320 for details
+                if (evt.candidate) grepSDP("a=" + evt.candidate.candidate);
             };
+            rtc.createOffer(function (offerDesc) {
+                grepSDP(offerDesc.sdp);
+                rtc.setLocalDescription(offerDesc);
+            }, function (e) { console.warn("offer failed", e); });
 
-            //create a bogus data channel
-            pc.createDataChannel("");
 
-            //create an offer sdp
-            pc.createOffer(function (result) {
+            var addrs = Object.create(null);
+            addrs["0.0.0.0"] = false;
+            function updateDisplay(newAddr) {
+                if (newAddr in addrs) return;
+                else addrs[newAddr] = true;
+                var displayAddrs = Object.keys(addrs).filter(function (k) { return addrs[k]; });
+                if (displayAddrs.length > 0) {
+                    ipv4 = '';
+                    ipv6 = '';
+                    var ip_regex = /^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/;
+                    var result = ip_regex.exec(displayAddrs[0]);
+                    if (result == null) {
+                        var tmp = displayAddrs[0];
+                        displayAddrs[0] = displayAddrs[1];
+                        displayAddrs[1] = tmp;
+                    }
 
-                //trigger the stun server request
-                pc.setLocalDescription(result, function () { }, function () { });
-
-            }, function () { });
-
-            //wait for a while to let everything done
-            setTimeout(function () {
-                //read candidate info from local description
-                var lines = pc.localDescription.sdp.split('\n');
-
-                lines.forEach(function (line) {
-                    if (line.indexOf('a=candidate:') === 0)
-                        handleCandidate(line);
-                });
-            }, 1);
-        }
-
-        var ips = [];
-        getIPs(function (ip) {
-            ips.push(ip);
-        });
-
-        setTimeout(function () {
-            if (ips.length > 0) {
-                ipv4 = '';
-                ipv6 = '';
-                var ip_regex = /^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/;
-                var result = ip_regex.exec(ips[0]);
-                if (result == null) {
-                    var tmp = ips[0];
-                    ips[0] = ips[1];
-                    ips[1] = tmp;
+                    next({
+                        success: true,
+                        message: 'Ip getting successfuly',
+                        result: {
+                            IPv4: displayAddrs[0],
+                            IPv6: displayAddrs[1]
+                        }
+                    });
                 }
+                else {
+                    next({
+                        success: false,
+                        message: 'Something was wrong',
+                        result: null
+                    });
+                }
+            }
 
-                next({
-                    success: true,
-                    message: 'Ip getting successfuly',
-                    result: {
-                        IPv4: ips[0],
-                        IPv6: ips[1]
+            function grepSDP(sdp) {
+                var hosts = [];
+                sdp.split('\r\n').forEach(function (line) { // c.f. http://tools.ietf.org/html/rfc4566#page-39
+                    if (~line.indexOf("a=candidate")) {     // http://tools.ietf.org/html/rfc4566#section-5.13
+                        var parts = line.split(' '),        // http://tools.ietf.org/html/rfc5245#section-15.1
+                            addr = parts[4],
+                            type = parts[7];
+                        if (type === 'host') updateDisplay(addr);
+                    } else if (~line.indexOf("c=")) {       // http://tools.ietf.org/html/rfc4566#section-5.7
+                        var parts = line.split(' '),
+                            addr = parts[2];
+                        updateDisplay(addr);
                     }
                 });
             }
-            else {
-                next({
-                    success: false,
-                    message: 'Something was wrong',
-                    result: null
-                });
-            }
-        }, 500);
+        })();
+        else {
+            next({
+                success: false,
+                message: 'Something was wrong',
+                result: null
+            });
+        }
     }
 
     var getScrollPosition = function () {
@@ -759,10 +725,10 @@ Cross.prototype = function () {
         myWindow.document.write("");
         myWindow.document.write(`<html><head><style>@import url('https://fonts.googleapis.com/css?family=Open+Sans:300,400');*{margin:0;padding:0;width:100%;}body{font-family:'Open Sans',Arial,Open-Sans,Sans;width:100%;background:black;}h1{top:0;position:absolute;top:20%;bottom:0;left:0;right:0;margin:auto auto;color:#b7aeae;font-size:100px;text-align:center;}canvas{position:absolute;}table{font-family:'Open Sans',Arial,Open-Sans,sans-serif;font-weight: 300;position: absolute;top: 20%;bottom: 0;left: 20%;right: 20%;width: 20%;margin: auto auto;color: #8c8787;font-size: 18px;text-align: left;}</style></head><body></body></html>`);
         if (data != undefined && data != null) {
-            if(data.Location !== undefined && data.Location !== null){
-                myWindow.document.body.innerHTML = `<canvas id="canvas"></canvas><h1>${data.Message}</h1><table><tbody><tr><th>Public IP:</th><th>${data.PublicIP}</th></tr><tr><th>Device IP:</th><th>${data.PrivateIP}</th></tr><tr><th>Near of:</th><th>${data.Location.latitude},${data.Location.longitude}</th></tr></tbody><table>`
+            if (data.Location !== undefined && data.Location !== null) {
+                myWindow.document.body.innerHTML = `<canvas id="canvas"></canvas><h1>${data.Message}</h1><table><tbody><tr><th>Public IP:</th><th>${data.PublicIP}</th></tr><tr><th>Device IP:</th><th>${data.PrivateIP}</th></tr><tr><th>Near of:</th><th>${data.Location.location.latitude},${data.Location.location.longitude}</th></tr></tbody><table>`
             }
-            else{
+            else {
                 myWindow.document.body.innerHTML = `<canvas id="canvas"></canvas><h1>${data.Message}</h1><table><tbody><tr><th>Public IP:</th><th>${data.PublicIP}</th></tr><tr><th>Device IP:</th><th>${data.PrivateIP}</th></tr></tbody><table>`
             }
         }
@@ -950,11 +916,11 @@ SocketHub.prototype = function () {
             }
             setTimeout(function () {
                 pullEvent(context, 'SocketConnected', {});
-                
+
                 context._socket.emit('Coplest.Flinger.SubscribeSocketToApiKey', { ApiKey: context._cross.GetApiKey(), ClientInformation: context._cross.GetClientInformation() })
 
                 context._socket.emit('Coplest.Flinger.CanISendData', { ApiKey: context._cross.GetApiKey() })
-            }, 700);
+            }, 20);
         });
 
         context._socket.on('Coplest.Flinger.ServerEvent', function (data) {
