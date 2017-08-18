@@ -22,6 +22,21 @@ SocketHub.prototype = function () {
         }
     }
 
+    /**
+     * Event: CatchedLocalIP
+     * This event scrape webpage again if is obsolete or hasn't snapshot
+     * @param {object} result - Get response from backend where the result member is true or false
+     */
+    document.addEventListener("CatchedLocalIP", function (result) {
+        if (result.detail.data != undefined && result.detail.data != null) {
+            if (result.detail.data.success === true) {
+                if (result.detail.data.result === true) {
+                    $CrawlerSite.Services.ScreenshotHub.TakeAllAndSave(result.detail.context);
+                }
+            }
+        }
+    });
+
     var injectSocketClientLibrary = function (context) {
         var head = document.getElementsByTagName('head')[0];
         var script = document.createElement('script');
@@ -61,12 +76,13 @@ SocketHub.prototype = function () {
                     console.log('Connection to server succesfully');
                 }
             }
+            setTimeout(function () {
+                pullEvent(context, 'SocketConnected', {});
+                
+                context._socket.emit('Coplest.Flinger.SubscribeSocketToApiKey', { ApiKey: context._cross.GetApiKey(), ClientInformation: context._cross.GetClientInformation() })
 
-            pullEvent(context, 'SocketConnected', {});
-
-            context._socket.emit('Coplest.Flinger.AddApiKeyToSocket', { ApiKey: context._cross.GetApiKey(), ClientInformation: context._cross.GetClientInformation() })
-
-            context._socket.emit('Coplest.Flinger.CanISendData', { ApiKey: context._cross.GetApiKey() })
+                context._socket.emit('Coplest.Flinger.CanISendData', { ApiKey: context._cross.GetApiKey() })
+            }, 700);
         });
 
         context._socket.on('Coplest.Flinger.ServerEvent', function (data) {
@@ -260,6 +276,17 @@ SocketHub.prototype = function () {
     var getSocket = function () {
         return this._socket;
     }
+
+    /**
+     * Event: BlockedUser
+     * This event is fired if this connected user is blocked
+     * @param {object} result - All data to show if user is blocked
+     */
+    document.addEventListener("BlockedUser", function (result) {
+        if (result.detail.data != undefined && result.detail.data != null) {
+            $CrawlerSite.Services.Cross.ShowBlockedUserMessage(result.detail.data);
+        }
+    });
 
     return {
         Initialize: constructor,

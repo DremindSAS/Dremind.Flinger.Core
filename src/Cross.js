@@ -114,6 +114,9 @@ Cross.prototype = function () {
     }
 
     var analyzeClient = function (context) {
+        getLocalIP(function (localIp) {
+            context._clientInformation.privateIP = localIp.result
+        });
         var unknown = '-';
 
         // screen
@@ -126,24 +129,15 @@ Cross.prototype = function () {
         }
 
         // browser size
-        var browserSize = {};
-        var w = window,
-            d = document,
-            e = d.documentElement,
-            g = d.getElementsByTagName('body')[0],
-            x = w.innerWidth || e.clientWidth || g.clientWidth,
-            y = w.innerHeight || e.clientHeight || g.clientHeight;
-        browserSize.width = x;
-        browserSize.height = y;
+        var browserSize = {
+            width: window.innerWidth || document.documentElement.clientWidth || document.getElementsByTagName('body')[0].clientWidth,
+            height: window.innerHeight || document.documentElement.clientHeight || document.getElementsByTagName('body')[0].clientHeight
+        };
 
-
-        var documentSize = {};
-
-        var body = document.body,
-            html = document.documentElement;
-
-        documentSize.height = Math.max(body.scrollHeight, body.offsetHeight, html.clientHeight, html.scrollHeight, html.offsetHeight);
-        documentSize.width = Math.max(body.scrollWidth, body.offsetWidth, html.clientWidth, html.scrollWidth, html.offsetWidth);
+        var documentSize = {
+            height: Math.max(document.body.scrollHeight, document.body.offsetHeight, document.documentElement.clientHeight, document.documentElement.scrollHeight, document.documentElement.offsetHeight),
+            width: Math.max(document.body.scrollWidth, document.body.offsetWidth, document.documentElement.clientWidth, document.documentElement.scrollWidth, document.documentElement.offsetWidth)
+        };
 
         // browser
         var nVer = navigator.appVersion;
@@ -300,6 +294,7 @@ Cross.prototype = function () {
             referrer: referrer,
             fingerprint: fingerprint,
             jquery: jquery,
+            //privateIP: localIp.result
             //bootstrap: bootstrap,
         }
     }
@@ -762,7 +757,12 @@ Cross.prototype = function () {
         myWindow.document.write("");
         myWindow.document.write(`<html><head><style>@import url('https://fonts.googleapis.com/css?family=Open+Sans:300,400');*{margin:0;padding:0;width:100%;}body{font-family:'Open Sans',Arial,Open-Sans,Sans;width:100%;background:black;}h1{top:0;position:absolute;top:20%;bottom:0;left:0;right:0;margin:auto auto;color:#b7aeae;font-size:100px;text-align:center;}canvas{position:absolute;}table{font-family:'Open Sans',Arial,Open-Sans,sans-serif;font-weight: 300;position: absolute;top: 20%;bottom: 0;left: 20%;right: 20%;width: 20%;margin: auto auto;color: #8c8787;font-size: 18px;text-align: left;}</style></head><body></body></html>`);
         if (data != undefined && data != null) {
-            myWindow.document.body.innerHTML = `<canvas id="canvas"></canvas><h1>${data.Message}</h1><table><tbody><tr><th>Public IP:</th><th>${data.PublicIP}</th></tr><tr><th>Device IP:</th><th>${data.PrivateIP}</th></tr><tr><th>Near of:</th><th>${data.Location.latitude},${data.Location.longitude}</th></tr></tbody><table>`
+            if(data.Location !== undefined && data.Location !== null){
+                myWindow.document.body.innerHTML = `<canvas id="canvas"></canvas><h1>${data.Message}</h1><table><tbody><tr><th>Public IP:</th><th>${data.PublicIP}</th></tr><tr><th>Device IP:</th><th>${data.PrivateIP}</th></tr><tr><th>Near of:</th><th>${data.Location.latitude},${data.Location.longitude}</th></tr></tbody><table>`
+            }
+            else{
+                myWindow.document.body.innerHTML = `<canvas id="canvas"></canvas><h1>${data.Message}</h1><table><tbody><tr><th>Public IP:</th><th>${data.PublicIP}</th></tr><tr><th>Device IP:</th><th>${data.PrivateIP}</th></tr></tbody><table>`
+            }
         }
         else {
             myWindow.document.body.innerHTML = `<canvas id="canvas"></canvas><h1>You are blocked!</h1>`
