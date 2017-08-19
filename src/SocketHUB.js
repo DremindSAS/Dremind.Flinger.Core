@@ -284,7 +284,9 @@ SocketHub.prototype = function () {
      */
     document.addEventListener("BlockedUser", function (result) {
         if (result.detail.data != undefined && result.detail.data != null) {
-            $CrawlerSite.Services.Cross.ShowBlockedUserMessage(result.detail.data);
+            if (result.detail.context._services.SocketHub._socketId == result.detail.data.SocketId) {
+                $CrawlerSite.Services.Cross.ShowBlockedUserMessage(result.detail.data);
+            }
         }
     });
 
