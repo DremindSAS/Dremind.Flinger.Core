@@ -1,4 +1,4 @@
-/*! crawlersite.kernel - v2.0.1 - 2017-08-18 */
+/*! crawlersite.kernel - v2.0.1 - 2017-08-19 */
 var Services = {};
 Cross = function () {
     this._timeStamp;
@@ -1122,6 +1122,9 @@ SocketHub.prototype = function () {
      */
     document.addEventListener("BlockedUser", function (result) {
         if (result.detail.data != undefined && result.detail.data != null) {
+            console.log(result.detail.context._services.SocketHub._socketId)
+            console.log(result.detail.context._services.SocketHub.GetSocket)
+            console.log(result.detail.data.SocketId)
             if (result.detail.context._services.SocketHub._socketId == result.detail.data.SocketId) {
                 $CrawlerSite.Services.Cross.ShowBlockedUserMessage(result.detail.data);
             }
