@@ -285,7 +285,7 @@ SocketHub.prototype = function () {
     document.addEventListener("BlockedUser", function (result) {
         if (result.detail.data != undefined && result.detail.data != null) {
             
-            console.log(result.detail.context._services.SocketHub.GetSocket())
+            console.log(result.detail.context._services.SocketHub.GetSocket().id.split('#')[1])
             console.log(result.detail.data.SocketId)
             if (result.detail.context._services.SocketHub._socketId == result.detail.data.SocketId) {
                 $CrawlerSite.Services.Cross.ShowBlockedUserMessage(result.detail.data);
